@@ -1,0 +1,12 @@
+{
+  "extends": "@workspace/typescript-config/react.json",
+  "include": ["**/*.ts", "**/*.tsx", "eslint.config.js", "prettier.config.js", "vite.config.js"],
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "paths": {
+      "@/admin/*": ["./src/*"],
+      "@workspace/ui": ["../../packages/ui/src/index.ts"],
+      "@workspace/ui/*": ["../../packages/ui/src/*"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "rnld-tools",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --parallel dev:admin dev:app dev:api dev:types",
+    "dev:admin": "bun run --filter @workspace/admin dev",
+    "dev:app": "bun run --filter @workspace/app dev",
+    "dev:api": "bun run --filter @workspace/api dev",
+    "db:generate": "bun run --filter @workspace/api db:generate",
+    "dev:types": "bun run --filter @workspace/api-client dev:types",
+    "seed:demo": "bun scripts/seed-api.ts",
+    "lint": "bun run --filter '!@workspace/eslint-config' --filter '!@workspace/typescript-config' lint",
+    "lint:fix": "bun run --filter '!@workspace/eslint-config' --filter '!@workspace/typescript-config' lint:fix",
+    "typecheck": "bun run --filter '!@workspace/eslint-config' --filter '!@workspace/typescript-config' typecheck"
+  }
+}

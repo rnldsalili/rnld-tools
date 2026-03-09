@@ -1,0 +1,73 @@
+name: Deploy (Production)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Admin + API (Production)
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Verify Cloudflare API token
+        run: |
+          curl "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify" \
+          -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+
+      - name: Generate Prisma Client
+        working-directory: apps/api
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./prisma/db.sqlite
+
+      - name: Apply DB Migrations (Production)
+        working-directory: apps/api
+        run: bunx wrangler d1 migrations apply cf-hr-template-prod --remote --env production
+
+      - name: Deploy API (production)
+        working-directory: apps/api
+        run: bun run deploy -- --env production
+
+      - name: Sync API secrets (production)
+        working-directory: apps/api
+        run: |
+          test -n "$BETTER_AUTH_SECRET"
+          test -n "$SEED_TOKEN"
+          test -n "$R2_ACCESS_KEY_ID"
+          test -n "$R2_SECRET_ACCESS_KEY"
+          bun -e 'console.log(JSON.stringify({
+            BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+            SEED_TOKEN: process.env.SEED_TOKEN,
+            R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+            R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+          }))' | bunx wrangler secret bulk --env production
+        env:
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+
+      - name: Prebuild API client
+        run: bun run --filter @workspace/api-client build
+
+      - name: Build Admin
+        working-directory: apps/admin
+        run: bun run build:production
+
+      - name: Deploy Admin (production)
+        working-directory: apps/admin
+        run: bun run deploy -- --env production

@@ -1,0 +1,27 @@
+{
+    "name": "@workspace/api-client",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "dev:types": "rm -rf dist; rm -f worker-configuration.d.ts; cp ../../apps/api/worker-configuration.d.ts . && tsc --watch",
+        "build": "rm -rf dist; rm -f worker-configuration.d.ts; cp ../../apps/api/worker-configuration.d.ts . && tsc",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@types/node": "^25.3.5",
+        "@workspace/api": "workspace:*",
+        "hono": "^4.12.5"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20260307.1",
+        "@workspace/eslint-config": "workspace:*",
+        "@workspace/typescript-config": "workspace:*",
+        "eslint": "^10.0.3",
+        "typescript": "^5.9.3"
+    }
+}
