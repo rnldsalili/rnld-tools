@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "cf-hr-template-api",
+	"name": "rnld-tools-api",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-01-26",
 	"compatibility_flags": [
@@ -17,20 +17,20 @@
 		"BETTER_AUTH_URL": "http://localhost:3000",
 		"CORS_ORIGINS": "http://localhost:3010",
 		// "R2_ACCOUNT_ID": "YOUR_R2_ACCOUNT_ID",
-		// "R2_BUCKET_NAME": "cf-hr-template-dev",
+		// "R2_BUCKET_NAME": "rnld-tools-dev",
 		// "R2_PRESIGNED_URL_TTL_SECONDS": "900"
 	},
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "cf-hr-template-dev",
+			"database_name": "rnld-tools-dev",
 			"database_id": "YOUR_D1_DATABASE_ID_DEV"
 		}
 	],
 	// "r2_buckets": [
 	// 	{
 	// 		"binding": "STORAGE",
-	// 		"bucket_name": "cf-hr-template-dev",
+	// 		"bucket_name": "rnld-tools-dev",
 	// 	}
 	// ],
 	"ratelimits": [
@@ -45,12 +45,12 @@
 	],
 	"env": {
 		"production": {
-			"name": "cf-hr-template-api",
+			"name": "rnld-tools-api",
 			"vars": {
 				"BETTER_AUTH_URL": "YOUR_API_URL",
 				"CORS_ORIGINS": "YOUR_ADMIN_URL",
 				// "R2_ACCOUNT_ID": "YOUR_R2_ACCOUNT_ID",
-				// "R2_BUCKET_NAME": "cf-hr-template-prod",
+				// "R2_BUCKET_NAME": "rnld-tools-prod",
 				// "R2_PRESIGNED_URL_TTL_SECONDS": "900"
 			},
 			"ratelimits": [
@@ -66,14 +66,14 @@
 			"d1_databases": [
 				{
 					"binding": "DB",
-					"database_name": "cf-hr-template-prod",
+					"database_name": "rnld-tools-prod",
 					"database_id": "YOUR_D1_DATABASE_ID_PROD"
 				}
 			],
 			// "r2_buckets": [
 			// 	{
 			// 		"binding": "STORAGE",
-			// 		"bucket_name": "cf-hr-template-prod"
+			// 		"bucket_name": "rnld-tools-prod"
 			// 	}
 			// ],
 			"routes": [

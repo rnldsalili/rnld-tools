@@ -36,7 +36,7 @@ jobs:
 
       - name: Apply DB Migrations (Production)
         working-directory: apps/api
-        run: bunx wrangler d1 migrations apply cf-hr-template-prod --remote --env production
+        run: bunx wrangler d1 migrations apply rnld-tools-prod --remote --env production
 
       - name: Deploy API (production)
         working-directory: apps/api
