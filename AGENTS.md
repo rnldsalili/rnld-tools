@@ -81,6 +81,16 @@ Source: `src/middlewares/`
 - `routeTree.gen.ts` is auto-generated — do not edit manually
 - Use `packages/api-client` for type-safe API calls via Hono RPC
 
+### UI Components (`packages/ui`)
+
+The shared UI library is built on **shadcn/ui**. When working on any UI-related task:
+
+- **Always load the `shadcn` skill** before implementing or modifying UI components — it provides component docs, usage examples, and install commands tailored to this project.
+- **Use the shadcn MCP tools** (`shadcn_search_items_in_registries`, `shadcn_view_items_in_registries`, `shadcn_get_item_examples_from_registries`, `shadcn_get_add_command_for_items`) to discover, inspect, and add components rather than writing them from scratch.
+- **Run `shadcn_get_audit_checklist`** after generating or modifying UI components to verify correctness.
+- New components must be added to `packages/ui` and exported from its index — do not co-locate shadcn components inside `apps/app`.
+- Prefer composition of existing shadcn primitives over custom implementations.
+
 ## Integration Points
 
 | Service | Binding | Purpose |

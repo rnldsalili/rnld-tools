@@ -15,5 +15,8 @@
     "lint": "bun run --filter '!@workspace/eslint-config' --filter '!@workspace/typescript-config' lint",
     "lint:fix": "bun run --filter '!@workspace/eslint-config' --filter '!@workspace/typescript-config' lint:fix",
     "typecheck": "bun run --filter '!@workspace/eslint-config' --filter '!@workspace/typescript-config' typecheck"
+  },
+  "devDependencies": {
+    "shadcn": "^4.0.2"
   }
 }

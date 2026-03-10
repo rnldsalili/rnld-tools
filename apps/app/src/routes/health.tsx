@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-import { healthQueryOptions, useHealth } from '../hooks/use-health';
+import { healthQueryOptions, useHealth } from '@/app/hooks/use-health';
 
 export const Route = createFileRoute('/health')({
   loader: ({ context: { queryClient } }) =>

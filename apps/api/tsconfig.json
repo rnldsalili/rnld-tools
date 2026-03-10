@@ -4,7 +4,6 @@
     "lib": ["ESNext"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "baseUrl": ".",
     "paths": {
       "@/api/*": ["./src/*"],
       "@/prisma/*": ["./generated/prisma/*"]

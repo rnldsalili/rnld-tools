@@ -1,5 +1,5 @@
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
-import apiClient from '../lib/api';
+import apiClient from '@/app/lib/api';
 
 export const healthQueryOptions = queryOptions({
   queryKey: ['health'],
