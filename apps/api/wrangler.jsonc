@@ -47,8 +47,8 @@
 		"production": {
 			"name": "rnld-tools-api",
 			"vars": {
-				"BETTER_AUTH_URL": "YOUR_API_URL",
-				"CORS_ORIGINS": "YOUR_ADMIN_URL",
+				"BETTER_AUTH_URL": "https://tools-api.ronald.it.com",
+				"CORS_ORIGINS": "https://tools.ronald.it.com",
 				// "R2_ACCOUNT_ID": "YOUR_R2_ACCOUNT_ID",
 				// "R2_BUCKET_NAME": "rnld-tools-prod",
 				// "R2_PRESIGNED_URL_TTL_SECONDS": "900"
@@ -78,7 +78,7 @@
 			// ],
 			"routes": [
 				{
-					"pattern": "YOUR_API_DOMAIN",
+					"pattern": "tools-api.ronald.it.com",
 					"custom_domain": true
 				}
 			]

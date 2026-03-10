@@ -3,5 +3,16 @@
   "name": "rnld-tools-app",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
+  "env": {
+    "production": {
+      "name": "rnld-tools-app",
+      "routes": [
+        {
+          "pattern": "tools.ronald.it.com",
+          "custom_domain": true
+        }
+      ]
+    }
+  }
 }

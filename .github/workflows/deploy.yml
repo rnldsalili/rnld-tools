@@ -5,7 +5,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Admin + API (Production)
+    name: Deploy App + API (Production)
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -47,27 +47,27 @@ jobs:
         run: |
           test -n "$BETTER_AUTH_SECRET"
           test -n "$SEED_TOKEN"
-          test -n "$R2_ACCESS_KEY_ID"
-          test -n "$R2_SECRET_ACCESS_KEY"
+          # test -n "$R2_ACCESS_KEY_ID"
+          # test -n "$R2_SECRET_ACCESS_KEY"
           bun -e 'console.log(JSON.stringify({
             BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
             SEED_TOKEN: process.env.SEED_TOKEN,
-            R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
-            R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+            // R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+            // R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
           }))' | bunx wrangler secret bulk --env production
         env:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          # R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          # R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 
       - name: Prebuild API client
         run: bun run --filter @workspace/api-client build
 
-      - name: Build Admin
-        working-directory: apps/admin
-        run: bun run build:production
+      - name: Build App
+        working-directory: apps/app
+        run: bun run build
 
-      - name: Deploy Admin (production)
-        working-directory: apps/admin
-        run: bun run deploy -- --env production
+      - name: Deploy App (production)
+        working-directory: apps/app
+        run: bunx wrangler deploy --env production
