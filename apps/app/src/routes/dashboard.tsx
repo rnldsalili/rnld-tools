@@ -1,19 +1,70 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { ShieldCheckIcon, HashIcon, LayoutDashboardIcon } from 'lucide-react';
+import { useSession } from '@workspace/auth-client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@workspace/ui';
 
 export const Route = createFileRoute('/dashboard')({ component: DashboardPage });
 
+const TOOLS = [
+  {
+    href: '/tools/password-generator',
+    icon: ShieldCheckIcon,
+    title: 'Password Generator',
+    description: 'Generate strong, secure passwords with customizable options.',
+  },
+  {
+    href: '/tools/uuid-generator',
+    icon: HashIcon,
+    title: 'UUID Generator',
+    description: 'Generate cryptographically random UUID v4 identifiers.',
+  },
+] as const;
+
 function DashboardPage() {
+  const { data: session } = useSession();
+  const name = session?.user?.name ?? session?.user?.email ?? 'there';
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">
-        Dashboard
-      </p>
-      <h1 className="text-4xl font-bold text-foreground tracking-tight">
-        Welcome back
-      </h1>
-      <p className="text-muted-foreground mt-3 max-w-xs leading-relaxed text-sm">
-        You are signed in. Build your dashboard here.
-      </p>
+    <div className="min-h-screen bg-background px-6 py-16">
+      <div className="max-w-2xl mx-auto flex flex-col gap-10">
+        {/* Heading */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-center size-12 rounded-full bg-accent mb-2">
+            <LayoutDashboardIcon className="size-5 text-accent-foreground" />
+          </div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">Dashboard</p>
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">
+            Welcome back{name ? `, ${name}` : ''}.
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
+            Pick a tool below to get started.
+          </p>
+        </div>
+
+        {/* Tools grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {TOOLS.map(({ href, icon: Icon, title, description }) => (
+            <Link key={href} to={href}>
+              <Card
+                className={cn(
+                  'h-full transition-colors duration-150',
+                  'hover:border-foreground/20 hover:bg-accent/40 cursor-pointer',
+                )}
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-center size-9 rounded-md bg-accent mb-3">
+                    <Icon className="size-4 text-accent-foreground" />
+                  </div>
+                  <CardTitle className="text-sm">{title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-xs leading-relaxed">{description}</CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
