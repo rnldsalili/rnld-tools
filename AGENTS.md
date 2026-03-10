@@ -8,7 +8,6 @@ Monorepo template: Cloudflare Workers API (Hono) + React frontend (TanStack Star
 
 ```
 apps/api/      # Hono v4 + Cloudflare Workers backend (port 3000)
-apps/admin/    # TanStack Start + React 19 frontend (port 3010)
 apps/app/      # TanStack Start + React 19 frontend
 packages/
   api-client/        # Hono RPC client (inferred from AppType)
@@ -76,7 +75,7 @@ Migrations live in `apps/api/migrations/`. Apply locally with `wrangler d1 migra
 
 Source: `src/middlewares/`
 
-### Frontend (`apps/admin`, `apps/app`)
+### Frontend (`apps/app`)
 
 - File-based routing via TanStack Router (`src/routes/`)
 - `routeTree.gen.ts` is auto-generated — do not edit manually

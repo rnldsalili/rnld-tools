@@ -20,8 +20,8 @@ A monorepo template for building full-stack applications with Cloudflare Workers
 
 ```
 apps/
-  admin/   # TanStack Start frontend (port 3010)
   api/     # Hono + Cloudflare Workers backend (port 3000)
+  app/     # TanStack Start frontend
 packages/
   api-client/        # Hono RPC client
   auth-client/       # Better Auth client
@@ -49,7 +49,6 @@ bash bun-create.sh
 
 ```bash
 cp apps/api/.dev.vars.example apps/api/.dev.vars
-cp apps/admin/.env.example apps/admin/.env
 ```
 
 **2. Create Cloudflare D1 databases**

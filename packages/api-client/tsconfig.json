@@ -22,7 +22,7 @@
         "outDir": "dist"
     },
     "watchOptions": {
-      "excludeDirectories": ["**/node_modules", "**/apps/admin"]
+      "excludeDirectories": ["**/node_modules"]
     },
     "include": ["src/**/*", "worker-configuration.d.ts"]
 }
