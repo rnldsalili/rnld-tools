@@ -13,53 +13,33 @@ import {
   cn,
 } from '@workspace/ui';
 
+import {
+  DEFAULT_UUID_OPTIONS,
+  UUID_COUNT_MAX,
+  UUID_COUNT_MIN,
+} from '@/app/constants/uuid-generator';
+import { generateBatch } from '@/app/lib/uuid-generator';
+import type { UuidOptions } from '@/app/types/uuid-generator';
+
 export const Route = createFileRoute('/tools/uuid-generator')({
   component: UuidGeneratorPage,
 });
 
-const UUID_COUNT_MIN = 1;
-const UUID_COUNT_MAX = 20;
-const UUID_COUNT_DEFAULT = 5;
-
-function generateUuidV4(): string {
-  // Use crypto.randomUUID if available (modern browsers + Workers)
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  // Fallback using getRandomValues
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
-  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant 10xx
-  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0'));
-  return [
-    hex.slice(0, 4).join(''),
-    hex.slice(4, 6).join(''),
-    hex.slice(6, 8).join(''),
-    hex.slice(8, 10).join(''),
-    hex.slice(10, 16).join(''),
-  ].join('-');
-}
-
-function generateBatch(count: number): string[] {
-  return Array.from({ length: count }, generateUuidV4);
-}
-
 function UuidGeneratorPage() {
-  const [count, setCount] = useState(UUID_COUNT_DEFAULT);
-  const [uuids, setUuids] = useState<string[]>(() => generateBatch(UUID_COUNT_DEFAULT));
+  const [opts, setOpts] = useState<UuidOptions>(DEFAULT_UUID_OPTIONS);
+  const [uuids, setUuids] = useState<string[]>(() => generateBatch(DEFAULT_UUID_OPTIONS.count));
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
   const regenerate = useCallback(() => {
-    setUuids(generateBatch(count));
+    setUuids(generateBatch(opts.count));
     setCopiedIndex(null);
     setCopiedAll(false);
-  }, [count]);
+  }, [opts.count]);
 
   function handleCountChange(raw: string) {
     const v = Math.min(UUID_COUNT_MAX, Math.max(UUID_COUNT_MIN, Number(raw)));
-    if (!isNaN(v)) setCount(v);
+    if (!isNaN(v)) setOpts((prev) => ({ ...prev, count: v }));
   }
 
   async function copyOne(index: number) {
@@ -108,7 +88,7 @@ function UuidGeneratorPage() {
                 type="number"
                 min={UUID_COUNT_MIN}
                 max={UUID_COUNT_MAX}
-                value={count}
+                value={opts.count}
                 onChange={(e) => handleCountChange(e.target.value)}
                 className={cn(
                   'w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
@@ -128,7 +108,7 @@ function UuidGeneratorPage() {
           {uuids.length > 0 ? (
             <div className="flex flex-col gap-2">
               {uuids.map((uuid, i) => (
-                <div key={uuid + i} className="flex items-center gap-2 group">
+                <div key={uuid + i} className="flex items-center gap-2">
                   <code className="flex-1 rounded-md border border-input bg-muted px-3 py-2 text-xs font-mono text-foreground truncate">
                     {uuid}
                   </code>
