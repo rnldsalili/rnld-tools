@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ShieldCheckIcon, HashIcon, LayoutDashboardIcon } from 'lucide-react';
+import { ShieldCheckIcon, HashIcon, ShuffleIcon, LayoutDashboardIcon } from 'lucide-react';
 import { useSession } from '@workspace/auth-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@workspace/ui';
 
@@ -17,6 +17,12 @@ const TOOLS = [
     icon: HashIcon,
     title: 'UUID Generator',
     description: 'Generate cryptographically random UUID v4 identifiers.',
+  },
+  {
+    href: '/tools/secret-generator',
+    icon: ShuffleIcon,
+    title: 'Secret Generator',
+    description: 'Generate cryptographically secure random secrets, like openssl rand -base64 32.',
   },
 ] as const;
 

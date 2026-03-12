@@ -14,6 +14,7 @@ import { Route as HealthRouteImport } from './routes/health'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ToolsUuidGeneratorRouteImport } from './routes/tools/uuid-generator'
+import { Route as ToolsSecretGeneratorRouteImport } from './routes/tools/secret-generator'
 import { Route as ToolsPasswordGeneratorRouteImport } from './routes/tools/password-generator'
 
 const LoginRoute = LoginRouteImport.update({
@@ -41,6 +42,11 @@ const ToolsUuidGeneratorRoute = ToolsUuidGeneratorRouteImport.update({
   path: '/tools/uuid-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsSecretGeneratorRoute = ToolsSecretGeneratorRouteImport.update({
+  id: '/tools/secret-generator',
+  path: '/tools/secret-generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsPasswordGeneratorRoute = ToolsPasswordGeneratorRouteImport.update({
   id: '/tools/password-generator',
   path: '/tools/password-generator',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/tools/password-generator': typeof ToolsPasswordGeneratorRoute
+  '/tools/secret-generator': typeof ToolsSecretGeneratorRoute
   '/tools/uuid-generator': typeof ToolsUuidGeneratorRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/tools/password-generator': typeof ToolsPasswordGeneratorRoute
+  '/tools/secret-generator': typeof ToolsSecretGeneratorRoute
   '/tools/uuid-generator': typeof ToolsUuidGeneratorRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/tools/password-generator': typeof ToolsPasswordGeneratorRoute
+  '/tools/secret-generator': typeof ToolsSecretGeneratorRoute
   '/tools/uuid-generator': typeof ToolsUuidGeneratorRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/login'
     | '/tools/password-generator'
+    | '/tools/secret-generator'
     | '/tools/uuid-generator'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/login'
     | '/tools/password-generator'
+    | '/tools/secret-generator'
     | '/tools/uuid-generator'
   id:
     | '__root__'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/login'
     | '/tools/password-generator'
+    | '/tools/secret-generator'
     | '/tools/uuid-generator'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +117,7 @@ export interface RootRouteChildren {
   HealthRoute: typeof HealthRoute
   LoginRoute: typeof LoginRoute
   ToolsPasswordGeneratorRoute: typeof ToolsPasswordGeneratorRoute
+  ToolsSecretGeneratorRoute: typeof ToolsSecretGeneratorRoute
   ToolsUuidGeneratorRoute: typeof ToolsUuidGeneratorRoute
 }
 
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsUuidGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/secret-generator': {
+      id: '/tools/secret-generator'
+      path: '/tools/secret-generator'
+      fullPath: '/tools/secret-generator'
+      preLoaderRoute: typeof ToolsSecretGeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/password-generator': {
       id: '/tools/password-generator'
       path: '/tools/password-generator'
@@ -161,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   HealthRoute: HealthRoute,
   LoginRoute: LoginRoute,
   ToolsPasswordGeneratorRoute: ToolsPasswordGeneratorRoute,
+  ToolsSecretGeneratorRoute: ToolsSecretGeneratorRoute,
   ToolsUuidGeneratorRoute: ToolsUuidGeneratorRoute,
 }
 export const routeTree = rootRouteImport
