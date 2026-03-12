@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   cn,
 } from '@workspace/ui';
-import { ChevronDownIcon, KeyRoundIcon, HashIcon, LogOutIcon, SunIcon, MoonIcon } from 'lucide-react';
+import { ChevronDownIcon, KeyRoundIcon, HashIcon, ShuffleIcon, LogOutIcon, SunIcon, MoonIcon } from 'lucide-react';
 import { useTheme } from '@/app/hooks/use-theme';
 
 export default function header() {
@@ -68,6 +68,12 @@ export default function header() {
                 <Link to="/tools/uuid-generator" className="cursor-pointer">
                   <HashIcon />
                   UUID Generator
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/tools/secret-generator" className="cursor-pointer">
+                  <ShuffleIcon />
+                  Secret Generator
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
