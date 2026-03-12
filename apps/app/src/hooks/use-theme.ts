@@ -3,13 +3,17 @@ import { useState, useEffect } from 'react';
 type Theme = 'light' | 'dark';
 
 export function useTheme() {
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    const saved = localStorage.getItem('theme') as Theme | null;
-    return saved === 'dark';
-  });
+  const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const saved = localStorage.getItem('theme') as Theme | null;
+    setIsDark(saved === 'dark');
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const root = document.documentElement;
     if (isDark) {
       root.classList.add('dark');
@@ -17,11 +21,11 @@ export function useTheme() {
       root.classList.remove('dark');
     }
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
+  }, [isDark, mounted]);
 
   function toggle() {
     setIsDark((prev) => !prev);
   }
 
-  return { isDark, toggle };
+  return { isDark, mounted, toggle };
 }

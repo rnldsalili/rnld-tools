@@ -50,21 +50,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <Header />
           {children}
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'TanStack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              {
-                name: 'TanStack Query',
-                render: <ReactQueryDevtoolsPanel />,
-              },
-            ]}
-          />
+          {import.meta.env.DEV && (
+            <TanStackDevtools
+              config={{
+                position: 'bottom-right',
+              }}
+              plugins={[
+                {
+                  name: 'TanStack Router',
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                {
+                  name: 'TanStack Query',
+                  render: <ReactQueryDevtoolsPanel />,
+                },
+              ]}
+            />
+          )}
         </QueryClientProvider>
         <Scripts />
       </body>

@@ -15,9 +15,9 @@ import { ChevronDownIcon, KeyRoundIcon, HashIcon, ShuffleIcon, LogOutIcon, SunIc
 import { useTheme } from '@/app/hooks/use-theme';
 
 export default function header() {
-  const { data: session, isPending } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
-  const { isDark, toggle } = useTheme();
+  const { isDark, mounted, toggle } = useTheme();
 
   async function handleSignOut() {
     await signOut();
@@ -81,29 +81,27 @@ export default function header() {
         </DropdownMenu>
 
         {/* Auth */}
-        {!isPending && (
-          session ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-foreground truncate max-w-40 px-2">
-                {session.user.email}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <LogOutIcon data-icon="inline-start" />
-                Sign out
-              </Button>
-            </div>
-          ) : (
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/login" className="text-muted-foreground">
-                Sign in
-              </Link>
+        {session ? (
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground truncate max-w-40 px-2">
+              {session.user.email}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSignOut}
+              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <LogOutIcon data-icon="inline-start" />
+              Sign out
             </Button>
-          )
+          </div>
+        ) : (
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/login" className="text-muted-foreground">
+              Sign in
+            </Link>
+          </Button>
         )}
 
         {/* Separator */}
@@ -116,7 +114,7 @@ export default function header() {
           onClick={toggle}
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {isDark ? <SunIcon /> : <MoonIcon />}
+          {mounted ? (isDark ? <SunIcon /> : <MoonIcon />) : <MoonIcon />}
         </Button>
       </div>
     </header>
