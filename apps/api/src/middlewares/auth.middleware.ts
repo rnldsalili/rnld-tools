@@ -12,7 +12,6 @@ export const requireAuth = createMiddleware(async (c, next) => {
         code: 401,
         message: 'Unauthorized',
       },
-      data: {},
     }, 401);
   }
 

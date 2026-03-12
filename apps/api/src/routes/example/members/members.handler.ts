@@ -105,7 +105,6 @@ export const getMember = createHandlers(
           code: 404,
           message: 'Member not found',
         },
-        data: {},
       }, 404);
     }
     const memberWithPresignedImages = await replaceImageKeysWithPresignedUrls(
@@ -147,7 +146,6 @@ export const createMember = createHandlers(
           code: imageResult.error.code,
           message: imageResult.error.message,
         },
-        data: {},
       }, imageResult.error.code as 404 | 500);
     }
 
@@ -191,7 +189,6 @@ export const createMember = createHandlers(
               code: 409,
               message: 'A member with this name already exists',
             },
-            data: {},
           }, 409);
         }
         if (error.code === 'P2003') {
@@ -200,7 +197,6 @@ export const createMember = createHandlers(
               code: 400,
               message: 'Family not found',
             },
-            data: {},
           }, 400);
         }
       }
@@ -231,7 +227,6 @@ export const updateMember = createHandlers(
           code: 404,
           message: 'Member not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -250,7 +245,6 @@ export const updateMember = createHandlers(
           code: imageResult.error.code,
           message: imageResult.error.message,
         },
-        data: {},
       }, imageResult.error.code as 404 | 500);
     }
 
@@ -294,7 +288,6 @@ export const updateMember = createHandlers(
               code: 409,
               message: 'A member with this name already exists',
             },
-            data: {},
           }, 409);
         }
         if (error.code === 'P2025') {
@@ -303,7 +296,6 @@ export const updateMember = createHandlers(
               code: 404,
               message: 'Member not found',
             },
-            data: {},
           }, 404);
         }
         if (error.code === 'P2003') {
@@ -312,7 +304,6 @@ export const updateMember = createHandlers(
               code: 400,
               message: 'Family not found',
             },
-            data: {},
           }, 400);
         }
       }

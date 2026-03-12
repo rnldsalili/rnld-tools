@@ -130,7 +130,6 @@ export const getFamily = createHandlers(
           code: 404,
           message: 'Family not found',
         },
-        data: {},
       }, 404);
     }
     const familyWithPresignedImages = await replaceImageKeysWithPresignedUrls(
@@ -174,7 +173,6 @@ export const createFamily = createHandlers(
           code: imageResult.error.code,
           message: imageResult.error.message,
         },
-        data: {},
       }, imageResult.error.code as 404 | 500);
     }
 
@@ -214,7 +212,6 @@ export const createFamily = createHandlers(
                 code: 409,
                 message: 'The selected member is already assigned as a primary contact',
               },
-              data: {},
             }, 409);
           }
 
@@ -223,7 +220,6 @@ export const createFamily = createHandlers(
               code: 409,
               message: 'A family with this name already exists',
             },
-            data: {},
           }, 409);
         }
         if (
@@ -235,7 +231,6 @@ export const createFamily = createHandlers(
               code: 400,
               message: 'Primary contact not found',
             },
-            data: {},
           }, 400);
         }
       }
@@ -268,7 +263,6 @@ export const updateFamily = createHandlers(
           code: 404,
           message: 'Family not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -287,7 +281,6 @@ export const updateFamily = createHandlers(
           code: imageResult.error.code,
           message: imageResult.error.message,
         },
-        data: {},
       }, imageResult.error.code as 404 | 500);
     }
 
@@ -328,7 +321,6 @@ export const updateFamily = createHandlers(
                 code: 409,
                 message: 'The selected member is already assigned as a primary contact',
               },
-              data: {},
             }, 409);
           }
 
@@ -337,7 +329,6 @@ export const updateFamily = createHandlers(
               code: 409,
               message: 'A family with this name already exists',
             },
-            data: {},
           }, 409);
         }
         if (
@@ -350,7 +341,6 @@ export const updateFamily = createHandlers(
               code: 400,
               message: 'Primary contact not found',
             },
-            data: {},
           }, 400);
         }
         if (error.code === 'P2025') {
@@ -359,7 +349,6 @@ export const updateFamily = createHandlers(
               code: 404,
               message: 'Family not found',
             },
-            data: {},
           }, 404);
         }
       }

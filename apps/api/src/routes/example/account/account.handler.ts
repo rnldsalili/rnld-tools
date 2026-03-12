@@ -36,7 +36,6 @@ export const getAccount = createHandlers(async (c) => {
         code: 404,
         message: 'Account not found',
       },
-      data: {},
     }, 404);
   }
   const accountWithPresignedImages = await replaceImageKeysWithPresignedUrls(
@@ -74,7 +73,6 @@ export const updateAccount = createHandlers(
           code: 404,
           message: 'Account not found',
         },
-        data: {},
       }, 404);
     }
     const imageResult = await processImageUpload({
@@ -91,7 +89,6 @@ export const updateAccount = createHandlers(
           code: imageResult.error.code,
           message: imageResult.error.message,
         },
-        data: {},
       }, imageResult.error.code as 404 | 500);
     }
 
@@ -135,7 +132,6 @@ export const updateAccount = createHandlers(
               code: 404,
               message: 'Account not found',
             },
-            data: {},
           }, 404);
         }
       }
@@ -163,7 +159,6 @@ export const updateAccountPassword = createHandlers(
           code: 404,
           message: 'Account not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -181,7 +176,6 @@ export const updateAccountPassword = createHandlers(
           code: 404,
           message: 'Account credentials not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -196,7 +190,6 @@ export const updateAccountPassword = createHandlers(
           code: 400,
           message: 'Current password is incorrect',
         },
-        data: {},
       }, 400);
     }
 
@@ -213,7 +206,6 @@ export const updateAccountPassword = createHandlers(
           code: 200,
           message: 'Password updated successfully',
         },
-        data: {},
       }, 200);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -223,7 +215,6 @@ export const updateAccountPassword = createHandlers(
               code: 404,
               message: 'Account credentials not found',
             },
-            data: {},
           }, 404);
         }
       }

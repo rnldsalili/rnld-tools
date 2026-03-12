@@ -102,7 +102,6 @@ export const getAdmin = createHandlers(
           code: 404,
           message: 'Admin not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -112,7 +111,6 @@ export const getAdmin = createHandlers(
           code: 404,
           message: 'Admin not found',
         },
-        data: {},
       }, 404);
     }
     const adminWithPresignedImages = await replaceImageKeysWithPresignedUrls(
@@ -154,7 +152,6 @@ export const createAdmin = createHandlers(
           code: imageResult.error.code,
           message: imageResult.error.message,
         },
-        data: {},
       }, imageResult.error.code as 404 | 500);
     }
 
@@ -168,7 +165,6 @@ export const createAdmin = createHandlers(
           code: 409,
           message: 'User with this email already exists',
         },
-        data: {},
       }, 409);
     }
 
@@ -232,7 +228,6 @@ export const updateAdmin = createHandlers(
           code: 404,
           message: 'Admin not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -251,7 +246,6 @@ export const updateAdmin = createHandlers(
           code: imageResult.error.code,
           message: imageResult.error.message,
         },
-        data: {},
       }, imageResult.error.code as 404 | 500);
     }
 
@@ -286,7 +280,6 @@ export const updateAdmin = createHandlers(
               code: 404,
               message: 'Admin not found',
             },
-            data: {},
           }, 404);
         }
         if (error.code === 'P2002') {
@@ -295,7 +288,6 @@ export const updateAdmin = createHandlers(
               code: 409,
               message: 'User with this email already exists',
             },
-            data: {},
           }, 409);
         }
       }
@@ -324,7 +316,6 @@ export const updateAdminPassword = createHandlers(
           code: 404,
           message: 'Admin not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -342,7 +333,6 @@ export const updateAdminPassword = createHandlers(
           code: 404,
           message: 'Admin credentials not found',
         },
-        data: {},
       }, 404);
     }
 
@@ -359,7 +349,6 @@ export const updateAdminPassword = createHandlers(
           code: 200,
           message: 'Admin password updated successfully',
         },
-        data: {},
       }, 200);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -369,7 +358,6 @@ export const updateAdminPassword = createHandlers(
               code: 404,
               message: 'Admin credentials not found',
             },
-            data: {},
           }, 404);
         }
       }

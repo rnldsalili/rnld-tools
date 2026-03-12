@@ -31,7 +31,6 @@ export const uploadAsset = createHandlers(
                         code: 500,
                         message: 'Failed to upload file',
                     },
-                    data: {},
                 },
                 500,
             );

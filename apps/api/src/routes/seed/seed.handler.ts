@@ -17,7 +17,6 @@ export const seedDatabase = createHandlers(
           code: 403,
           message: 'Invalid seed token',
         },
-        data: {},
       }, 403);
     }
 

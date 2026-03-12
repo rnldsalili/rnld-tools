@@ -40,7 +40,6 @@ export const createApp = () => {
             code: 429,
             message: 'Internal Server Error',
           },
-          data: {},
         }, 429);
       },
     }),
@@ -54,7 +53,6 @@ export const createApp = () => {
         code: 404,
         message: 'Not Found',
       },
-      data: {},
     }, 404);
   });
 
@@ -64,7 +62,6 @@ export const createApp = () => {
         code: 500,
         message: 'Internal Server Error',
       },
-      data: {},
     }, 500);
   });
 

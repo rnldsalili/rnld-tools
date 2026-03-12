@@ -12,7 +12,6 @@ export const requireSuperAdmin = createMiddleware<AppBindings>(async (c, next) =
         code: 403,
         message: 'Forbidden',
       },
-      data: {},
     }, 403);
   }
 

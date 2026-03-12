@@ -12,7 +12,6 @@ export const requireAdminRole = createMiddleware<AppBindings>(async (c, next) =>
         code: 403,
         message: 'Forbidden',
       },
-      data: {},
     }, 403);
   }
 
