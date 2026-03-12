@@ -66,7 +66,7 @@ jobs:
 
       - name: Build App
         working-directory: apps/app
-        run: bun run build
+        run: bun run build:production
 
       - name: Deploy App (production)
         working-directory: apps/app
