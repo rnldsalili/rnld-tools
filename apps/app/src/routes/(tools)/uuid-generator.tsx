@@ -21,7 +21,7 @@ import {
 import { generateBatch } from '@/app/lib/uuid-generator';
 import type { UuidOptions } from '@/app/types/uuid-generator';
 
-export const Route = createFileRoute('/tools/uuid-generator')({
+export const Route = createFileRoute('/(tools)/uuid-generator')({
   head: () => ({ meta: [{ title: 'RTools - UUID Generator' }] }),
   component: UuidGeneratorPage,
 });

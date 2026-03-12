@@ -11,11 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HealthRouteImport } from './routes/health'
-import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ToolsUuidGeneratorRouteImport } from './routes/tools/uuid-generator'
-import { Route as ToolsSecretGeneratorRouteImport } from './routes/tools/secret-generator'
-import { Route as ToolsPasswordGeneratorRouteImport } from './routes/tools/password-generator'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as toolsUuidGeneratorRouteImport } from './routes/(tools)/uuid-generator'
+import { Route as toolsSecretGeneratorRouteImport } from './routes/(tools)/secret-generator'
+import { Route as toolsPasswordGeneratorRouteImport } from './routes/(tools)/password-generator'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -27,9 +28,8 @@ const HealthRoute = HealthRouteImport.update({
   path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,88 +37,95 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ToolsUuidGeneratorRoute = ToolsUuidGeneratorRouteImport.update({
-  id: '/tools/uuid-generator',
-  path: '/tools/uuid-generator',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const toolsUuidGeneratorRoute = toolsUuidGeneratorRouteImport.update({
+  id: '/(tools)/uuid-generator',
+  path: '/uuid-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ToolsSecretGeneratorRoute = ToolsSecretGeneratorRouteImport.update({
-  id: '/tools/secret-generator',
-  path: '/tools/secret-generator',
+const toolsSecretGeneratorRoute = toolsSecretGeneratorRouteImport.update({
+  id: '/(tools)/secret-generator',
+  path: '/secret-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ToolsPasswordGeneratorRoute = ToolsPasswordGeneratorRouteImport.update({
-  id: '/tools/password-generator',
-  path: '/tools/password-generator',
+const toolsPasswordGeneratorRoute = toolsPasswordGeneratorRouteImport.update({
+  id: '/(tools)/password-generator',
+  path: '/password-generator',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
-  '/tools/password-generator': typeof ToolsPasswordGeneratorRoute
-  '/tools/secret-generator': typeof ToolsSecretGeneratorRoute
-  '/tools/uuid-generator': typeof ToolsUuidGeneratorRoute
+  '/password-generator': typeof toolsPasswordGeneratorRoute
+  '/secret-generator': typeof toolsSecretGeneratorRoute
+  '/uuid-generator': typeof toolsUuidGeneratorRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
-  '/tools/password-generator': typeof ToolsPasswordGeneratorRoute
-  '/tools/secret-generator': typeof ToolsSecretGeneratorRoute
-  '/tools/uuid-generator': typeof ToolsUuidGeneratorRoute
+  '/password-generator': typeof toolsPasswordGeneratorRoute
+  '/secret-generator': typeof toolsSecretGeneratorRoute
+  '/uuid-generator': typeof toolsUuidGeneratorRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
-  '/tools/password-generator': typeof ToolsPasswordGeneratorRoute
-  '/tools/secret-generator': typeof ToolsSecretGeneratorRoute
-  '/tools/uuid-generator': typeof ToolsUuidGeneratorRoute
+  '/(tools)/password-generator': typeof toolsPasswordGeneratorRoute
+  '/(tools)/secret-generator': typeof toolsSecretGeneratorRoute
+  '/(tools)/uuid-generator': typeof toolsUuidGeneratorRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/dashboard'
     | '/health'
     | '/login'
-    | '/tools/password-generator'
-    | '/tools/secret-generator'
-    | '/tools/uuid-generator'
+    | '/password-generator'
+    | '/secret-generator'
+    | '/uuid-generator'
+    | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/dashboard'
     | '/health'
     | '/login'
-    | '/tools/password-generator'
-    | '/tools/secret-generator'
-    | '/tools/uuid-generator'
+    | '/password-generator'
+    | '/secret-generator'
+    | '/uuid-generator'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
-    | '/dashboard'
+    | '/_authenticated'
     | '/health'
     | '/login'
-    | '/tools/password-generator'
-    | '/tools/secret-generator'
-    | '/tools/uuid-generator'
+    | '/(tools)/password-generator'
+    | '/(tools)/secret-generator'
+    | '/(tools)/uuid-generator'
+    | '/_authenticated/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   HealthRoute: typeof HealthRoute
   LoginRoute: typeof LoginRoute
-  ToolsPasswordGeneratorRoute: typeof ToolsPasswordGeneratorRoute
-  ToolsSecretGeneratorRoute: typeof ToolsSecretGeneratorRoute
-  ToolsUuidGeneratorRoute: typeof ToolsUuidGeneratorRoute
+  toolsPasswordGeneratorRoute: typeof toolsPasswordGeneratorRoute
+  toolsSecretGeneratorRoute: typeof toolsSecretGeneratorRoute
+  toolsUuidGeneratorRoute: typeof toolsUuidGeneratorRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -137,11 +144,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -151,38 +158,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tools/uuid-generator': {
-      id: '/tools/uuid-generator'
-      path: '/tools/uuid-generator'
-      fullPath: '/tools/uuid-generator'
-      preLoaderRoute: typeof ToolsUuidGeneratorRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/(tools)/uuid-generator': {
+      id: '/(tools)/uuid-generator'
+      path: '/uuid-generator'
+      fullPath: '/uuid-generator'
+      preLoaderRoute: typeof toolsUuidGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tools/secret-generator': {
-      id: '/tools/secret-generator'
-      path: '/tools/secret-generator'
-      fullPath: '/tools/secret-generator'
-      preLoaderRoute: typeof ToolsSecretGeneratorRouteImport
+    '/(tools)/secret-generator': {
+      id: '/(tools)/secret-generator'
+      path: '/secret-generator'
+      fullPath: '/secret-generator'
+      preLoaderRoute: typeof toolsSecretGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tools/password-generator': {
-      id: '/tools/password-generator'
-      path: '/tools/password-generator'
-      fullPath: '/tools/password-generator'
-      preLoaderRoute: typeof ToolsPasswordGeneratorRouteImport
+    '/(tools)/password-generator': {
+      id: '/(tools)/password-generator'
+      path: '/password-generator'
+      fullPath: '/password-generator'
+      preLoaderRoute: typeof toolsPasswordGeneratorRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   HealthRoute: HealthRoute,
   LoginRoute: LoginRoute,
-  ToolsPasswordGeneratorRoute: ToolsPasswordGeneratorRoute,
-  ToolsSecretGeneratorRoute: ToolsSecretGeneratorRoute,
-  ToolsUuidGeneratorRoute: ToolsUuidGeneratorRoute,
+  toolsPasswordGeneratorRoute: toolsPasswordGeneratorRoute,
+  toolsSecretGeneratorRoute: toolsSecretGeneratorRoute,
+  toolsUuidGeneratorRoute: toolsUuidGeneratorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

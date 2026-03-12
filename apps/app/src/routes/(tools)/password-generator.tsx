@@ -25,7 +25,7 @@ import {
 import { calcStrength, generatePassword } from '@/app/lib/password-generator';
 import type { PasswordOptions } from '@/app/types/password-generator';
 
-export const Route = createFileRoute('/tools/password-generator')({
+export const Route = createFileRoute('/(tools)/password-generator')({
   head: () => ({ meta: [{ title: 'RTools - Password Generator' }] }),
   component: PasswordGeneratorPage,
 });

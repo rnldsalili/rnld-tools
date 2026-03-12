@@ -59,19 +59,19 @@ export default function header() {
               <DropdownMenuLabel>Tools</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/tools/password-generator" className="cursor-pointer">
+                <Link to="/password-generator" className="cursor-pointer">
                   <KeyRoundIcon />
                   Password Generator
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/tools/uuid-generator" className="cursor-pointer">
+                <Link to="/uuid-generator" className="cursor-pointer">
                   <HashIcon />
                   UUID Generator
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/tools/secret-generator" className="cursor-pointer">
+                <Link to="/secret-generator" className="cursor-pointer">
                   <ShuffleIcon />
                   Secret Generator
                 </Link>

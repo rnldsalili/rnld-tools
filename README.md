@@ -1,6 +1,16 @@
-# cf-hono-react-template
+# rnld-tools
 
-A monorepo template for building full-stack applications with Cloudflare Workers, Hono, and React.
+RTools is a full-stack Bun monorepo for authenticated utility tools built with Cloudflare Workers, Hono, Better Auth, and React. The current app ships a protected dashboard with password, UUID, and secret generators, plus typed API integration between the frontend and backend.
+
+## Features
+
+- Better Auth email/password sign-in
+- Protected dashboard for authenticated users
+- Password generator with strength meter and option toggles
+- UUID v4 batch generator with copy helpers
+- Secret generator with `base64`, `base64url`, and `hex` output modes
+- Shared UI package with a global light/dark theme
+- Typed Hono RPC client shared across the monorepo
 
 ## Stack
 
@@ -8,82 +18,125 @@ A monorepo template for building full-stack applications with Cloudflare Workers
 | :--- | :--- |
 | API runtime | Cloudflare Workers (Wrangler) |
 | API framework | Hono v4 |
-| Database | Cloudflare D1 (SQLite) via Prisma 7 |
+| Database | Cloudflare D1 via Prisma 7 |
 | Auth | Better Auth |
 | Frontend | React 19 + TanStack Start |
 | Routing | TanStack Router |
+| Data fetching | TanStack Query |
 | Styling | Tailwind CSS v4 |
-| UI components | Base UI + shadcn/ui |
+| UI components | Shared `@workspace/ui` package built around shadcn tooling |
 | Package manager | Bun |
 
-## Structure
+## Monorepo Structure
 
 ```
 apps/
-  api/     # Hono + Cloudflare Workers backend (port 3000)
-  app/     # TanStack Start frontend
+  api/                  # Hono + Cloudflare Workers API (port 3000)
+  app/                  # TanStack Start frontend (port 3010)
 packages/
-  api-client/        # Hono RPC client
-  auth-client/       # Better Auth client
-  ui/                # Shared component library
-  constants/
+  api-client/           # Typed Hono RPC client
+  auth-client/          # Better Auth browser client + hooks
+  ui/                   # Shared UI components and theme styles
+  constants/            # Shared enums and option lists
   eslint-config/
   typescript-config/
 ```
 
-## Getting Started
+## Active Routes
 
-### Scaffold a new project
+### Frontend
+
+- `/` - landing page
+- `/login` - sign-in form
+- `/dashboard` - protected tool launcher
+- `/health` - frontend view backed by the API health endpoint
+- `/tools/password-generator`
+- `/tools/uuid-generator`
+- `/tools/secret-generator`
+
+### API
+
+- `/api/auth/*` - Better Auth handlers
+- `/api/health` - basic health response
+- `/api/seed` - creates missing credential accounts from the seed file
+
+## Local Development
+
+### 1. Install dependencies
 
 ```bash
-bun create rnldsalili/cf-hono-react-template <project-name>
-cd <project-name>
-bash bun-create.sh
+bun install
 ```
 
-`bun create` downloads the template files. `bun-create.sh` then runs the interactive setup — prompts for your project name, replaces config placeholders, installs dependencies, and initialises a fresh git repository.
-
-### After running bun-create.sh
-
-**1. Configure environment variables**
+### 2. Configure API secrets
 
 ```bash
 cp apps/api/.dev.vars.example apps/api/.dev.vars
 ```
 
-**2. Create Cloudflare D1 databases**
+Set the following values in `apps/api/.dev.vars`:
+
+- `BETTER_AUTH_SECRET` - generate one with `bun x @better-auth/cli@latest secret`
+- `SEED_TOKEN` - any strong random value used by `/api/seed`
+- `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` only if you enable R2-backed flows
+
+### 3. Create and configure a D1 database
 
 ```bash
-bunx wrangler d1 create <project-name>-dev
-bunx wrangler d1 create <project-name>-prod
+bunx wrangler d1 create rnld-tools-dev
 ```
 
-Copy the `database_id` values printed by the commands above into `apps/api/wrangler.jsonc`.
+Copy the printed `database_id` into `apps/api/wrangler.jsonc` under the `DB` binding.
 
-**3. Apply DB migrations locally**
+If you maintain local or remote migrations, apply them with Wrangler from `apps/api`.
 
-```bash
-cd apps/api && bunx wrangler d1 migrations apply <project-name>-dev --local && cd ../
-```
-
-**4. Generate the Prisma client**
+### 4. Generate the Prisma client
 
 ```bash
 bun run db:generate
 ```
 
-**5. Start development servers**
+### 5. Start the app and API
 
 ```bash
 bun run dev
+```
+
+This starts:
+
+- the API on `http://localhost:3000`
+- the frontend on `http://localhost:3010`
+- the `@workspace/api-client` type watcher used by the frontend
+
+### 6. Optional: seed an initial account
+
+Sign-up is disabled, so the easiest way to create local users is to seed them.
+
+1. Edit `apps/api/scripts/seed/users.ts` with the users you want.
+2. Call the seed endpoint with the token from `apps/api/.dev.vars`:
+
+```bash
+curl -X POST http://localhost:3000/api/seed \
+  -H "content-type: application/json" \
+  -d '{"seedToken":"<your-seed-token>"}'
 ```
 
 ## Commands
 
 | Command | Description |
 | :--- | :--- |
-| `bun run dev` | Start all services in parallel |
-| `bun run lint` | Lint all workspaces |
-| `bun run lint:fix` | Fix lint errors |
-| `bun run typecheck` | Type-check all workspaces |
-| `bun run db:generate` | Regenerate Prisma client |
+| `bun run dev` | Start the frontend, API, and api-client type watcher |
+| `bun run lint` | Lint all non-config workspaces |
+| `bun run lint:fix` | Auto-fix lint errors |
+| `bun run typecheck` | Type-check all non-config workspaces |
+| `bun run db:generate` | Regenerate the Prisma client for `apps/api` |
+| `bun run --filter @workspace/app test` | Run frontend tests with Vitest |
+| `bun run --filter @workspace/app build` | Build the frontend app |
+| `bun run --filter @workspace/api deploy` | Deploy the API worker |
+| `bun run --filter @workspace/app deploy` | Build and deploy the frontend worker |
+
+## Notes
+
+- Frontend API requests read `VITE_API_URL`, which is configured in `apps/app/wrangler.jsonc`.
+- The typed client in `packages/api-client` is inferred from `apps/api/src/routes/index.ts`.
+- Example API routes still exist under `apps/api/src/routes/example/`, but they are not mounted in the current app.
