@@ -36,7 +36,7 @@
 	"ratelimits": [
 		{
 			"name": "RATE_LIMITER",
-			"namespace_id": "1001",
+			"namespace_id": "3001",
 			"simple": {
 				"limit": 100,
 				"period": 60
@@ -56,7 +56,7 @@
 			"ratelimits": [
 				{
 					"name": "RATE_LIMITER",
-					"namespace_id": "1002",
+					"namespace_id": "3002",
 					"simple": {
 						"limit": 100,
 						"period": 60
@@ -67,7 +67,7 @@
 				{
 					"binding": "DB",
 					"database_name": "rnld-tools-prod",
-					"database_id": "YOUR_D1_DATABASE_ID_PROD"
+					"database_id": "88f61131-bee2-41cc-88d4-2461504045a5"
 				}
 			],
 			// "r2_buckets": [
