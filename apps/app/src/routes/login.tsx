@@ -15,7 +15,10 @@ import {
   Input,
 } from '@workspace/ui';
 
-export const Route = createFileRoute('/login')({ component: LoginPage });
+export const Route = createFileRoute('/login')({
+  head: () => ({ meta: [{ title: 'RTools - Login' }] }),
+  component: LoginPage,
+});
 
 function LoginPage() {
   const router = useRouter();

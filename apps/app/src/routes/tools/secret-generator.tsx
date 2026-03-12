@@ -24,6 +24,7 @@ import { generateSecret, outputLength } from '@/app/lib/secret-generator';
 import type { SecretEncoding, SecretOptions } from '@/app/types/secret-generator';
 
 export const Route = createFileRoute('/tools/secret-generator')({
+  head: () => ({ meta: [{ title: 'RTools - Secret Generator' }] }),
   component: SecretGeneratorPage,
 });
 

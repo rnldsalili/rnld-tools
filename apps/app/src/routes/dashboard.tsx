@@ -3,7 +3,10 @@ import { ShieldCheckIcon, HashIcon, ShuffleIcon, LayoutDashboardIcon } from 'luc
 import { useSession } from '@workspace/auth-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@workspace/ui';
 
-export const Route = createFileRoute('/dashboard')({ component: DashboardPage });
+export const Route = createFileRoute('/dashboard')({
+  head: () => ({ meta: [{ title: 'RTools - Dashboard' }] }),
+  component: DashboardPage,
+});
 
 const TOOLS = [
   {

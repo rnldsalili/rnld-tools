@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { healthQueryOptions, useHealth } from '@/app/hooks/use-health';
 
 export const Route = createFileRoute('/health')({
+  head: () => ({ meta: [{ title: 'RTools - Health' }] }),
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(healthQueryOptions),
   component: HealthPage,
