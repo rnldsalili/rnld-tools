@@ -13,6 +13,7 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  PasswordInput,
 } from '@workspace/ui';
 
 export const Route = createFileRoute('/login')({
@@ -69,9 +70,8 @@ function LoginPage() {
               </Field>
               <Field data-invalid={!!error && !password ? true : undefined}>
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required

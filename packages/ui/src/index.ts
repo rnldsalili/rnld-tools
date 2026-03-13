@@ -1,5 +1,6 @@
 // Components
 export { Button, buttonVariants } from '@workspace/ui/components/button';
+export { PasswordInput } from '@workspace/ui/components/composite/password-input';
 export { Input } from '@workspace/ui/components/input';
 export {
   Card,

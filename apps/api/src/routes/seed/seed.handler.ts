@@ -1,9 +1,19 @@
+import { UserRole } from '@workspace/constants';
 import { users } from '../../../scripts/seed/users';
 import { seedRequestSchema } from './seed.schema';
 import { createHandlers } from '@/api/app';
 import { auth } from '@/api/lib/auth';
 import { initializePrisma } from '@/api/lib/db';
 import { validate } from '@/api/lib/validator';
+
+const resolvePassword = (
+  userData: (typeof users)[number],
+  env: CloudflareBindings,
+): string | null => {
+  if (userData.password) return userData.password;
+  if (userData.role === UserRole.SUPER_ADMIN) return env.SUPERADMIN_PASSWORD || null;
+  return null;
+};
 
 export const seedDatabase = createHandlers(
   validate('json', seedRequestSchema),
@@ -38,7 +48,18 @@ export const seedDatabase = createHandlers(
         continue;
       }
 
-      const hashedPassword = await authContext.password.hash(userData.password);
+      const password = resolvePassword(userData, c.env);
+
+      if (!password) {
+        return c.json({
+          meta: {
+            code: 500,
+            message: `Password not configured for user: ${normalizedEmail}`,
+          },
+        }, 500);
+      }
+
+      const hashedPassword = await authContext.password.hash(password);
 
       const createdUser = await prisma.user.create({
         data: {
