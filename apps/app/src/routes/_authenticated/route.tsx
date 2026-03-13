@@ -3,10 +3,10 @@ import { authClient } from '@workspace/auth-client';
 
 export const Route = createFileRoute('/_authenticated')({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     const { data: session } = await authClient.getSession();
     if (!session?.user) {
-      throw redirect({ to: '/login' });
+      throw redirect({ to: '/login', search: { next: location.href } });
     }
   },
   component: () => <Outlet />,

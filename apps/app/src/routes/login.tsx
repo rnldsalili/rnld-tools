@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { signIn } from '@workspace/auth-client';
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
+import { z } from 'zod';
+import { authClient, signIn } from '@workspace/auth-client';
 import {
   Button,
   Card,
@@ -17,12 +18,23 @@ import {
 } from '@workspace/ui';
 
 export const Route = createFileRoute('/login')({
+  ssr: false,
   head: () => ({ meta: [{ title: 'RTools - Login' }] }),
+  validateSearch: z.object({
+    next: z.string().optional(),
+  }),
+  beforeLoad: async () => {
+    const { data: session } = await authClient.getSession();
+    if (session?.user) {
+      throw redirect({ to: '/dashboard' });
+    }
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
   const router = useRouter();
+  const { next } = Route.useSearch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +54,8 @@ function LoginPage() {
       return;
     }
 
-    await router.navigate({ to: '/dashboard' });
+    const destination = next && next.startsWith('/') ? next : '/dashboard';
+    await router.navigate({ to: destination as any });
   }
 
   return (
