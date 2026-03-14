@@ -1,4 +1,4 @@
-import { InstallmentInterval, InstallmentType } from '@workspace/constants';
+import { InstallmentInterval, InstallmentStatus, InstallmentType } from '@workspace/constants';
 import {
   loanCreateSchema,
   loanGetQuerySchema,
@@ -6,7 +6,7 @@ import {
   loanListQuerySchema,
   loanUpdateSchema,
 } from './loans.schema';
-import { LoanInstallmentStatus, Prisma } from '@/prisma/client';
+import { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { validate } from '@/api/lib/validator';
@@ -28,7 +28,7 @@ const buildInstallmentFilter = (): Prisma.LoanInstallmentWhereInput => {
     NOT: {
       AND: [
         { dueDate: { lt: currentDate } },
-        { status: LoanInstallmentStatus.PAID },
+        { status: InstallmentStatus.PAID },
       ],
     },
   };

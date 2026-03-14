@@ -141,6 +141,12 @@ The shared UI library lives in `packages/ui`. When working on UI tasks:
 - Follow the existing formatting style in the file you touch instead of reformatting unrelated code.
 - ESLint config comes from `packages/eslint-config`; run `bun run lint` before committing.
 
+### Types
+
+- Co-locate feature types with their hook file (e.g., types for `use-loan.ts` live in `use-loan.ts`). Components import them via `import { useHook, type SomeType } from '@/app/hooks/use-feature'`.
+- Types derived from `InferRequestType` / `InferResponseType` belong in the hook file because they reference `apiClient` directly and are tightly coupled to the hook's query/mutation logic.
+- Only move types to a dedicated `types/` folder when they are shared across multiple hook files or the hook file grows unwieldy.
+
 ### Naming Conventions
 
 - **Clear and Descriptive**: Prefer verbose, descriptive names over short, cryptic ones (e.g., `loanPayload` instead of `payload`, `authenticatedUser` instead of `user`).

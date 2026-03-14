@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { type ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { HandCoinsIcon, EyeIcon } from 'lucide-react';
+import { HandCoinsIcon, EyeIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Button, DataTable, Input, Pagination } from '@workspace/ui';
 import { useDebounce } from '@/app/hooks/use-debounce';
-import { useLoans, type LoanListItem } from '@/app/hooks/use-loans';
+import { useLoans, type LoanListItem } from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
-
-const LOANS_LIMIT = 10;
+import { CreateLoanDialog } from '@/app/components/loans/create-loan-dialog';
+import { LOANS_LIMIT } from '@workspace/constants';
 
 const columns: ColumnDef<LoanListItem>[] = [
   {
@@ -67,6 +67,7 @@ export const Route = createFileRoute('/_authenticated/(loans)/loans/')({
 function LoansPage() {
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const debouncedSearch = useDebounce(searchInput);
 
   const { data, isLoading } = useLoans({
@@ -102,12 +103,18 @@ function LoansPage() {
                   <p className="text-xs text-muted-foreground">Manage borrower loans and installments.</p>
                 </div>
               </div>
-              <Input
-                placeholder="Search by borrower..."
-                value={searchInput}
-                onChange={handleSearchChange}
-                className="max-w-xs"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="Search by borrower..."
+                  value={searchInput}
+                  onChange={handleSearchChange}
+                  className="max-w-xs"
+                />
+                <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
+                  <PlusIcon className="size-3.5" />
+                  New Loan
+                </Button>
+              </div>
             </div>
           }
           footer={
@@ -120,6 +127,8 @@ function LoansPage() {
           }
         />
       </div>
+
+      <CreateLoanDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
     </div>
   );
 }

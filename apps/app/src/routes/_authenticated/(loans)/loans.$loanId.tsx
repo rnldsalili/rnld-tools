@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useForm } from '@tanstack/react-form';
 import { type ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { PencilIcon } from 'lucide-react';
@@ -8,45 +7,16 @@ import {
   Badge,
   Button,
   DataTable,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Label,
   Pagination,
   SectionCard,
   SectionCardContent,
   SectionCardHeader,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-  cn,
-  Input,
 } from '@workspace/ui';
-import { InstallmentStatus, INSTALLMENT_STATUSES } from '@workspace/constants';
+import { INSTALLMENTS_LIMIT } from '@workspace/constants';
 import { useLoan, type LoanInstallment } from '@/app/hooks/use-loan';
-import { useUpdateInstallment } from '@/app/hooks/use-update-installment';
 import { formatCurrency } from '@/app/lib/format';
-
-const INSTALLMENTS_LIMIT = 10;
-
-const STATUS_STYLES: Record<string, string> = {
-  [InstallmentStatus.PENDING]: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-  [InstallmentStatus.PAID]: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  [InstallmentStatus.OVERDUE]: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-};
-
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <Badge className={cn('border-0 font-medium', STATUS_STYLES[status])}>
-      {status}
-    </Badge>
-  );
-}
+import { EditInstallmentDialog } from '@/app/components/loans/edit-installment-dialog';
+import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
 
 export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
   head: () => ({ meta: [{ title: 'RTools - Loan Detail' }] }),
@@ -78,7 +48,7 @@ function LoanDetailPage() {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => <InstallmentStatusBadge status={row.original.status} />,
     },
     {
       accessorKey: 'remarks',
@@ -195,114 +165,5 @@ function LoanField({ label, value }: { label: string; value: string }) {
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="text-sm font-medium break-all">{value}</span>
     </div>
-  );
-}
-
-interface EditInstallmentDialogProps {
-  loanId: string;
-  installment: LoanInstallment;
-  onClose: () => void;
-}
-
-function EditInstallmentDialog({ loanId, installment, onClose }: EditInstallmentDialogProps) {
-  const { mutateAsync, isPending } = useUpdateInstallment();
-
-  const form = useForm({
-    defaultValues: {
-      status: installment.status as string,
-      dueDate: installment.dueDate,
-      remarks: installment.remarks ?? '',
-    },
-    onSubmit: async ({ value }) => {
-      await mutateAsync({
-        loanId,
-        installmentId: installment.id,
-        body: {
-          status: value.status as (typeof INSTALLMENT_STATUSES)[number],
-          dueDate: value.dueDate,
-          remarks: value.remarks || null,
-        },
-      });
-      onClose();
-    },
-  });
-
-  return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit Installment</DialogTitle>
-        </DialogHeader>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
-          }}
-          className="flex flex-col gap-4"
-        >
-          {/* Status */}
-          <form.Field name="status">
-            {(field) => (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={field.name}>Status</Label>
-                <Select value={field.state.value} onValueChange={field.handleChange}>
-                  <SelectTrigger id={field.name}>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INSTALLMENT_STATUSES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </form.Field>
-
-          {/* Due Date */}
-          <form.Field name="dueDate">
-            {(field) => (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={field.name}>Due Date</Label>
-                <Input
-                  id={field.name}
-                  type="date"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                />
-              </div>
-            )}
-          </form.Field>
-
-          {/* Remarks */}
-          <form.Field name="remarks">
-            {(field) => (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor={field.name}>Remarks</Label>
-                <Textarea
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Optional remarks..."
-                  rows={3}
-                />
-              </div>
-            )}
-          </form.Field>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? 'Saving...' : 'Save changes'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }
