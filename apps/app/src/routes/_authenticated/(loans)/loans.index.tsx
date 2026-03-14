@@ -59,7 +59,7 @@ const columns: ColumnDef<LoanListItem>[] = [
   },
 ];
 
-export const Route = createFileRoute('/_authenticated/loans/')({
+export const Route = createFileRoute('/_authenticated/(loans)/loans/')({
   head: () => ({ meta: [{ title: 'RTools - Loans' }] }),
   component: LoansPage,
 });

@@ -48,7 +48,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export const Route = createFileRoute('/_authenticated/loans/$loanId')({
+export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
   head: () => ({ meta: [{ title: 'RTools - Loan Detail' }] }),
   staticData: { title: 'Loan Detail' },
   component: LoanDetailPage,

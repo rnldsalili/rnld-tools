@@ -14,13 +14,13 @@ import { Route as HealthRouteImport } from './routes/health'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as toolsRouteRouteImport } from './routes/(tools)/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedLoansRouteImport } from './routes/_authenticated/loans'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as toolsUuidGeneratorRouteImport } from './routes/(tools)/uuid-generator'
 import { Route as toolsSecretGeneratorRouteImport } from './routes/(tools)/secret-generator'
 import { Route as toolsPasswordGeneratorRouteImport } from './routes/(tools)/password-generator'
-import { Route as AuthenticatedLoansIndexRouteImport } from './routes/_authenticated/loans.index'
-import { Route as AuthenticatedLoansLoanIdRouteImport } from './routes/_authenticated/loans.$loanId'
+import { Route as AuthenticatedloansLoansRouteImport } from './routes/_authenticated/(loans)/loans'
+import { Route as AuthenticatedloansLoansIndexRouteImport } from './routes/_authenticated/(loans)/loans.index'
+import { Route as AuthenticatedloansLoansLoanIdRouteImport } from './routes/_authenticated/(loans)/loans.$loanId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -45,11 +45,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedLoansRoute = AuthenticatedLoansRouteImport.update({
-  id: '/loans',
-  path: '/loans',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -70,16 +65,22 @@ const toolsPasswordGeneratorRoute = toolsPasswordGeneratorRouteImport.update({
   path: '/password-generator',
   getParentRoute: () => toolsRouteRoute,
 } as any)
-const AuthenticatedLoansIndexRoute = AuthenticatedLoansIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedLoansRoute,
+const AuthenticatedloansLoansRoute = AuthenticatedloansLoansRouteImport.update({
+  id: '/(loans)/loans',
+  path: '/loans',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedLoansLoanIdRoute =
-  AuthenticatedLoansLoanIdRouteImport.update({
+const AuthenticatedloansLoansIndexRoute =
+  AuthenticatedloansLoansIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedloansLoansRoute,
+  } as any)
+const AuthenticatedloansLoansLoanIdRoute =
+  AuthenticatedloansLoansLoanIdRouteImport.update({
     id: '/$loanId',
     path: '/$loanId',
-    getParentRoute: () => AuthenticatedLoansRoute,
+    getParentRoute: () => AuthenticatedloansLoansRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -90,9 +91,9 @@ export interface FileRoutesByFullPath {
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/loans': typeof AuthenticatedLoansRouteWithChildren
-  '/loans/$loanId': typeof AuthenticatedLoansLoanIdRoute
-  '/loans/': typeof AuthenticatedLoansIndexRoute
+  '/loans': typeof AuthenticatedloansLoansRouteWithChildren
+  '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
+  '/loans/': typeof AuthenticatedloansLoansIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,8 +103,8 @@ export interface FileRoutesByTo {
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/loans/$loanId': typeof AuthenticatedLoansLoanIdRoute
-  '/loans': typeof AuthenticatedLoansIndexRoute
+  '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
+  '/loans': typeof AuthenticatedloansLoansIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,9 +117,9 @@ export interface FileRoutesById {
   '/(tools)/secret-generator': typeof toolsSecretGeneratorRoute
   '/(tools)/uuid-generator': typeof toolsUuidGeneratorRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/loans': typeof AuthenticatedLoansRouteWithChildren
-  '/_authenticated/loans/$loanId': typeof AuthenticatedLoansLoanIdRoute
-  '/_authenticated/loans/': typeof AuthenticatedLoansIndexRoute
+  '/_authenticated/(loans)/loans': typeof AuthenticatedloansLoansRouteWithChildren
+  '/_authenticated/(loans)/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
+  '/_authenticated/(loans)/loans/': typeof AuthenticatedloansLoansIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -155,9 +156,9 @@ export interface FileRouteTypes {
     | '/(tools)/secret-generator'
     | '/(tools)/uuid-generator'
     | '/_authenticated/dashboard'
-    | '/_authenticated/loans'
-    | '/_authenticated/loans/$loanId'
-    | '/_authenticated/loans/'
+    | '/_authenticated/(loans)/loans'
+    | '/_authenticated/(loans)/loans/$loanId'
+    | '/_authenticated/(loans)/loans/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,13 +206,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/loans': {
-      id: '/_authenticated/loans'
-      path: '/loans'
-      fullPath: '/loans'
-      preLoaderRoute: typeof AuthenticatedLoansRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -240,19 +234,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof toolsPasswordGeneratorRouteImport
       parentRoute: typeof toolsRouteRoute
     }
-    '/_authenticated/loans/': {
-      id: '/_authenticated/loans/'
+    '/_authenticated/(loans)/loans': {
+      id: '/_authenticated/(loans)/loans'
+      path: '/loans'
+      fullPath: '/loans'
+      preLoaderRoute: typeof AuthenticatedloansLoansRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/(loans)/loans/': {
+      id: '/_authenticated/(loans)/loans/'
       path: '/'
       fullPath: '/loans/'
-      preLoaderRoute: typeof AuthenticatedLoansIndexRouteImport
-      parentRoute: typeof AuthenticatedLoansRoute
+      preLoaderRoute: typeof AuthenticatedloansLoansIndexRouteImport
+      parentRoute: typeof AuthenticatedloansLoansRoute
     }
-    '/_authenticated/loans/$loanId': {
-      id: '/_authenticated/loans/$loanId'
+    '/_authenticated/(loans)/loans/$loanId': {
+      id: '/_authenticated/(loans)/loans/$loanId'
       path: '/$loanId'
       fullPath: '/loans/$loanId'
-      preLoaderRoute: typeof AuthenticatedLoansLoanIdRouteImport
-      parentRoute: typeof AuthenticatedLoansRoute
+      preLoaderRoute: typeof AuthenticatedloansLoansLoanIdRouteImport
+      parentRoute: typeof AuthenticatedloansLoansRoute
     }
   }
 }
@@ -273,27 +274,30 @@ const toolsRouteRouteWithChildren = toolsRouteRoute._addFileChildren(
   toolsRouteRouteChildren,
 )
 
-interface AuthenticatedLoansRouteChildren {
-  AuthenticatedLoansLoanIdRoute: typeof AuthenticatedLoansLoanIdRoute
-  AuthenticatedLoansIndexRoute: typeof AuthenticatedLoansIndexRoute
+interface AuthenticatedloansLoansRouteChildren {
+  AuthenticatedloansLoansLoanIdRoute: typeof AuthenticatedloansLoansLoanIdRoute
+  AuthenticatedloansLoansIndexRoute: typeof AuthenticatedloansLoansIndexRoute
 }
 
-const AuthenticatedLoansRouteChildren: AuthenticatedLoansRouteChildren = {
-  AuthenticatedLoansLoanIdRoute: AuthenticatedLoansLoanIdRoute,
-  AuthenticatedLoansIndexRoute: AuthenticatedLoansIndexRoute,
-}
+const AuthenticatedloansLoansRouteChildren: AuthenticatedloansLoansRouteChildren =
+  {
+    AuthenticatedloansLoansLoanIdRoute: AuthenticatedloansLoansLoanIdRoute,
+    AuthenticatedloansLoansIndexRoute: AuthenticatedloansLoansIndexRoute,
+  }
 
-const AuthenticatedLoansRouteWithChildren =
-  AuthenticatedLoansRoute._addFileChildren(AuthenticatedLoansRouteChildren)
+const AuthenticatedloansLoansRouteWithChildren =
+  AuthenticatedloansLoansRoute._addFileChildren(
+    AuthenticatedloansLoansRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedLoansRoute: typeof AuthenticatedLoansRouteWithChildren
+  AuthenticatedloansLoansRoute: typeof AuthenticatedloansLoansRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedLoansRoute: AuthenticatedLoansRouteWithChildren,
+  AuthenticatedloansLoansRoute: AuthenticatedloansLoansRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
