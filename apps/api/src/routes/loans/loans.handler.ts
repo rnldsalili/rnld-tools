@@ -1,4 +1,4 @@
-import { InstallmentInterval, InstallmentStatus, InstallmentType } from '@workspace/constants';
+import { InstallmentInterval, InstallmentType } from '@workspace/constants';
 import {
   loanCreateSchema,
   loanGetQuerySchema,
@@ -32,17 +32,6 @@ const addInterval = (startDate: Date, interval: InstallmentInterval, step: numbe
   return resultDate;
 };
 
-const buildInstallmentFilter = (): Prisma.LoanInstallmentWhereInput => {
-  const currentDate = new Date();
-  return {
-    NOT: {
-      AND: [
-        { dueDate: { lt: currentDate } },
-        { status: InstallmentStatus.PAID },
-      ],
-    },
-  };
-};
 
 export const getLoans = createHandlers(
   validate('query', loanListQuerySchema),
@@ -95,16 +84,15 @@ export const getLoan = createHandlers(
     }
 
     const skipCount = (page - 1) * limit;
-    const installmentFilter = buildInstallmentFilter();
 
     const [loanInstallments, totalInstallments] = await Promise.all([
       prisma.loanInstallment.findMany({
-        where: { loanId: loanId, ...installmentFilter },
+        where: { loanId: loanId },
         orderBy: { dueDate: 'asc' },
         skip: skipCount,
         take: limit,
       }),
-      prisma.loanInstallment.count({ where: { loanId: loanId, ...installmentFilter } }),
+      prisma.loanInstallment.count({ where: { loanId: loanId } }),
     ]);
 
     return c.json({

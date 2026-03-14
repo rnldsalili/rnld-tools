@@ -14,15 +14,8 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean;
   toolbar?: React.ReactNode;
   footer?: React.ReactNode;
-}
-
-interface DataTableProps<TData, TValue> {
-  columns: Array<ColumnDef<TData, TValue>>;
-  data: Array<TData>;
-  isLoading?: boolean;
-  toolbar?: React.ReactNode;
-  footer?: React.ReactNode;
   variant?: 'default' | 'card';
+  getRowClassName?: (row: TData) => string | undefined;
 }
 
 export function DataTable<TData, TValue>({
@@ -32,6 +25,7 @@ export function DataTable<TData, TValue>({
   toolbar,
   footer,
   variant = 'default',
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -54,7 +48,7 @@ export function DataTable<TData, TValue>({
         ))
       ) : table.getRowModel().rows.length > 0 ? (
         table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+          <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className={getRowClassName?.(row.original)}>
             {row.getVisibleCells().map((cell) => (
               <TableCell key={cell.id}>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}

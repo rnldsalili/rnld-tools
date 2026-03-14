@@ -507,7 +507,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             <form.Field name="installmentMode">
               {(field) => (
                 <Field>
-                  <FieldLabel htmlFor={field.name}>Mode</FieldLabel>
+                  <FieldLabel htmlFor={field.name}>Mode <span className="text-destructive">*</span></FieldLabel>
                   <Select
                       value={field.state.value}
                       onValueChange={(value) => field.handleChange(value as InstallmentMode)}

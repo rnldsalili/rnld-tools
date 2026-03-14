@@ -21,6 +21,12 @@ type UpdateLoanBody = InferRequestType<typeof apiClient.loans[':id']['$put']>['j
 type UpdateInstallmentBody = InferRequestType<
   typeof apiClient.loans[':loanId']['installments'][':installmentId']['$put']
 >['json'];
+type AddInstallmentBody = InferRequestType<
+  typeof apiClient.loans[':loanId']['installments']['$post']
+>['json'];
+type MarkInstallmentPaidBody = InferRequestType<
+  typeof apiClient.loans[':loanId']['installments'][':installmentId']['mark-paid']['$post']
+>['json'];
 
 // --- Query params ---
 
@@ -139,6 +145,58 @@ export function useUpdateInstallment() {
       });
       const data = await res.json() as { meta?: { message?: string } };
       if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to update installment.');
+      return data;
+    },
+    onSuccess: (_data, { loanId }) => {
+      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+    },
+  });
+}
+
+export function useAddInstallment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      loanId,
+      body,
+    }: {
+      loanId: string;
+      body: AddInstallmentBody;
+    }) => {
+      const res = await apiClient.loans[':loanId'].installments.$post({
+        param: { loanId },
+        json: body,
+      });
+      const data = await res.json() as { meta?: { message?: string } };
+      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to add installment.');
+      return data;
+    },
+    onSuccess: (_data, { loanId }) => {
+      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+    },
+  });
+}
+
+export function useMarkInstallmentPaid() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      loanId,
+      installmentId,
+      body,
+    }: {
+      loanId: string;
+      installmentId: string;
+      body: MarkInstallmentPaidBody;
+    }) => {
+      const res = await apiClient.loans[':loanId'].installments[':installmentId']['mark-paid'].$post({
+        param: { loanId, installmentId },
+        json: body,
+      });
+      const data = await res.json() as { meta?: { message?: string } };
+      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to mark installment as paid.');
       return data;
     },
     onSuccess: (_data, { loanId }) => {

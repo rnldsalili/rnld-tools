@@ -93,7 +93,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
         >
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-              <FieldLabel htmlFor={field.name}>Borrower</FieldLabel>
+              <FieldLabel htmlFor={field.name}>Borrower <span className="text-destructive">*</span></FieldLabel>
               <Input
                   id={field.name}
                   value={field.state.value}
@@ -119,7 +119,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
         >
           {(field) => (
             <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-              <FieldLabel htmlFor={field.name}>Amount</FieldLabel>
+              <FieldLabel htmlFor={field.name}>Amount <span className="text-destructive">*</span></FieldLabel>
               <Input
                   id={field.name}
                   type="number"

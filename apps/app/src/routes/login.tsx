@@ -74,7 +74,7 @@ function LoginPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <FieldGroup>
                 <Field data-invalid={!!error && !email ? true : undefined}>
-                  <FieldLabel htmlFor="email">Email</FieldLabel>
+                  <FieldLabel htmlFor="email">Email <span className="text-destructive">*</span></FieldLabel>
                   <Input
                       id="email"
                       type="email"
@@ -87,7 +87,7 @@ function LoginPage() {
                   />
                 </Field>
                 <Field data-invalid={!!error && !password ? true : undefined}>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                  <FieldLabel htmlFor="password">Password <span className="text-destructive">*</span></FieldLabel>
                   <PasswordInput
                       id="password"
                       placeholder="••••••••"

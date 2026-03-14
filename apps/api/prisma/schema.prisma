@@ -117,6 +117,7 @@ model LoanInstallment {
   dueDate         DateTime
   amount          Float
   status          LoanInstallmentStatus @default(PENDING)
+  paidAt          DateTime?
   remarks         String?
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt

@@ -1,4 +1,4 @@
-import { deleteInstallment, updateInstallment } from './installments.handler';
+import { addInstallment, deleteInstallment, markInstallmentPaid, updateInstallment } from './installments.handler';
 import { createRouter } from '@/api/app';
 import { requireAuth } from '@/api/middlewares/auth.middleware';
 import { requireAdminRole } from '@/api/middlewares/role.middleware';
@@ -6,7 +6,9 @@ import { requireAdminRole } from '@/api/middlewares/role.middleware';
 const installmentsRoute = createRouter()
   .use('*', requireAuth)
   .use('*', requireAdminRole)
+  .post('/', ...addInstallment)
   .put('/:installmentId', ...updateInstallment)
-  .delete('/:installmentId', ...deleteInstallment);
+  .delete('/:installmentId', ...deleteInstallment)
+  .post('/:installmentId/mark-paid', ...markInstallmentPaid);
 
 export default installmentsRoute;

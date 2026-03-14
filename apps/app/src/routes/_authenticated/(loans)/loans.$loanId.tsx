@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { PencilIcon } from 'lucide-react';
+import { CheckCircleIcon, PencilIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
   Badge,
@@ -11,14 +11,16 @@ import {
   SectionCardContent,
   SectionCardHeader,
 } from '@workspace/ui';
-import { INSTALLMENTS_LIMIT } from '@workspace/constants';
+import { INSTALLMENTS_LIMIT, InstallmentStatus } from '@workspace/constants';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanInstallment } from '@/app/hooks/use-loan';
 import {  useLoan } from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
+import { AddInstallmentDialog } from '@/app/components/loans/add-installment-dialog';
 import { EditInstallmentDialog } from '@/app/components/loans/edit-installment-dialog';
 import { EditLoanDialog } from '@/app/components/loans/edit-loan-dialog';
 import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
+import { MarkPaidDialog } from '@/app/components/loans/mark-paid-dialog';
 
 export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
   head: () => ({ meta: [{ title: 'RTools - Loan Detail' }] }),
@@ -30,7 +32,9 @@ function LoanDetailPage() {
   const { loanId } = Route.useParams();
   const [installmentsPage, setInstallmentsPage] = useState(1);
   const [selectedInstallment, setSelectedInstallment] = useState<LoanInstallment | null>(null);
+  const [markPaidInstallment, setMarkPaidInstallment] = useState<LoanInstallment | null>(null);
   const [isEditLoanOpen, setIsEditLoanOpen] = useState(false);
+  const [isAddInstallmentOpen, setIsAddInstallmentOpen] = useState(false);
 
   const { data, isLoading } = useLoan({
     loanId,
@@ -59,6 +63,16 @@ function LoanDetailPage() {
       cell: ({ row }) => <InstallmentStatusBadge status={row.original.status} />,
     },
     {
+      accessorKey: 'paidAt',
+      header: 'Paid At',
+      cell: ({ row }) =>
+        row.original.paidAt ? (
+          format(new Date(row.original.paidAt), 'MMM d, yyyy')
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
       accessorKey: 'remarks',
       header: 'Remarks',
       cell: ({ row }) => (
@@ -69,15 +83,28 @@ function LoanDetailPage() {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5"
-            onClick={() => setSelectedInstallment(row.original)}
-        >
-          <PencilIcon className="size-3.5" />
-          Edit
-        </Button>
+        <div className="flex items-center gap-1">
+          {row.original.status !== InstallmentStatus.PAID && (
+            <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setMarkPaidInstallment(row.original)}
+            >
+              <CheckCircleIcon className="size-3.5" />
+              Mark as Paid
+            </Button>
+          )}
+          <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setSelectedInstallment(row.original)}
+          >
+            <PencilIcon className="size-3.5" />
+            Edit
+          </Button>
+        </div>
       ),
     },
   ];
@@ -141,14 +168,31 @@ function LoanDetailPage() {
                 columns={columns}
                 data={installments}
                 isLoading={isLoading}
+                getRowClassName={(row) => {
+                  const isOverdue =
+                    row.status === InstallmentStatus.PENDING &&
+                    new Date(row.dueDate) < new Date();
+                  return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
+                }}
                 toolbar={(
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">Installments</span>
-                  {!isLoading && installmentsPagination && (
-                    <Badge className="bg-muted text-muted-foreground border-0 text-xs">
-                      {installmentsPagination.total}
-                    </Badge>
-                  )}
+                <div className="flex w-full items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold">Installments</span>
+                    {!isLoading && installmentsPagination && (
+                      <Badge className="bg-muted text-muted-foreground border-0 text-xs">
+                        {installmentsPagination.total}
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setIsAddInstallmentOpen(true)}
+                      disabled={isLoading || !loan}
+                  >
+                    <PlusIcon className="size-3.5" />
+                    Add Installment
+                  </Button>
                 </div>
               )}
                 footer={
@@ -172,6 +216,25 @@ function LoanDetailPage() {
             loanId={loanId}
             installment={selectedInstallment}
             onClose={() => setSelectedInstallment(null)}
+        />
+      )}
+
+      {/* Mark as Paid Dialog */}
+      {markPaidInstallment && loan && (
+        <MarkPaidDialog
+            loanId={loanId}
+            installment={markPaidInstallment}
+            currency={loan.currency}
+            onClose={() => setMarkPaidInstallment(null)}
+        />
+      )}
+
+      {/* Add Installment Dialog */}
+      {loan && (
+        <AddInstallmentDialog
+            loanId={loanId}
+            open={isAddInstallmentOpen}
+            onOpenChange={setIsAddInstallmentOpen}
         />
       )}
 
