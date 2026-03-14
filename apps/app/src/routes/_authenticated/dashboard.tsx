@@ -32,7 +32,7 @@ const TOOLS = [
 
 function DashboardPage() {
   const { data: session } = useSession();
-  const name = session?.user?.name ?? session?.user?.email ?? 'there';
+  const name = session?.user.name ?? session?.user.email ?? 'there';
 
   return (
     <div className="min-h-screen bg-background px-6 py-16">

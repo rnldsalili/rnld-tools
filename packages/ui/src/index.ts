@@ -99,5 +99,7 @@ export { useIsMobile } from '@workspace/ui/hooks/use-is-mobile';
 
 export { Modal } from '@workspace/ui/components/composite/modal';
 
+export { Toaster } from '@workspace/ui/components/sonner';
+
 // Utilities
 export { cn } from '@workspace/ui/lib/utils';

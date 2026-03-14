@@ -84,7 +84,9 @@ export function useCreateLoan() {
   return useMutation({
     mutationFn: async ({ body }: { body: CreateLoanBody }) => {
       const res = await apiClient.loans.$post({ json: body });
-      return res.json();
+      const data = await res.json() as { meta?: { message?: string } };
+      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to create loan.');
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
@@ -107,7 +109,9 @@ export function useUpdateLoan() {
         param: { id: loanId },
         json: body,
       });
-      return res.json();
+      const data = await res.json() as { meta?: { message?: string } };
+      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to update loan.');
+      return data;
     },
     onSuccess: (_data, { loanId }) => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
@@ -133,7 +137,9 @@ export function useUpdateInstallment() {
         param: { loanId, installmentId },
         json: body,
       });
-      return res.json();
+      const data = await res.json() as { meta?: { message?: string } };
+      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to update installment.');
+      return data;
     },
     onSuccess: (_data, { loanId }) => {
       queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });

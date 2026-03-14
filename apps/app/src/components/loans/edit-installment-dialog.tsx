@@ -1,5 +1,6 @@
 import { useForm } from '@tanstack/react-form';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import {
   Button,
   Field,
@@ -36,17 +37,22 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
       remarks: installment.remarks ?? '',
     },
     onSubmit: async ({ value }) => {
-      await mutateAsync({
-        loanId,
-        installmentId: installment.id,
-        body: {
-          status: value.status as (typeof INSTALLMENT_STATUSES)[number],
-          dueDate: value.dueDate,
-          amount: parseFloat(value.amount),
-          remarks: value.remarks || null,
-        },
-      });
-      onClose();
+      try {
+        await mutateAsync({
+          loanId,
+          installmentId: installment.id,
+          body: {
+            status: value.status as (typeof INSTALLMENT_STATUSES)[number],
+            dueDate: value.dueDate,
+            amount: parseFloat(value.amount),
+            remarks: value.remarks || null,
+          },
+        });
+        toast.success('Installment updated successfully.');
+        onClose();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to update installment.');
+      }
     },
   });
 

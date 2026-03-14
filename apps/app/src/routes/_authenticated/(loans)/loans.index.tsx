@@ -30,8 +30,8 @@ function LoansPage() {
     limit: LOANS_LIMIT,
   });
 
-  const loans = data?.data?.loans ?? [];
-  const totalPages = data?.data?.pagination?.totalPages ?? 1;
+  const loans = data?.data.loans ?? [];
+  const totalPages = data?.data.pagination.totalPages ?? 1;
 
   const columns: Array<ColumnDef<LoanListItem>> = [
     {
@@ -92,15 +92,6 @@ function LoansPage() {
       ),
     },
   ];
-
-  const { data, isLoading } = useLoans({
-    search: debouncedSearch,
-    page,
-    limit: LOANS_LIMIT,
-  });
-
-  const loans = data?.data?.loans ?? [];
-  const totalPages = data?.data?.pagination?.totalPages ?? 1;
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchInput(e.target.value);

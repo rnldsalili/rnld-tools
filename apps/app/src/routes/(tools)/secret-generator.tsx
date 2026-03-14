@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CheckIcon, CopyIcon, RefreshCwIcon, ShuffleIcon } from 'lucide-react';
 import {
   Button,
@@ -37,19 +37,17 @@ const ENCODINGS: Array<{ value: SecretEncoding; label: string }> = [
 
 function SecretGeneratorPage() {
   const [opts, setOpts] = useState<SecretOptions>(DEFAULT_SECRET_OPTIONS);
-  const [secret, setSecret] = useState('');
+  const [secret, setSecret] = useState(() => generateSecret(DEFAULT_SECRET_OPTIONS));
   const [copied, setCopied] = useState(false);
 
-  const regenerate = useCallback(() => {
+  function regenerate() {
     setSecret(generateSecret(opts));
-  }, [opts]);
+  }
 
-  useEffect(() => {
-    regenerate();
-  }, [regenerate]);
-
-  function setOpt<K extends keyof SecretOptions>(key: K, value: SecretOptions[K]) {
-    setOpts((prev) => ({ ...prev, [key]: value }));
+  function setOpt<TKey extends keyof SecretOptions>(key: TKey, value: SecretOptions[TKey]) {
+    const newOpts = { ...opts, [key]: value };
+    setOpts(newOpts);
+    setSecret(generateSecret(newOpts));
   }
 
   async function copySecret() {
@@ -78,8 +76,7 @@ function SecretGeneratorPage() {
             Cryptographically secure random secret — equivalent to{' '}
             <code className="font-mono text-xs bg-muted px-1 py-0.5 rounded">
               openssl rand -{opts.encoding === 'hex' ? 'hex' : 'base64'} {opts.bytes}
-            </code>
-            .
+            </code>{'.'}
           </CardDescription>
         </CardHeader>
 

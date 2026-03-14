@@ -3,9 +3,11 @@ import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools';
 import { HeadContent, Scripts, createRootRouteWithContext } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { TanStackDevtools } from '@tanstack/react-devtools';
-import { Provider as JotaiProvider } from 'jotai';
+import { Provider as JotaiProvider, useAtomValue  } from 'jotai';
+import { Toaster } from '@workspace/ui';
 import type { QueryClient } from '@tanstack/react-query';
 
+import { themeAtom } from '@/app/stores/theme';
 import appCss from '@/app/styles.css?url';
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -37,6 +39,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   shellComponent: RootDocument,
 });
 
+function ThemedToaster() {
+  const theme = useAtomValue(themeAtom);
+  return <Toaster theme={theme} />;
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { queryClient } = Route.useRouteContext();
 
@@ -49,6 +56,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <JotaiProvider>
           <QueryClientProvider client={queryClient}>
             {children}
+            <ThemedToaster />
             {import.meta.env.DEV && (
               <TanStackDevtools
                   config={{

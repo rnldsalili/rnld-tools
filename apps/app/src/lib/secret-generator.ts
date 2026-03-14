@@ -12,8 +12,8 @@ export function generateSecret(opts: SecretOptions): string {
 
   // Build binary string without spread (avoids stack overflow for large arrays)
   let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
   }
   const b64 = btoa(binary);
 

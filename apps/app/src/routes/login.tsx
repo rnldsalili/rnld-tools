@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { authClient, signIn } from '@workspace/auth-client';
 import {
   Button,
@@ -51,7 +52,9 @@ function LoginPage() {
     setIsPending(false);
 
     if (signInError) {
-      setError(signInError.message ?? 'Login failed. Please try again.');
+      const message = signInError.message ?? 'Login failed. Please try again.';
+      setError(message);
+      toast.error(message);
       return;
     }
 

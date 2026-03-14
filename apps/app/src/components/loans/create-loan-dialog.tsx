@@ -1,4 +1,5 @@
 import { useForm } from '@tanstack/react-form';
+import { toast } from 'sonner';
 import {
   Button,
   Field,
@@ -94,9 +95,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         installments: buildInstallmentsPayload(value),
       };
 
-      await mutateAsync({ body: loanPayload });
-      form.reset();
-      onOpenChange(false);
+      try {
+        await mutateAsync({ body: loanPayload });
+        toast.success('Loan created successfully.');
+        form.reset();
+        onOpenChange(false);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to create loan.');
+      }
     },
   });
 

@@ -14,7 +14,7 @@ interface InstallmentStatusBadgeProps {
 export function InstallmentStatusBadge({ status }: InstallmentStatusBadgeProps) {
   return (
     <Badge className={cn('border-0 font-medium', STATUS_STYLES[status])}>
-      {INSTALLMENT_STATUS_LABELS[status as InstallmentStatus] ?? status}
+      {(INSTALLMENT_STATUS_LABELS as Record<string, string | undefined>)[status] ?? status}
     </Badge>
   );
 }

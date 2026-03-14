@@ -1,4 +1,5 @@
 import { useForm } from '@tanstack/react-form';
+import { toast } from 'sonner';
 import {
   Button,
   Field,
@@ -39,18 +40,23 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
       description: loan.description ?? '',
     },
     onSubmit: async ({ value }) => {
-      await mutateAsync({
-        loanId: loan.id,
-        body: {
-          borrower: value.borrower,
-          amount: parseFloat(value.amount),
-          interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
-          phone: value.phone || null,
-          email: value.email || null,
-          description: value.description || null,
-        },
-      });
-      onClose();
+      try {
+        await mutateAsync({
+          loanId: loan.id,
+          body: {
+            borrower: value.borrower,
+            amount: parseFloat(value.amount),
+            interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
+            phone: value.phone || null,
+            email: value.email || null,
+            description: value.description || null,
+          },
+        });
+        toast.success('Loan updated successfully.');
+        onClose();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Failed to update loan.');
+      }
     },
   });
 

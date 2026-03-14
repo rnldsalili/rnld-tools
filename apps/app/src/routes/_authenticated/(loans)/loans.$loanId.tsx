@@ -38,7 +38,7 @@ function LoanDetailPage() {
     limit: INSTALLMENTS_LIMIT,
   });
 
-  const loan = data?.data?.loan;
+  const loan = data?.data.loan;
   const installments = loan?.installments ?? [];
   const installmentsPagination = loan?.installmentsPagination;
 

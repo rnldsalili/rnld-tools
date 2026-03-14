@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CheckIcon, CopyIcon, RefreshCwIcon, ShieldCheckIcon } from 'lucide-react';
 import {
   Button,
@@ -33,22 +33,20 @@ export const Route = createFileRoute('/(tools)/password-generator')({
 
 function PasswordGeneratorPage() {
   const [opts, setOpts] = useState<PasswordOptions>(DEFAULT_PASSWORD_OPTIONS);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(() => generatePassword(DEFAULT_PASSWORD_OPTIONS));
   const [copied, setCopied] = useState(false);
 
-  const regenerate = useCallback(() => {
+  function regenerate() {
     setPassword(generatePassword(opts));
-  }, [opts]);
-
-  useEffect(() => {
-    regenerate();
-  }, [regenerate]);
+  }
 
   const strength = calcStrength(opts);
   const hasAtLeastOne = opts.uppercase || opts.lowercase || opts.numbers || opts.symbols;
 
-  function setOpt<K extends keyof PasswordOptions>(key: K, value: PasswordOptions[K]) {
-    setOpts((prev) => ({ ...prev, [key]: value }));
+  function setOpt<TKey extends keyof PasswordOptions>(key: TKey, value: PasswordOptions[TKey]) {
+    const newOpts = { ...opts, [key]: value };
+    setOpts(newOpts);
+    setPassword(generatePassword(newOpts));
   }
 
   async function copyPassword() {

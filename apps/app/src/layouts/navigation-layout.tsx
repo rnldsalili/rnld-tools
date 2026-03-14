@@ -93,7 +93,7 @@ function Breadcrumb() {
   const matches = useMatches();
 
   const crumbs = matches
-    .filter((match) => (match.staticData as { title?: string })?.title)
+    .filter((match) => (match.staticData as { title?: string }).title)
     .map((match) => ({
       title: (match.staticData as { title: string }).title,
       pathname: match.pathname,
@@ -141,8 +141,8 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
   }
 
   const userInitial =
-    session.user.name?.[0]?.toUpperCase() ??
-    session.user.email?.[0]?.toUpperCase() ??
+    session.user.name.charAt(0).toUpperCase() ||
+    session.user.email.charAt(0).toUpperCase() ||
     '?';
 
   async function handleSignOut() {
