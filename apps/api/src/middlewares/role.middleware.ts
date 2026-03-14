@@ -1,4 +1,4 @@
-import { ADMIN_ROLES } from '@workspace/constants';
+import { UserRole } from '@workspace/constants';
 import { createMiddleware } from 'hono/factory';
 
 import type { AppBindings } from '@/api/app';
@@ -6,7 +6,10 @@ import type { AppBindings } from '@/api/app';
 export const requireAdminRole = createMiddleware<AppBindings>(async (c, next) => {
   const user = c.get('user');
 
-  if (!user.role || !ADMIN_ROLES.includes(user.role)) {
+  const isAdmin = user.role === UserRole.ADMIN;
+  const isSuperAdmin = user.role === UserRole.SUPER_ADMIN;
+
+  if (!user.role || (!isAdmin && !isSuperAdmin)) {
     return c.json({
       meta: {
         code: 403,
