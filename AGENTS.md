@@ -137,6 +137,16 @@ The shared UI library lives in `packages/ui`. When working on UI tasks:
   - `@/app/*` -> `apps/app/src/*`
   - `@/api/*` -> `apps/api/src/*`
   - `@/prisma/*` -> `apps/api/generated/prisma/*`
-- Use Zod v4 for schema validation.
+- Use Zod v4 for schema validation. Always use Zod v4 APIs and avoid deprecated methods (e.g. use `z.string().nonempty()` → `z.string().min(1)`, `z.object().nonstrict()` → `z.object()`, `.merge()` on non-objects → use `z.intersection()` or spread, etc.).
 - Follow the existing formatting style in the file you touch instead of reformatting unrelated code.
 - ESLint config comes from `packages/eslint-config`; run `bun run lint` before committing.
+
+### Naming Conventions
+
+- **Clear and Descriptive**: Prefer verbose, descriptive names over short, cryptic ones (e.g., `loanPayload` instead of `payload`, `authenticatedUser` instead of `user`).
+- **Context-Specific**: Ensure variable names reflect their specific role within the context (e.g., `totalLoans` instead of `total` in a loan listing handler).
+- **Boolean Naming**: Use prefixes like `is`, `has`, `should`, or `can` for boolean variables (e.g., `isLoanActive`).
+- **Prisma Results**: When fetching from the database, use descriptive names for the results (e.g., `loanFound` for a single record, `loanInstallments` for an array).
+- **Handler Variables**: Use specific names for constants in routes (e.g., `loanId`, `installmentFilter`, `skipCount`).
+- **Error Handling**: Prefer `dbError` or `validationError` over a generic `error` when the type is known.
+- **Avoid Magic Values**: Do not use hardcoded strings or numbers for repeated logic, statuses, or configurations. Instead, define them as enums or constants in `packages/constants` and reuse them across the workspace.

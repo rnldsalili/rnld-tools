@@ -25,6 +25,11 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  loansCreated            Loan[]             @relation("LoanCreatedBy")
+  loansUpdated            Loan[]             @relation("LoanUpdatedBy")
+  loanInstallmentsCreated LoanInstallment[]  @relation("LoanInstallmentCreatedBy")
+  loanInstallmentsUpdated LoanInstallment[]  @relation("LoanInstallmentUpdatedBy")
+
   @@unique([email])
   @@map("user")
 }
@@ -75,4 +80,54 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum LoanInstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model Loan {
+  id             String   @id @default(cuid())
+  borrower       String
+  amount         Float
+  currency       String   @default("PHP")
+  interestRate   Float?
+  phone          String?
+  email          String?
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdByUserId String
+  updatedByUserId String
+
+  createdBy    User             @relation("LoanCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy    User             @relation("LoanUpdatedBy", fields: [updatedByUserId], references: [id])
+  installments LoanInstallment[]
+
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@map("loan")
+}
+
+model LoanInstallment {
+  id              String                @id @default(cuid())
+  loanId          String
+  dueDate         DateTime
+  status          LoanInstallmentStatus @default(PENDING)
+  remarks         String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  createdByUserId String
+  updatedByUserId String
+
+  loan      Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  createdBy User @relation("LoanInstallmentCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User @relation("LoanInstallmentUpdatedBy", fields: [updatedByUserId], references: [id])
+
+  @@index([loanId])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@map("loan_installment")
 }

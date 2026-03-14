@@ -109,6 +109,9 @@
     "packages/constants": {
       "name": "@workspace/constants",
       "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.3.6",
+      },
       "devDependencies": {
         "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
