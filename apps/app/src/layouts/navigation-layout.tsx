@@ -1,4 +1,4 @@
-import { Link, useMatches, useRouter } from '@tanstack/react-router';
+import { Link, useLocation, useMatches, useRouter } from '@tanstack/react-router';
 import { useAtom } from 'jotai';
 import {
   ChevronRightIcon,
@@ -132,9 +132,9 @@ interface NavigationLayoutProps {
 export function NavigationLayout({ children }: NavigationLayoutProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { pathname: currentPath } = useLocation();
   const { isDark, mounted, toggle } = useTheme();
   const [isCollapsed, setIsCollapsed] = useAtom(sidebarCollapsedAtom);
-  const currentPath = router.state.location.pathname;
 
   if (!session?.user) {
     return <>{children}</>;

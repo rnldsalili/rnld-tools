@@ -92,7 +92,7 @@ function LoansPage() {
           data={loans}
           isLoading={isLoading}
           toolbar={
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex w-full items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                   <HandCoinsIcon className="size-3.5" />

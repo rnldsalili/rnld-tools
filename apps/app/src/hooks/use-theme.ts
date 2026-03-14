@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark';
+import { useAtom } from 'jotai';
+
+import { themeAtom } from '@/app/stores/theme';
 
 export function useTheme() {
-  const [isDark, setIsDark] = useState(false);
+  const [theme, setTheme] = useAtom(themeAtom);
   const [mounted, setMounted] = useState(false);
 
+  const isDark = theme === 'dark';
+
   useEffect(() => {
-    const saved = localStorage.getItem('theme') as Theme | null;
-    setIsDark(saved === 'dark');
     setMounted(true);
   }, []);
 
@@ -20,11 +22,10 @@ export function useTheme() {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark, mounted]);
 
   function toggle() {
-    setIsDark((prev) => !prev);
+    setTheme(isDark ? 'light' : 'dark');
   }
 
   return { isDark, mounted, toggle };
