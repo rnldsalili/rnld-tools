@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import { authClient } from '@workspace/auth-client';
+import { NavigationLayout } from '@/app/layouts/navigation-layout';
 
 export const Route = createFileRoute('/_authenticated')({
   ssr: false,
@@ -9,5 +10,10 @@ export const Route = createFileRoute('/_authenticated')({
       throw redirect({ to: '/login', search: { next: location.href } });
     }
   },
-  component: () => <Outlet />,
+  component: () => (
+    <NavigationLayout>
+      <Outlet />
+    </NavigationLayout>
+  ),
 });
+

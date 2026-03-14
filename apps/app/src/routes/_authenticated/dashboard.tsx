@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
   head: () => ({ meta: [{ title: 'RTools - Dashboard' }] }),
+  staticData: { title: 'Dashboard' },
   component: DashboardPage,
 });
 

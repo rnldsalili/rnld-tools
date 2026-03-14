@@ -1,6 +1,12 @@
 // Components
 export { Button, buttonVariants } from '@workspace/ui/components/button';
 export { PasswordInput } from '@workspace/ui/components/composite/password-input';
+export {
+  SectionCard,
+  SectionCardHeader,
+  SectionCardContent,
+  SectionCardFooter,
+} from '@workspace/ui/components/composite/section-card';
 export { Input } from '@workspace/ui/components/input';
 export {
   Card,
@@ -46,6 +52,47 @@ export { Checkbox } from '@workspace/ui/components/checkbox';
 export { Slider } from '@workspace/ui/components/slider';
 export { Label } from '@workspace/ui/components/label';
 export { Separator } from '@workspace/ui/components/separator';
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+} from '@workspace/ui/components/table';
+export { DataTable } from '@workspace/ui/components/composite/data-table';
+export { Pagination } from '@workspace/ui/components/pagination';
+export { Badge, badgeVariants } from '@workspace/ui/components/badge';
+export { Textarea } from '@workspace/ui/components/textarea';
+export {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@workspace/ui/components/select';
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@workspace/ui/components/dialog';
+
+export {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@workspace/ui/components/tooltip';
 
 // Hooks
 export { useIsMobile } from '@workspace/ui/hooks/use-is-mobile';

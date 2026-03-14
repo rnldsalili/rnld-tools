@@ -4,8 +4,7 @@ import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import { HeadContent, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-
-import Header from '@/app/components/header'
+import { Provider as JotaiProvider } from 'jotai'
 
 import appCss from '@/app/styles.css?url'
 
@@ -47,27 +46,28 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <QueryClientProvider client={queryClient}>
-          <Header />
-          {children}
-          {import.meta.env.DEV && (
-            <TanStackDevtools
-              config={{
-                position: 'bottom-right',
-              }}
-              plugins={[
-                {
-                  name: 'TanStack Router',
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-                {
-                  name: 'TanStack Query',
-                  render: <ReactQueryDevtoolsPanel />,
-                },
-              ]}
-            />
-          )}
-        </QueryClientProvider>
+        <JotaiProvider>
+          <QueryClientProvider client={queryClient}>
+            {children}
+            {import.meta.env.DEV && (
+              <TanStackDevtools
+                config={{
+                  position: 'bottom-right',
+                }}
+                plugins={[
+                  {
+                    name: 'TanStack Router',
+                    render: <TanStackRouterDevtoolsPanel />,
+                  },
+                  {
+                    name: 'TanStack Query',
+                    render: <ReactQueryDevtoolsPanel />,
+                  },
+                ]}
+              />
+            )}
+          </QueryClientProvider>
+        </JotaiProvider>
         <Scripts />
       </body>
     </html>
