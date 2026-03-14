@@ -89,7 +89,7 @@ function LoanDetailPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           {/* Loan Details — card variant matching installments */}
           <SectionCard className="lg:w-96 lg:shrink-0">
-            <SectionCardHeader>
+            <SectionCardHeader className="flex justify-between items-center">
               <span className="text-sm font-semibold">Loan Details</span>
               {loan && (
                 <Button

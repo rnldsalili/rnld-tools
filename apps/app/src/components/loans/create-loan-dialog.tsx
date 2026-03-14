@@ -20,8 +20,6 @@ import {
   Currency,
   INSTALLMENT_INTERVAL_LABELS,
   INSTALLMENT_INTERVAL_VALUES,
-  INSTALLMENT_STATUSES,
-  INSTALLMENT_STATUS_LABELS,
   InstallmentInterval,
   InstallmentStatus,
   InstallmentType,
@@ -42,14 +40,10 @@ interface DefaultValues {
   installmentMode: InstallmentMode;
   singleDueDate: string;
   singleAmount: string;
-  singleStatus: string;
-  singleRemarks: string;
   bulkInterval: string;
   bulkCount: string;
   bulkStartDate: string;
   bulkAmount: string;
-  bulkStatus: string;
-  bulkRemarks: string;
 }
 
 const DEFAULT_VALUES: DefaultValues = {
@@ -63,14 +57,10 @@ const DEFAULT_VALUES: DefaultValues = {
   installmentMode: InstallmentType.SINGLE as InstallmentMode,
   singleDueDate: '',
   singleAmount: '',
-  singleStatus: InstallmentStatus.PENDING,
-  singleRemarks: '',
   bulkInterval: InstallmentInterval.MONTHLY,
   bulkCount: '1',
   bulkStartDate: '',
   bulkAmount: '',
-  bulkStatus: InstallmentStatus.PENDING,
-  bulkRemarks: '',
 };
 
 interface CreateLoanDialogProps {
@@ -121,8 +111,10 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         <form.Field
             name="singleDueDate"
             validators={{
-            onChange: ({ value }) =>
-              !value ? 'Due date is required' : undefined,
+            onChange: ({ value }) => {
+              if (form.getFieldValue('installmentMode') !== InstallmentType.SINGLE) return undefined;
+              return !value ? 'Due date is required' : undefined;
+            },
           }}
         >
           {(field) => (
@@ -146,6 +138,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             name="singleAmount"
             validators={{
             onChange: ({ value }) => {
+              if (form.getFieldValue('installmentMode') !== InstallmentType.SINGLE) return undefined;
               if (!value) return 'Amount is required';
               const parsed = parseFloat(value);
               if (isNaN(parsed) || parsed <= 0) return 'Must be a positive number';
@@ -169,39 +162,6 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                   onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-            </Field>
-          )}
-        </form.Field>
-
-        <form.Field name="singleStatus">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Status</FieldLabel>
-              <Select value={field.state.value} onValueChange={field.handleChange}>
-                <SelectTrigger id={field.name}>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INSTALLMENT_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{INSTALLMENT_STATUS_LABELS[s]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
-        </form.Field>
-
-        <form.Field name="singleRemarks">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Remarks</FieldLabel>
-              <Textarea
-                  id={field.name}
-                  placeholder="Optional remarks..."
-                  rows={2}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-              />
             </Field>
           )}
         </form.Field>
@@ -241,6 +201,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
               name="bulkCount"
               validators={{
               onChange: ({ value }) => {
+                if (form.getFieldValue('installmentMode') !== InstallmentType.BULK) return undefined;
                 const parsed = parseInt(value, 10);
                 if (!value || isNaN(parsed) || parsed < 1 || parsed > 360)
                   return 'Count must be 1–360';
@@ -272,8 +233,10 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         <form.Field
             name="bulkStartDate"
             validators={{
-            onChange: ({ value }) =>
-              !value ? 'Start date is required' : undefined,
+            onChange: ({ value }) => {
+              if (form.getFieldValue('installmentMode') !== InstallmentType.BULK) return undefined;
+              return !value ? 'Start date is required' : undefined;
+            },
           }}
         >
           {(field) => (
@@ -297,6 +260,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             name="bulkAmount"
             validators={{
             onChange: ({ value }) => {
+              if (form.getFieldValue('installmentMode') !== InstallmentType.BULK) return undefined;
               if (!value) return 'Amount is required';
               const parsed = parseFloat(value);
               if (isNaN(parsed) || parsed <= 0) return 'Must be a positive number';
@@ -320,39 +284,6 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                   onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-            </Field>
-          )}
-        </form.Field>
-
-        <form.Field name="bulkStatus">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Status</FieldLabel>
-              <Select value={field.state.value} onValueChange={field.handleChange}>
-                <SelectTrigger id={field.name}>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INSTALLMENT_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{INSTALLMENT_STATUS_LABELS[s]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-          )}
-        </form.Field>
-
-        <form.Field name="bulkRemarks">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Remarks</FieldLabel>
-              <Textarea
-                  id={field.name}
-                  placeholder="Optional remarks..."
-                  rows={2}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-              />
             </Field>
           )}
         </form.Field>
@@ -615,8 +546,7 @@ function buildInstallmentsPayload(value: DefaultValues) {
       count: parseInt(value.bulkCount, 10),
       startDate: value.bulkStartDate,
       amount: parseFloat(value.bulkAmount),
-      status: value.bulkStatus as (typeof INSTALLMENT_STATUSES)[number],
-      remarks: value.bulkRemarks.trim() || undefined,
+      status: InstallmentStatus.PENDING,
     };
   }
 
@@ -624,7 +554,6 @@ function buildInstallmentsPayload(value: DefaultValues) {
     type: InstallmentType.SINGLE as const,
     dueDate: value.singleDueDate,
     amount: parseFloat(value.singleAmount),
-    status: value.singleStatus as (typeof INSTALLMENT_STATUSES)[number],
-    remarks: value.singleRemarks.trim() || undefined,
+    status: InstallmentStatus.PENDING,
   };
 }

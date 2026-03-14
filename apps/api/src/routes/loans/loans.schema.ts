@@ -33,7 +33,6 @@ const singleInstallmentSchema = z.object({
   dueDate: dateStringValidator,
   amount: z.number().positive(),
   status: installmentStatus,
-  remarks: z.string().trim().optional(),
 });
 
 const bulkInstallmentSchema = z.object({
@@ -43,7 +42,6 @@ const bulkInstallmentSchema = z.object({
   startDate: dateStringValidator,
   amount: z.number().positive(),
   status: installmentStatus,
-  remarks: z.string().trim().optional(),
 });
 
 const installmentCreateSchema = z.discriminatedUnion('type', [

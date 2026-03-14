@@ -12,13 +12,23 @@ import { initializePrisma } from '@/api/lib/db';
 import { validate } from '@/api/lib/validator';
 
 const addInterval = (startDate: Date, interval: InstallmentInterval, step: number): Date => {
+  const originalDay = startDate.getDate();
   const resultDate = new Date(startDate);
+
+  // Set day to 1 first to prevent month overflow (e.g. Mar 31 + 1 month → May 1 instead of Apr 30)
+  resultDate.setDate(1);
+
   if (interval === InstallmentInterval.ANNUALLY) {
-    resultDate.setFullYear(resultDate.getFullYear() + step);
+    resultDate.setFullYear(startDate.getFullYear() + step);
   } else {
     const monthsToAdd = interval === InstallmentInterval.QUARTERLY ? 3 : 1;
-    resultDate.setMonth(resultDate.getMonth() + monthsToAdd * step);
+    resultDate.setMonth(startDate.getMonth() + monthsToAdd * step);
   }
+
+  // Clamp to the last valid day of the target month
+  const lastDayOfMonth = new Date(resultDate.getFullYear(), resultDate.getMonth() + 1, 0).getDate();
+  resultDate.setDate(Math.min(originalDay, lastDayOfMonth));
+
   return resultDate;
 };
 
@@ -148,7 +158,6 @@ export const createLoan = createHandlers(
             dueDate: new Date(installmentConfig.dueDate),
             amount: installmentConfig.amount,
             status: installmentConfig.status,
-            remarks: installmentConfig.remarks?.trim() || null,
             createdBy: { connect: { id: authenticatedUser.id } },
             updatedBy: { connect: { id: authenticatedUser.id } },
           },
@@ -161,7 +170,6 @@ export const createLoan = createHandlers(
           dueDate: addInterval(baseDate, installmentConfig.interval, index),
           amount: installmentConfig.amount,
           status: installmentConfig.status,
-          remarks: installmentConfig.remarks?.trim() || null,
           createdByUserId: authenticatedUser.id,
           updatedByUserId: authenticatedUser.id,
         }));
