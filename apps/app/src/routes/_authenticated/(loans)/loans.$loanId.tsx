@@ -46,6 +46,11 @@ function LoanDetailPage() {
       cell: ({ row }) => format(new Date(row.original.dueDate), 'MMM d, yyyy'),
     },
     {
+      accessorKey: 'amount',
+      header: 'Amount',
+      cell: ({ row }) => formatCurrency(row.original.amount, loan?.currency ?? 'PHP'),
+    },
+    {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => <InstallmentStatusBadge status={row.original.status} />,

@@ -146,6 +146,7 @@ export const createLoan = createHandlers(
           data: {
             loan: { connect: { id: createdLoan.id } },
             dueDate: new Date(installmentConfig.dueDate),
+            amount: installmentConfig.amount,
             status: installmentConfig.status,
             remarks: installmentConfig.remarks?.trim() || null,
             createdBy: { connect: { id: authenticatedUser.id } },
@@ -158,6 +159,7 @@ export const createLoan = createHandlers(
         const installmentRows = Array.from({ length: installmentConfig.count }, (_, index) => ({
           loanId: createdLoan.id,
           dueDate: addInterval(baseDate, installmentConfig.interval, index),
+          amount: installmentConfig.amount,
           status: installmentConfig.status,
           remarks: installmentConfig.remarks?.trim() || null,
           createdByUserId: authenticatedUser.id,

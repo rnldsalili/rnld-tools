@@ -26,6 +26,7 @@ export const updateInstallment = createHandlers(
         where: { id: installmentId, loanId },
         data: {
           ...(installmentUpdatePayload.dueDate !== undefined && { dueDate: new Date(installmentUpdatePayload.dueDate) }),
+          ...(installmentUpdatePayload.amount !== undefined && { amount: installmentUpdatePayload.amount }),
           ...(installmentUpdatePayload.status !== undefined && { status: installmentUpdatePayload.status }),
           ...(installmentUpdatePayload.remarks !== undefined && { remarks: installmentUpdatePayload.remarks?.trim() || null }),
           updatedBy: { connect: { id: authenticatedUser.id } },

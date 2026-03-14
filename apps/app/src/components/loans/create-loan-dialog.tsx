@@ -40,11 +40,13 @@ interface DefaultValues {
   description: string;
   installmentMode: InstallmentMode;
   singleDueDate: string;
+  singleAmount: string;
   singleStatus: string;
   singleRemarks: string;
   bulkInterval: string;
   bulkCount: string;
   bulkStartDate: string;
+  bulkAmount: string;
   bulkStatus: string;
   bulkRemarks: string;
 }
@@ -59,11 +61,13 @@ const DEFAULT_VALUES: DefaultValues = {
   description: '',
   installmentMode: InstallmentType.SINGLE as InstallmentMode,
   singleDueDate: '',
+  singleAmount: '',
   singleStatus: InstallmentStatus.PENDING,
   singleRemarks: '',
   bulkInterval: InstallmentInterval.MONTHLY,
   bulkCount: '1',
   bulkStartDate: '',
+  bulkAmount: '',
   bulkStatus: InstallmentStatus.PENDING,
   bulkRemarks: '',
 };
@@ -123,6 +127,37 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
               <Input
                 id={field.name}
                 type="date"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+              />
+              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field
+          name="singleAmount"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Amount is required';
+              const parsed = parseFloat(value);
+              if (isNaN(parsed) || parsed <= 0) return 'Must be a positive number';
+              return undefined;
+            },
+          }}
+        >
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>
+                Amount <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input
+                id={field.name}
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
                 onBlur={field.handleBlur}
@@ -243,6 +278,37 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
               <Input
                 id={field.name}
                 type="date"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+              />
+              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field
+          name="bulkAmount"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Amount is required';
+              const parsed = parseFloat(value);
+              if (isNaN(parsed) || parsed <= 0) return 'Must be a positive number';
+              return undefined;
+            },
+          }}
+        >
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>
+                Amount per Installment <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input
+                id={field.name}
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
                 onBlur={field.handleBlur}
@@ -542,6 +608,7 @@ function buildInstallmentsPayload(value: DefaultValues) {
       interval: value.bulkInterval as InstallmentInterval,
       count: parseInt(value.bulkCount, 10),
       startDate: value.bulkStartDate,
+      amount: parseFloat(value.bulkAmount),
       status: value.bulkStatus as (typeof INSTALLMENT_STATUSES)[number],
       remarks: value.bulkRemarks.trim() || undefined,
     };
@@ -550,6 +617,7 @@ function buildInstallmentsPayload(value: DefaultValues) {
   return {
     type: InstallmentType.SINGLE as const,
     dueDate: value.singleDueDate,
+    amount: parseFloat(value.singleAmount),
     status: value.singleStatus as (typeof INSTALLMENT_STATUSES)[number],
     remarks: value.singleRemarks.trim() || undefined,
   };

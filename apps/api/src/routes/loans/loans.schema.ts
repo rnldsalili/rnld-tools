@@ -31,6 +31,7 @@ const installmentStatus = z.enum(INSTALLMENT_STATUSES).default(InstallmentStatus
 const singleInstallmentSchema = z.object({
   type: z.literal(InstallmentType.SINGLE),
   dueDate: dateStringValidator,
+  amount: z.number().positive(),
   status: installmentStatus,
   remarks: z.string().trim().optional(),
 });
@@ -40,6 +41,7 @@ const bulkInstallmentSchema = z.object({
   interval: z.enum(InstallmentInterval),
   count: z.number().int().min(1).max(360),
   startDate: dateStringValidator,
+  amount: z.number().positive(),
   status: installmentStatus,
   remarks: z.string().trim().optional(),
 });

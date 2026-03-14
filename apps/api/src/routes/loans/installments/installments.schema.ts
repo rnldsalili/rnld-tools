@@ -9,6 +9,7 @@ export const loanInstallmentParamSchema = z.object({
 
 export const installmentUpdateSchema = z.object({
   dueDate: dateStringValidator.optional(),
+  amount: z.number().positive().optional(),
   status: z.enum(INSTALLMENT_STATUSES).optional(),
   remarks: z.string().trim().optional().nullable(),
 });

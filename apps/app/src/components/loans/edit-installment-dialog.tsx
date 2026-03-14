@@ -31,6 +31,7 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
     defaultValues: {
       status: installment.status as string,
       dueDate: format(new Date(installment.dueDate), 'yyyy-MM-dd'),
+      amount: String(installment.amount),
       remarks: installment.remarks ?? '',
     },
     onSubmit: async ({ value }) => {
@@ -40,6 +41,7 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
         body: {
           status: value.status as (typeof INSTALLMENT_STATUSES)[number],
           dueDate: value.dueDate,
+          amount: parseFloat(value.amount),
           remarks: value.remarks || null,
         },
       });
@@ -104,6 +106,35 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
               <Input
                 id={field.name}
                 type="date"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                onBlur={field.handleBlur}
+              />
+              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field
+          name="amount"
+          validators={{
+            onChange: ({ value }) => {
+              if (!value) return 'Amount is required';
+              const parsed = parseFloat(value);
+              if (isNaN(parsed) || parsed <= 0) return 'Must be a positive number';
+              return undefined;
+            },
+          }}
+        >
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>Amount</FieldLabel>
+              <Input
+                id={field.name}
+                type="number"
+                min="0.01"
+                step="0.01"
+                placeholder="0.00"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
                 onBlur={field.handleBlur}

@@ -115,6 +115,7 @@ model LoanInstallment {
   id              String                @id @default(cuid())
   loanId          String
   dueDate         DateTime
+  amount          Float
   status          LoanInstallmentStatus @default(PENDING)
   remarks         String?
   createdAt       DateTime              @default(now())
