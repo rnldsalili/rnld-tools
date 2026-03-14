@@ -1,12 +1,12 @@
-import type { QueryClient } from '@tanstack/react-query'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
-import { HeadContent, Scripts, createRootRouteWithContext } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
-import { Provider as JotaiProvider } from 'jotai'
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools';
+import { HeadContent, Scripts, createRootRouteWithContext } from '@tanstack/react-router';
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
+import { TanStackDevtools } from '@tanstack/react-devtools';
+import { Provider as JotaiProvider } from 'jotai';
+import type { QueryClient } from '@tanstack/react-query';
 
-import appCss from '@/app/styles.css?url'
+import appCss from '@/app/styles.css?url';
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -35,10 +35,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   shellComponent: RootDocument,
-})
+});
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { queryClient } = Route.useRouteContext()
+  const { queryClient } = Route.useRouteContext();
 
   return (
     <html lang="en">
@@ -51,10 +51,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             {children}
             {import.meta.env.DEV && (
               <TanStackDevtools
-                config={{
+                  config={{
                   position: 'bottom-right',
                 }}
-                plugins={[
+                  plugins={[
                   {
                     name: 'TanStack Router',
                     render: <TanStackRouterDevtoolsPanel />,
@@ -71,5 +71,5 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

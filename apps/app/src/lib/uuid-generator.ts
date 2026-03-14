@@ -27,6 +27,6 @@ export function generateUuid(): string {
 /**
  * Generates an array of `count` UUID v4 strings.
  */
-export function generateBatch(count: number): string[] {
+export function generateBatch(count: number): Array<string> {
   return Array.from({ length: count }, generateUuid);
 }

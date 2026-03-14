@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import {
-  KeyRoundIcon,
+  ArrowRightIcon,
   FingerprintIcon,
-  ShieldCheckIcon,
+  KeyRoundIcon,
   LayoutDashboardIcon,
   LockIcon,
-  ArrowRightIcon,
+  ShieldCheckIcon,
 } from 'lucide-react';
 import { useSession } from '@workspace/auth-client';
 import {
@@ -67,7 +67,7 @@ function SectionLabel({
 }) {
   return (
     <p
-      className={cn(
+        className={cn(
         'text-xs font-semibold uppercase tracking-widest mb-4',
         className,
       )}

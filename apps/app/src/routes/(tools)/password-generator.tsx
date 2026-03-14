@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useCallback, useEffect } from 'react';
-import { CopyIcon, RefreshCwIcon, CheckIcon, ShieldCheckIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { CheckIcon, CopyIcon, RefreshCwIcon, ShieldCheckIcon } from 'lucide-react';
 import {
   Button,
   Card,
@@ -15,6 +15,7 @@ import {
   cn,
 } from '@workspace/ui';
 
+import type { PasswordOptions } from '@/app/types/password-generator';
 import {
   DEFAULT_PASSWORD_OPTIONS,
   PASSWORD_LENGTH_MAX,
@@ -23,7 +24,6 @@ import {
   STRENGTH_TEXT,
 } from '@/app/constants/password-generator';
 import { calcStrength, generatePassword } from '@/app/lib/password-generator';
-import type { PasswordOptions } from '@/app/types/password-generator';
 
 export const Route = createFileRoute('/(tools)/password-generator')({
   head: () => ({ meta: [{ title: 'RTools - Password Generator' }] }),
@@ -78,10 +78,10 @@ function PasswordGeneratorPage() {
           {/* Password display + action buttons */}
           <div className="flex items-center gap-2">
             <input
-              readOnly
-              value={password}
-              placeholder={hasAtLeastOne ? 'Generating…' : 'Select at least one character type'}
-              className={cn(
+                readOnly
+                value={password}
+                placeholder={hasAtLeastOne ? 'Generating…' : 'Select at least one character type'}
+                className={cn(
                 'flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono',
                 'text-foreground placeholder:text-muted-foreground',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
@@ -89,20 +89,20 @@ function PasswordGeneratorPage() {
               )}
             />
             <Button
-              variant="outline"
-              size="icon"
-              onClick={regenerate}
-              disabled={!hasAtLeastOne}
-              title="Regenerate"
+                variant="outline"
+                size="icon"
+                onClick={regenerate}
+                disabled={!hasAtLeastOne}
+                title="Regenerate"
             >
               <RefreshCwIcon className="size-4" />
             </Button>
             <Button
-              variant="outline"
-              size="icon"
-              onClick={copyPassword}
-              disabled={!password}
-              title="Copy to clipboard"
+                variant="outline"
+                size="icon"
+                onClick={copyPassword}
+                disabled={!password}
+                title="Copy to clipboard"
             >
               {copied ? <CheckIcon className="size-4 text-primary" /> : <CopyIcon className="size-4" />}
             </Button>
@@ -117,8 +117,8 @@ function PasswordGeneratorPage() {
             <div className="flex gap-1 h-1.5">
               {Array.from({ length: 5 }, (_, i) => (
                 <div
-                  key={i}
-                  className={cn(
+                    key={i}
+                    className={cn(
                     'flex-1 rounded-full transition-colors duration-300',
                     i < strength.score ? STRENGTH_COLORS[strength.label] : 'bg-muted',
                   )}
@@ -136,26 +136,26 @@ function PasswordGeneratorPage() {
                 Length
               </Label>
               <input
-                type="number"
-                min={PASSWORD_LENGTH_MIN}
-                max={PASSWORD_LENGTH_MAX}
-                value={opts.length}
-                onChange={(e) => {
+                  type="number"
+                  min={PASSWORD_LENGTH_MIN}
+                  max={PASSWORD_LENGTH_MAX}
+                  value={opts.length}
+                  onChange={(e) => {
                   const v = Math.min(PASSWORD_LENGTH_MAX, Math.max(PASSWORD_LENGTH_MIN, Number(e.target.value)));
                   if (!isNaN(v)) setOpt('length', v);
                 }}
-                className={cn(
+                  className={cn(
                   'w-14 rounded-md border border-input bg-background px-2 py-1 text-sm text-center',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
                 )}
               />
             </div>
             <Slider
-              id="length-slider"
-              min={PASSWORD_LENGTH_MIN}
-              max={PASSWORD_LENGTH_MAX}
-              value={[opts.length]}
-              onValueChange={([v]) => setOpt('length', v)}
+                id="length-slider"
+                min={PASSWORD_LENGTH_MIN}
+                max={PASSWORD_LENGTH_MAX}
+                value={[opts.length]}
+                onValueChange={([v]) => setOpt('length', v)}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{PASSWORD_LENGTH_MIN}</span>
@@ -170,28 +170,28 @@ function PasswordGeneratorPage() {
             <p className="text-sm font-medium text-foreground">Character Types</p>
             <div className="grid grid-cols-2 gap-3">
               <CheckboxOption
-                id="uppercase"
-                label="Uppercase (A–Z)"
-                checked={opts.uppercase}
-                onCheckedChange={(v) => setOpt('uppercase', v)}
+                  id="uppercase"
+                  label="Uppercase (A–Z)"
+                  checked={opts.uppercase}
+                  onCheckedChange={(v) => setOpt('uppercase', v)}
               />
               <CheckboxOption
-                id="lowercase"
-                label="Lowercase (a–z)"
-                checked={opts.lowercase}
-                onCheckedChange={(v) => setOpt('lowercase', v)}
+                  id="lowercase"
+                  label="Lowercase (a–z)"
+                  checked={opts.lowercase}
+                  onCheckedChange={(v) => setOpt('lowercase', v)}
               />
               <CheckboxOption
-                id="numbers"
-                label="Numbers (0–9)"
-                checked={opts.numbers}
-                onCheckedChange={(v) => setOpt('numbers', v)}
+                  id="numbers"
+                  label="Numbers (0–9)"
+                  checked={opts.numbers}
+                  onCheckedChange={(v) => setOpt('numbers', v)}
               />
               <CheckboxOption
-                id="symbols"
-                label="Symbols (!@#…)"
-                checked={opts.symbols}
-                onCheckedChange={(v) => setOpt('symbols', v)}
+                  id="symbols"
+                  label="Symbols (!@#…)"
+                  checked={opts.symbols}
+                  onCheckedChange={(v) => setOpt('symbols', v)}
               />
             </div>
             {!hasAtLeastOne && (
@@ -205,10 +205,10 @@ function PasswordGeneratorPage() {
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium text-foreground">Advanced</p>
             <CheckboxOption
-              id="exclude-ambiguous"
-              label="Exclude ambiguous characters (0, O, l, 1, I)"
-              checked={opts.excludeAmbiguous}
-              onCheckedChange={(v) => setOpt('excludeAmbiguous', v)}
+                id="exclude-ambiguous"
+                label="Exclude ambiguous characters (0, O, l, 1, I)"
+                checked={opts.excludeAmbiguous}
+                onCheckedChange={(v) => setOpt('excludeAmbiguous', v)}
             />
           </div>
         </CardContent>

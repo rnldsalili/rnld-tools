@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { ShieldCheckIcon, HashIcon, ShuffleIcon, LayoutDashboardIcon } from 'lucide-react';
+import { Link, createFileRoute } from '@tanstack/react-router';
+import { HashIcon, LayoutDashboardIcon, ShieldCheckIcon, ShuffleIcon } from 'lucide-react';
 import { useSession } from '@workspace/auth-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, cn } from '@workspace/ui';
 
@@ -56,7 +56,7 @@ function DashboardPage() {
           {TOOLS.map(({ href, icon: Icon, title, description }) => (
             <Link key={href} to={href}>
               <Card
-                className={cn(
+                  className={cn(
                   'h-full transition-colors duration-150',
                   'hover:border-foreground/20 hover:bg-accent/40 cursor-pointer',
                 )}

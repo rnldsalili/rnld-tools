@@ -2,8 +2,8 @@ import { Link, useLocation, useMatches, useRouter } from '@tanstack/react-router
 import { useAtom } from 'jotai';
 import {
   ChevronRightIcon,
-  HashIcon,
   HandCoinsIcon,
+  HashIcon,
   KeyRoundIcon,
   LayoutDashboardIcon,
   LogOutIcon,
@@ -15,7 +15,7 @@ import {
   SunIcon,
   WrenchIcon,
 } from 'lucide-react';
-import { useSession, signOut } from '@workspace/auth-client';
+import { signOut, useSession } from '@workspace/auth-client';
 import {
   Button,
   DropdownMenu,
@@ -39,12 +39,12 @@ interface NavItem {
   label: string;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: Array<NavItem> = [
   { to: '/dashboard', icon: LayoutDashboardIcon, label: 'Dashboard' },
   { to: '/loans', icon: HandCoinsIcon, label: 'Loans' },
 ];
 
-const TOOL_NAV_ITEMS: NavItem[] = [
+const TOOL_NAV_ITEMS: Array<NavItem> = [
   { to: '/password-generator', icon: KeyRoundIcon, label: 'Password Generator' },
   { to: '/uuid-generator', icon: HashIcon, label: 'UUID Generator' },
   { to: '/secret-generator', icon: ShuffleIcon, label: 'Secret Generator' },
@@ -64,8 +64,8 @@ function SidebarNavItem({
 
   const linkContent = (
     <Link
-      to={item.to}
-      className={cn(
+        to={item.to}
+        className={cn(
         'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors',
         'text-muted-foreground hover:bg-accent hover:text-foreground',
         isActive && 'bg-accent text-foreground font-medium',
@@ -112,8 +112,8 @@ function Breadcrumb() {
               <span className="text-foreground font-medium">{crumb.title}</span>
             ) : (
               <Link
-                to={crumb.pathname as any}
-                className="hover:text-foreground transition-colors"
+                  to={crumb.pathname as any}
+                  className="hover:text-foreground transition-colors"
               >
                 {crumb.title}
               </Link>
@@ -155,14 +155,14 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
       <div className="flex h-screen overflow-hidden bg-background">
         {/* Sidebar */}
         <aside
-          className={cn(
+            className={cn(
             'flex flex-col border-r border-border bg-background transition-[width] duration-200 ease-in-out shrink-0',
             isCollapsed ? 'w-12' : 'w-52',
           )}
         >
           {/* Sidebar header */}
           <div
-            className={cn(
+              className={cn(
               'flex h-14 items-center border-b border-border shrink-0',
               isCollapsed ? 'justify-center px-2' : 'justify-between px-3',
             )}
@@ -180,11 +180,11 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 shrink-0"
-                  onClick={() => setIsCollapsed(!isCollapsed)}
-                  aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 shrink-0"
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
                   {isCollapsed ? (
                     <PanelLeftOpenIcon className="size-3.5" />
@@ -203,10 +203,10 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
           <nav className="flex flex-col gap-0.5 p-2 flex-1 overflow-y-auto">
             {NAV_ITEMS.map((item) => (
               <SidebarNavItem
-                key={item.to}
-                item={item}
-                isCollapsed={isCollapsed}
-                currentPath={currentPath}
+                  key={item.to}
+                  item={item}
+                  isCollapsed={isCollapsed}
+                  currentPath={currentPath}
               />
             ))}
 
@@ -222,10 +222,10 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
 
             {TOOL_NAV_ITEMS.map((item) => (
               <SidebarNavItem
-                key={item.to}
-                item={item}
-                isCollapsed={isCollapsed}
-                currentPath={currentPath}
+                  key={item.to}
+                  item={item}
+                  isCollapsed={isCollapsed}
+                  currentPath={currentPath}
               />
             ))}
           </nav>
@@ -238,10 +238,10 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
             <div className="flex items-center gap-3 min-w-0">
               {/* Mobile menu toggle (visible on small screens) */}
               <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 md:hidden"
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 md:hidden"
+                  onClick={() => setIsCollapsed(!isCollapsed)}
               >
                 <MenuIcon className="size-4" />
               </Button>
@@ -251,11 +251,11 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
             <div className="flex items-center gap-1">
               {/* Theme toggle */}
               <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                onClick={toggle}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  onClick={toggle}
+                  aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {mounted ? (
                   isDark ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />
@@ -270,9 +270,9 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 rounded-full text-xs font-semibold bg-accent text-accent-foreground hover:bg-accent/80"
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 rounded-full text-xs font-semibold bg-accent text-accent-foreground hover:bg-accent/80"
                   >
                     {userInitial}
                   </Button>
@@ -283,8 +283,8 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={handleSignOut}
-                    className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                      onClick={handleSignOut}
+                      className="cursor-pointer gap-2 text-destructive focus:text-destructive"
                   >
                     <LogOutIcon className="size-3.5" />
                     Sign out

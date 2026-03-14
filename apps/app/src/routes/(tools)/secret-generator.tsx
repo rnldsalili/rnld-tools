@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useCallback, useEffect } from 'react';
-import { CopyIcon, RefreshCwIcon, CheckIcon, ShuffleIcon } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { CheckIcon, CopyIcon, RefreshCwIcon, ShuffleIcon } from 'lucide-react';
 import {
   Button,
   Card,
@@ -14,6 +14,7 @@ import {
   cn,
 } from '@workspace/ui';
 
+import type { SecretEncoding, SecretOptions } from '@/app/types/secret-generator';
 import {
   DEFAULT_SECRET_OPTIONS,
   ENCODING_LABELS,
@@ -21,7 +22,6 @@ import {
   SECRET_BYTES_MIN,
 } from '@/app/constants/secret-generator';
 import { generateSecret, outputLength } from '@/app/lib/secret-generator';
-import type { SecretEncoding, SecretOptions } from '@/app/types/secret-generator';
 
 export const Route = createFileRoute('/(tools)/secret-generator')({
   head: () => ({ meta: [{ title: 'RTools - Secret Generator' }] }),
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/(tools)/secret-generator')({
   component: SecretGeneratorPage,
 });
 
-const ENCODINGS: { value: SecretEncoding; label: string }[] = [
+const ENCODINGS: Array<{ value: SecretEncoding; label: string }> = [
   { value: 'base64', label: ENCODING_LABELS.base64 },
   { value: 'base64url', label: ENCODING_LABELS.base64url },
   { value: 'hex', label: ENCODING_LABELS.hex },
@@ -87,10 +87,10 @@ function SecretGeneratorPage() {
           {/* Secret display + action buttons */}
           <div className="flex items-center gap-2">
             <input
-              readOnly
-              value={secret}
-              placeholder="Generating…"
-              className={cn(
+                readOnly
+                value={secret}
+                placeholder="Generating…"
+                className={cn(
                 'flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono',
                 'text-foreground placeholder:text-muted-foreground truncate',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
@@ -100,11 +100,11 @@ function SecretGeneratorPage() {
               <RefreshCwIcon className="size-4" />
             </Button>
             <Button
-              variant="outline"
-              size="icon"
-              onClick={copySecret}
-              disabled={!secret}
-              title="Copy to clipboard"
+                variant="outline"
+                size="icon"
+                onClick={copySecret}
+                disabled={!secret}
+                title="Copy to clipboard"
             >
               {copied ? <CheckIcon className="size-4 text-primary" /> : <CopyIcon className="size-4" />}
             </Button>
@@ -124,26 +124,26 @@ function SecretGeneratorPage() {
                 Bytes
               </Label>
               <input
-                type="number"
-                min={SECRET_BYTES_MIN}
-                max={SECRET_BYTES_MAX}
-                value={opts.bytes}
-                onChange={(e) => {
+                  type="number"
+                  min={SECRET_BYTES_MIN}
+                  max={SECRET_BYTES_MAX}
+                  value={opts.bytes}
+                  onChange={(e) => {
                   const v = Math.min(SECRET_BYTES_MAX, Math.max(SECRET_BYTES_MIN, Number(e.target.value)));
                   if (!isNaN(v)) setOpt('bytes', v);
                 }}
-                className={cn(
+                  className={cn(
                   'w-14 rounded-md border border-input bg-background px-2 py-1 text-sm text-center',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
                 )}
               />
             </div>
             <Slider
-              id="bytes-slider"
-              min={SECRET_BYTES_MIN}
-              max={SECRET_BYTES_MAX}
-              value={[opts.bytes]}
-              onValueChange={([v]) => setOpt('bytes', v)}
+                id="bytes-slider"
+                min={SECRET_BYTES_MIN}
+                max={SECRET_BYTES_MAX}
+                value={[opts.bytes]}
+                onValueChange={([v]) => setOpt('bytes', v)}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>{SECRET_BYTES_MIN}</span>
@@ -159,10 +159,10 @@ function SecretGeneratorPage() {
             <div className="flex rounded-md border border-input p-0.5 gap-0.5 bg-muted">
               {ENCODINGS.map((enc) => (
                 <button
-                  key={enc.value}
-                  type="button"
-                  onClick={() => setOpt('encoding', enc.value)}
-                  className={cn(
+                    key={enc.value}
+                    type="button"
+                    onClick={() => setOpt('encoding', enc.value)}
+                    className={cn(
                     'flex-1 text-xs px-3 py-1.5 rounded-sm font-medium transition-colors duration-150',
                     opts.encoding === enc.value
                       ? 'bg-background text-foreground shadow-sm'

@@ -2,6 +2,11 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
 import apiClient from '@/app/lib/api';
 
+// --- Query keys ---
+
+const LOANS_QUERY_KEY = 'loans';
+const LOAN_QUERY_KEY = 'loan';
+
 // --- Types ---
 
 export type LoansListResponse = InferResponseType<typeof apiClient.loans.$get, 200>;
@@ -12,6 +17,7 @@ export type LoanDetail = LoanDetailResponse['data']['loan'];
 export type LoanInstallment = LoanDetail['installments'][number];
 
 type CreateLoanBody = InferRequestType<typeof apiClient.loans.$post>['json'];
+type UpdateLoanBody = InferRequestType<typeof apiClient.loans[':id']['$put']>['json'];
 type UpdateInstallmentBody = InferRequestType<
   typeof apiClient.loans[':loanId']['installments'][':installmentId']['$put']
 >['json'];
@@ -34,7 +40,7 @@ interface LoanQueryParams {
 
 export function loansQueryOptions(params: LoansQueryParams) {
   return queryOptions({
-    queryKey: ['loans', params],
+    queryKey: [LOANS_QUERY_KEY, params],
     queryFn: async () => {
       const res = await apiClient.loans.$get({
         query: {
@@ -50,7 +56,7 @@ export function loansQueryOptions(params: LoansQueryParams) {
 
 export function loanQueryOptions(params: LoanQueryParams) {
   return queryOptions({
-    queryKey: ['loan', params.loanId, { page: params.page, limit: params.limit }],
+    queryKey: [LOAN_QUERY_KEY, params.loanId, { page: params.page, limit: params.limit }],
     queryFn: async () => {
       const res = await apiClient.loans[':id'].$get({
         param: { id: params.loanId },
@@ -81,7 +87,31 @@ export function useCreateLoan() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['loans'] });
+      queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
+    },
+  });
+}
+
+export function useUpdateLoan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      loanId,
+      body,
+    }: {
+      loanId: string;
+      body: UpdateLoanBody;
+    }) => {
+      const res = await apiClient.loans[':id'].$put({
+        param: { id: loanId },
+        json: body,
+      });
+      return res.json();
+    },
+    onSuccess: (_data, { loanId }) => {
+      queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
     },
   });
 }
@@ -106,7 +136,7 @@ export function useUpdateInstallment() {
       return res.json();
     },
     onSuccess: (_data, { loanId }) => {
-      queryClient.invalidateQueries({ queryKey: ['loan', loanId] });
+      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
     },
   });
 }

@@ -15,14 +15,14 @@ import {
   Textarea,
 } from '@workspace/ui';
 import {
-  Currency,
   CURRENCIES,
-  InstallmentInterval,
+  Currency,
   INSTALLMENT_INTERVAL_LABELS,
   INSTALLMENT_INTERVAL_VALUES,
-  InstallmentStatus,
-  INSTALLMENT_STATUS_LABELS,
   INSTALLMENT_STATUSES,
+  INSTALLMENT_STATUS_LABELS,
+  InstallmentInterval,
+  InstallmentStatus,
   InstallmentType,
 } from '@workspace/constants';
 import { useCreateLoan } from '@/app/hooks/use-loan';
@@ -113,8 +113,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         <p className="text-xs text-muted-foreground">Single installment details</p>
 
         <form.Field
-          name="singleDueDate"
-          validators={{
+            name="singleDueDate"
+            validators={{
             onChange: ({ value }) =>
               !value ? 'Due date is required' : undefined,
           }}
@@ -125,11 +125,11 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 Due Date <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
-                id={field.name}
-                type="date"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                  id={field.name}
+                  type="date"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
@@ -137,8 +137,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         </form.Field>
 
         <form.Field
-          name="singleAmount"
-          validators={{
+            name="singleAmount"
+            validators={{
             onChange: ({ value }) => {
               if (!value) return 'Amount is required';
               const parsed = parseFloat(value);
@@ -153,14 +153,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 Amount <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
-                id={field.name}
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                  id={field.name}
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
@@ -190,11 +190,11 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             <Field>
               <FieldLabel htmlFor={field.name}>Remarks</FieldLabel>
               <Textarea
-                id={field.name}
-                placeholder="Optional remarks..."
-                rows={2}
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
+                  id={field.name}
+                  placeholder="Optional remarks..."
+                  rows={2}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
               />
             </Field>
           )}
@@ -232,8 +232,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
           </form.Field>
 
           <form.Field
-            name="bulkCount"
-            validators={{
+              name="bulkCount"
+              validators={{
               onChange: ({ value }) => {
                 const parsed = parseInt(value, 10);
                 if (!value || isNaN(parsed) || parsed < 1 || parsed > 360)
@@ -248,14 +248,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                   Count <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
-                  id={field.name}
-                  type="number"
-                  min="1"
-                  max="360"
-                  placeholder="e.g. 12"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
+                    id={field.name}
+                    type="number"
+                    min="1"
+                    max="360"
+                    placeholder="e.g. 12"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
                 />
                 <FieldError errors={toFieldErrors(field.state.meta.errors)} />
               </Field>
@@ -264,8 +264,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         </div>
 
         <form.Field
-          name="bulkStartDate"
-          validators={{
+            name="bulkStartDate"
+            validators={{
             onChange: ({ value }) =>
               !value ? 'Start date is required' : undefined,
           }}
@@ -276,11 +276,11 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 Start Date <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
-                id={field.name}
-                type="date"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                  id={field.name}
+                  type="date"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
@@ -288,8 +288,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         </form.Field>
 
         <form.Field
-          name="bulkAmount"
-          validators={{
+            name="bulkAmount"
+            validators={{
             onChange: ({ value }) => {
               if (!value) return 'Amount is required';
               const parsed = parseFloat(value);
@@ -304,14 +304,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 Amount per Installment <span className="text-destructive">*</span>
               </FieldLabel>
               <Input
-                id={field.name}
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                  id={field.name}
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
@@ -341,11 +341,11 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             <Field>
               <FieldLabel htmlFor={field.name}>Remarks</FieldLabel>
               <Textarea
-                id={field.name}
-                placeholder="Optional remarks..."
-                rows={2}
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
+                  id={field.name}
+                  placeholder="Optional remarks..."
+                  rows={2}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
               />
             </Field>
           )}
@@ -356,17 +356,17 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
 
   return (
     <Modal
-      open={open}
-      onOpenChange={handleOpenChange}
-      title="New Loan"
-      className="sm:max-w-lg"
-      footer={
+        open={open}
+        onOpenChange={handleOpenChange}
+        title="New Loan"
+        className="sm:max-w-lg"
+        footer={(
         <>
           <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleOpenChange(false)}
-            disabled={isPending}
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isPending}
           >
             Cancel
           </Button>
@@ -374,15 +374,15 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             {isPending ? 'Creating...' : 'Create Loan'}
           </Button>
         </>
-      }
+      )}
     >
       <form
-        id="create-loan-form"
-        onSubmit={(e) => {
+          id="create-loan-form"
+          onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-4"
+          className="flex flex-col gap-4"
       >
           {/* Loan Info */}
           <div className="flex flex-col gap-3">
@@ -392,8 +392,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
 
             {/* Borrower */}
             <form.Field
-              name="borrower"
-              validators={{
+                name="borrower"
+                validators={{
                 onChange: ({ value }) =>
                   !value.trim() ? 'Borrower name is required' : undefined,
               }}
@@ -404,11 +404,11 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                     Borrower <span className="text-destructive">*</span>
                   </FieldLabel>
                   <Input
-                    id={field.name}
-                    placeholder="Full name"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
+                      id={field.name}
+                      placeholder="Full name"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
                   />
                   <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
@@ -418,8 +418,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             {/* Amount + Currency */}
             <div className="grid grid-cols-2 gap-3">
               <form.Field
-                name="amount"
-                validators={{
+                  name="amount"
+                  validators={{
                   onChange: ({ value }) => {
                     if (!value) return 'Amount is required';
                     const parsed = parseFloat(value);
@@ -434,14 +434,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                       Amount <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Input
-                      id={field.name}
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
+                        id={field.name}
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
                     />
                     <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                   </Field>
@@ -471,8 +471,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
 
             {/* Interest Rate */}
             <form.Field
-              name="interestRate"
-              validators={{
+                name="interestRate"
+                validators={{
                 onChange: ({ value }) => {
                   if (!value) return undefined;
                   const parsed = parseFloat(value);
@@ -485,14 +485,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
                   <FieldLabel htmlFor={field.name}>Interest Rate (%)</FieldLabel>
                   <Input
-                    id={field.name}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="e.g. 5.5"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
+                      id={field.name}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="e.g. 5.5"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
                   />
                   <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
@@ -506,18 +506,18 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                   <Field>
                     <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
                     <Input
-                      id={field.name}
-                      placeholder="+63 9XX XXX XXXX"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                        id={field.name}
+                        placeholder="+63 9XX XXX XXXX"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
                     />
                   </Field>
                 )}
               </form.Field>
 
               <form.Field
-                name="email"
-                validators={{
+                  name="email"
+                  validators={{
                   onChange: ({ value }) => {
                     if (!value.trim()) return undefined;
                     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -529,12 +529,12 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                   <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
                     <FieldLabel htmlFor={field.name}>Email</FieldLabel>
                     <Input
-                      id={field.name}
-                      type="email"
-                      placeholder="borrower@example.com"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
+                        id={field.name}
+                        type="email"
+                        placeholder="borrower@example.com"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
                     />
                     <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                   </Field>
@@ -548,11 +548,11 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 <Field>
                   <FieldLabel htmlFor={field.name}>Description</FieldLabel>
                   <Textarea
-                    id={field.name}
-                    placeholder="Optional notes about this loan..."
-                    rows={2}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                      id={field.name}
+                      placeholder="Optional notes about this loan..."
+                      rows={2}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
                   />
                 </Field>
               )}
@@ -572,8 +572,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 <Field>
                   <FieldLabel htmlFor={field.name}>Mode</FieldLabel>
                   <Select
-                    value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value as InstallmentMode)}
+                      value={field.state.value}
+                      onValueChange={(value) => field.handleChange(value as InstallmentMode)}
                   >
                     <SelectTrigger id={field.name}>
                       <SelectValue placeholder="Select mode" />
@@ -596,7 +596,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
             </form.Subscribe>
           </div>
 
-        </form>
+      </form>
     </Modal>
   );
 }

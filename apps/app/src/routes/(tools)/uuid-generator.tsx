@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useCallback } from 'react';
-import { CopyIcon, CheckIcon, HashIcon, RefreshCwIcon, Trash2Icon, ClipboardListIcon } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { CheckIcon, ClipboardListIcon, CopyIcon, HashIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import {
   Button,
   Card,
@@ -13,13 +13,13 @@ import {
   cn,
 } from '@workspace/ui';
 
+import type { UuidOptions } from '@/app/types/uuid-generator';
 import {
   DEFAULT_UUID_OPTIONS,
   UUID_COUNT_MAX,
   UUID_COUNT_MIN,
 } from '@/app/constants/uuid-generator';
 import { generateBatch } from '@/app/lib/uuid-generator';
-import type { UuidOptions } from '@/app/types/uuid-generator';
 
 export const Route = createFileRoute('/(tools)/uuid-generator')({
   head: () => ({ meta: [{ title: 'RTools - UUID Generator' }] }),
@@ -29,7 +29,7 @@ export const Route = createFileRoute('/(tools)/uuid-generator')({
 
 function UuidGeneratorPage() {
   const [opts, setOpts] = useState<UuidOptions>(DEFAULT_UUID_OPTIONS);
-  const [uuids, setUuids] = useState<string[]>(() => generateBatch(DEFAULT_UUID_OPTIONS.count));
+  const [uuids, setUuids] = useState<Array<string>>(() => generateBatch(DEFAULT_UUID_OPTIONS.count));
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
@@ -86,13 +86,13 @@ function UuidGeneratorPage() {
                 Count
               </Label>
               <input
-                id="uuid-count"
-                type="number"
-                min={UUID_COUNT_MIN}
-                max={UUID_COUNT_MAX}
-                value={opts.count}
-                onChange={(e) => handleCountChange(e.target.value)}
-                className={cn(
+                  id="uuid-count"
+                  type="number"
+                  min={UUID_COUNT_MIN}
+                  max={UUID_COUNT_MAX}
+                  value={opts.count}
+                  onChange={(e) => handleCountChange(e.target.value)}
+                  className={cn(
                   'w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
                 )}
@@ -115,11 +115,11 @@ function UuidGeneratorPage() {
                     {uuid}
                   </code>
                   <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyOne(i)}
-                    title="Copy"
-                    className="shrink-0"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => copyOne(i)}
+                      title="Copy"
+                      className="shrink-0"
                   >
                     {copiedIndex === i ? (
                       <CheckIcon className="size-3.5 text-primary" />
@@ -142,10 +142,10 @@ function UuidGeneratorPage() {
               <Separator />
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={copyAll}
-                  className="flex items-center gap-2 flex-1"
+                    variant="outline"
+                    size="sm"
+                    onClick={copyAll}
+                    className="flex items-center gap-2 flex-1"
                 >
                   {copiedAll ? (
                     <CheckIcon className="size-3.5 text-primary" />
@@ -155,10 +155,10 @@ function UuidGeneratorPage() {
                   {copiedAll ? 'Copied!' : 'Copy All'}
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clear}
-                  className="flex items-center gap-2"
+                    variant="outline"
+                    size="sm"
+                    onClick={clear}
+                    className="flex items-center gap-2"
                 >
                   <Trash2Icon className="size-3.5" />
                   Clear

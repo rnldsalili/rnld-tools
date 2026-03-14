@@ -73,26 +73,26 @@ function LoginPage() {
                 <Field data-invalid={!!error && !email ? true : undefined}>
                   <FieldLabel htmlFor="email">Email</FieldLabel>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isPending}
+                      id="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isPending}
                   />
                 </Field>
                 <Field data-invalid={!!error && !password ? true : undefined}>
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <PasswordInput
-                    id="password"
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isPending}
+                      id="password"
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isPending}
                   />
                 </Field>
               </FieldGroup>

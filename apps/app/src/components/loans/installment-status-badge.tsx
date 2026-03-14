@@ -1,5 +1,5 @@
 import { Badge, cn } from '@workspace/ui';
-import { InstallmentStatus, INSTALLMENT_STATUS_LABELS } from '@workspace/constants';
+import { INSTALLMENT_STATUS_LABELS, InstallmentStatus } from '@workspace/constants';
 
 const STATUS_STYLES: Record<string, string> = {
   [InstallmentStatus.PENDING]: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',

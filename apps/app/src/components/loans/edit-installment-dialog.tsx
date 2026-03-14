@@ -3,8 +3,8 @@ import { format } from 'date-fns';
 import {
   Button,
   Field,
-  FieldLabel,
   FieldError,
+  FieldLabel,
   Input,
   Modal,
   Select,
@@ -14,8 +14,9 @@ import {
   SelectValue,
   Textarea,
 } from '@workspace/ui';
-import { INSTALLMENT_STATUS_LABELS, INSTALLMENT_STATUSES } from '@workspace/constants';
-import { useUpdateInstallment, type LoanInstallment } from '@/app/hooks/use-loan';
+import { INSTALLMENT_STATUSES, INSTALLMENT_STATUS_LABELS } from '@workspace/constants';
+import type { LoanInstallment } from '@/app/hooks/use-loan';
+import {  useUpdateInstallment } from '@/app/hooks/use-loan';
 import { toFieldErrors } from '@/app/lib/form';
 
 interface EditInstallmentDialogProps {
@@ -51,11 +52,11 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
 
   return (
     <Modal
-      open
-      onOpenChange={(open) => { if (!open) onClose(); }}
-      title="Edit Installment"
-      className="sm:max-w-md"
-      footer={
+        open
+        onOpenChange={(open) => { if (!open) onClose(); }}
+        title="Edit Installment"
+        className="sm:max-w-md"
+        footer={(
         <>
           <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
@@ -64,15 +65,15 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
             {isPending ? 'Saving...' : 'Save changes'}
           </Button>
         </>
-      }
+      )}
     >
       <form
-        id="edit-installment-form"
-        onSubmit={(e) => {
+          id="edit-installment-form"
+          onSubmit={(e) => {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="flex flex-col gap-4"
+          className="flex flex-col gap-4"
       >
         <form.Field name="status">
           {(field) => (
@@ -95,8 +96,8 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
         </form.Field>
 
         <form.Field
-          name="dueDate"
-          validators={{
+            name="dueDate"
+            validators={{
             onChange: ({ value }) => (!value ? 'Due date is required' : undefined),
           }}
         >
@@ -104,11 +105,11 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
             <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
               <FieldLabel htmlFor={field.name}>Due Date</FieldLabel>
               <Input
-                id={field.name}
-                type="date"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                  id={field.name}
+                  type="date"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
@@ -116,8 +117,8 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
         </form.Field>
 
         <form.Field
-          name="amount"
-          validators={{
+            name="amount"
+            validators={{
             onChange: ({ value }) => {
               if (!value) return 'Amount is required';
               const parsed = parseFloat(value);
@@ -130,14 +131,14 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
             <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
               <FieldLabel htmlFor={field.name}>Amount</FieldLabel>
               <Input
-                id={field.name}
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="0.00"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
+                  id={field.name}
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
@@ -149,11 +150,11 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
             <Field>
               <FieldLabel htmlFor={field.name}>Remarks</FieldLabel>
               <Textarea
-                id={field.name}
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="Optional remarks..."
-                rows={3}
+                  id={field.name}
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  placeholder="Optional remarks..."
+                  rows={3}
               />
             </Field>
           )}

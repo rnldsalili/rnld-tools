@@ -21,7 +21,6 @@
         "@cloudflare/workers-types": "^4.20260307.1",
         "@workspace/eslint-config": "workspace:*",
         "@workspace/typescript-config": "workspace:*",
-        "eslint": "^10.0.3",
         "typescript": "^5.9.3"
     }
 }

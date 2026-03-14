@@ -1,3 +1,4 @@
+import type { PasswordOptions, PasswordStrength } from '@/app/types/password-generator';
 import {
   AMBIGUOUS_RE,
   CHAR_LOWERCASE,
@@ -5,7 +6,6 @@ import {
   CHAR_SYMBOLS,
   CHAR_UPPERCASE,
 } from '@/app/constants/password-generator';
-import type { PasswordOptions, PasswordStrength } from '@/app/types/password-generator';
 
 export function generatePassword(opts: PasswordOptions): string {
   let charset = '';

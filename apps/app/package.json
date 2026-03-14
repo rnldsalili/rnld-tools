@@ -11,6 +11,8 @@
     "build:production": "CLOUDFLARE_ENV=production vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "deploy": "bun run build && wrangler deploy"
   },
   "dependencies": {

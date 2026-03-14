@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 import { authClient } from '@workspace/auth-client';
 import { NavigationLayout } from '@/app/layouts/navigation-layout';
 
