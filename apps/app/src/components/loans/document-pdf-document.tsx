@@ -334,7 +334,7 @@ function replacePlaceholdersInContent(content: TipTapNode | null, loan: LoanDeta
     '{{loan.currency}}': loan.currency,
     '{{loan.interestRate}}': loan.interestRate != null ? `${loan.interestRate}%` : MISSING_PLACEHOLDER_VALUE,
     '{{loan.description}}': loan.description ?? MISSING_PLACEHOLDER_VALUE,
-    '{{loan.createdAt}}': new Date(loan.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+    '{{loan.loanDate}}': new Date(loan.loanDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
     '{{loan.installmentCount}}': String(loan.installments.length),
     '{{loan.installmentInterval}}': INSTALLMENT_INTERVAL_LABELS[
       loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS

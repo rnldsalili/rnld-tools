@@ -126,6 +126,7 @@ export const createLoan = createHandlers(
         amount: loanPayload.amount,
         currency: loanPayload.currency,
         installmentInterval: loanPayload.installmentInterval,
+        loanDate: new Date(loanPayload.loanDate),
         interestRate: loanPayload.interestRate ?? null,
         phone: loanPayload.phone?.trim() || null,
         email: loanPayload.email?.trim() || null,
@@ -195,6 +196,7 @@ export const updateLoan = createHandlers(
           ...(loanUpdatePayload.installmentInterval !== undefined && {
             installmentInterval: loanUpdatePayload.installmentInterval,
           }),
+          loanDate: new Date(loanUpdatePayload.loanDate),
           ...(loanUpdatePayload.interestRate !== undefined && { interestRate: loanUpdatePayload.interestRate }),
           ...(loanUpdatePayload.phone !== undefined && { phone: loanUpdatePayload.phone?.trim() || null }),
           ...(loanUpdatePayload.email !== undefined && { email: loanUpdatePayload.email?.trim() || null }),
@@ -233,4 +235,3 @@ export const deleteLoan = createHandlers(
     }
   },
 );
-

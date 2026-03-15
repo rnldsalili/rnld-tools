@@ -92,7 +92,7 @@ const PUBLIC_DOCUMENT_PLACEHOLDERS: Record<string, (document: PublicDocument) =>
   '{{loan.interestRate}}': ({ loan }) =>
     loan.interestRate != null ? `${loan.interestRate}%` : MISSING_PLACEHOLDER_VALUE,
   '{{loan.description}}': ({ loan }) => loan.description ?? MISSING_PLACEHOLDER_VALUE,
-  '{{loan.createdAt}}': ({ loan }) => formatDisplayDate(loan.createdAt),
+  '{{loan.loanDate}}': ({ loan }) => formatDisplayDate(loan.loanDate),
   '{{loan.installmentCount}}': ({ loan }) => String(loan.installments.length),
   '{{loan.installmentInterval}}': ({ loan }) =>
     getInstallmentIntervalLabel(loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS),

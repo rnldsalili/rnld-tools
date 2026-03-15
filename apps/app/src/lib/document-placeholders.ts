@@ -15,7 +15,7 @@ export const LOAN_DOCUMENT_PLACEHOLDERS: Array<LoanDocumentPlaceholderDefinition
   { key: '{{loan.currency}}', label: 'Currency', isBlock: false },
   { key: '{{loan.interestRate}}', label: 'Interest Rate', isBlock: false },
   { key: '{{loan.description}}', label: 'Loan Description', isBlock: false },
-  { key: '{{loan.createdAt}}', label: 'Loan Date', isBlock: false },
+  { key: '{{loan.loanDate}}', label: 'Loan Date', isBlock: false },
   { key: '{{loan.installmentCount}}', label: 'Total Installments', isBlock: false },
   { key: '{{loan.installmentInterval}}', label: 'Installment Interval', isBlock: false },
   { key: LOAN_DOCUMENT_INSTALLMENTS_PLACEHOLDER, label: 'Installments Table', isBlock: true },

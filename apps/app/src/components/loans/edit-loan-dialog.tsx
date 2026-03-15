@@ -27,6 +27,7 @@ interface LoanEditData {
   borrower: string;
   amount: number;
   installmentInterval: string;
+  loanDate: string;
   interestRate: number | null;
   phone: string | null;
   email: string | null;
@@ -46,6 +47,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
       borrower: loan.borrower,
       amount: String(loan.amount),
       installmentInterval: loan.installmentInterval,
+      loanDate: loan.loanDate.slice(0, 10),
       interestRate: loan.interestRate != null ? String(loan.interestRate) : '',
       phone: loan.phone ?? '',
       email: loan.email ?? '',
@@ -59,6 +61,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
             borrower: value.borrower,
             amount: parseFloat(value.amount),
             installmentInterval: value.installmentInterval as InstallmentInterval,
+            loanDate: value.loanDate,
             interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
             phone: value.phone || null,
             email: value.email || null,
@@ -166,6 +169,27 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field
+            name="loanDate"
+            validators={{
+            onChange: ({ value }) => (!value ? 'Loan date is required' : undefined),
+          }}
+        >
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>Loan Date <span className="text-destructive">*</span></FieldLabel>
+              <Input
+                  id={field.name}
+                  type="date"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+              />
+              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
           )}
         </form.Field>

@@ -186,7 +186,7 @@ function LoanDetailPage() {
                     />
                     <LoanField label="Phone" value={loan.phone ?? '—'} />
                     <LoanField label="Email" value={loan.email ?? '—'} />
-                    <LoanField label="Created" value={format(new Date(loan.createdAt), 'MMM d, yyyy')} />
+                    <LoanField label="Loan Date" value={format(new Date(loan.loanDate), 'MMM d, yyyy')} />
                     <LoanField label="Updated" value={format(new Date(loan.updatedAt), 'MMM d, yyyy')} />
                   </div>
                   {loan.description && (

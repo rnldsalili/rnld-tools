@@ -34,6 +34,7 @@ interface DefaultValues {
   amount: string;
   currency: string;
   installmentInterval: string;
+  loanDate: string;
   interestRate: string;
   phone: string;
   email: string;
@@ -51,6 +52,7 @@ const DEFAULT_VALUES: DefaultValues = {
   amount: '',
   currency: Currency.PHP,
   installmentInterval: InstallmentInterval.MONTHLY,
+  loanDate: '',
   interestRate: '',
   phone: '',
   email: '',
@@ -79,6 +81,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         amount: parseFloat(value.amount),
         currency: value.currency as (typeof CURRENCIES)[number],
         installmentInterval: value.installmentInterval as InstallmentInterval,
+        loanDate: value.loanDate,
         interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : undefined,
         phone: value.phone.trim() || undefined,
         email: value.email.trim() || undefined,
@@ -384,6 +387,29 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 )}
               </form.Field>
             </div>
+
+            <form.Field
+                name="loanDate"
+                validators={{
+                onChange: ({ value }) => (!value ? 'Loan date is required' : undefined),
+              }}
+            >
+              {(field) => (
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+                  <FieldLabel htmlFor={field.name}>
+                    Loan Date <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                      id={field.name}
+                      type="date"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                  />
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
+                </Field>
+              )}
+            </form.Field>
 
             {/* Interest Rate */}
             <form.Field

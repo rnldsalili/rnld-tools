@@ -110,19 +110,20 @@ enum LoanDocumentLogActorType {
 }
 
 model Loan {
-  id             String   @id @default(cuid())
-  borrower       String
-  amount         Float
-  currency       String   @default("PHP")
-  interestRate   Float?
-  phone          String?
-  email          String?
-  description    String?
+  id                  String   @id @default(cuid())
+  borrower            String
+  amount              Float
+  currency            String   @default("PHP")
+  interestRate        Float?
+  phone               String?
+  email               String?
+  description         String?
   installmentInterval String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  createdByUserId String
-  updatedByUserId String
+  loanDate            DateTime
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  createdByUserId     String
+  updatedByUserId     String
 
   createdBy        User               @relation("LoanCreatedBy", fields: [createdByUserId], references: [id])
   updatedBy        User               @relation("LoanUpdatedBy", fields: [updatedByUserId], references: [id])
