@@ -33,6 +33,7 @@ interface DefaultValues {
   borrower: string;
   amount: string;
   currency: string;
+  installmentInterval: string;
   interestRate: string;
   phone: string;
   email: string;
@@ -40,7 +41,6 @@ interface DefaultValues {
   installmentMode: InstallmentMode;
   singleDueDate: string;
   singleAmount: string;
-  bulkInterval: string;
   bulkCount: string;
   bulkStartDate: string;
   bulkAmount: string;
@@ -50,6 +50,7 @@ const DEFAULT_VALUES: DefaultValues = {
   borrower: '',
   amount: '',
   currency: Currency.PHP,
+  installmentInterval: InstallmentInterval.MONTHLY,
   interestRate: '',
   phone: '',
   email: '',
@@ -57,7 +58,6 @@ const DEFAULT_VALUES: DefaultValues = {
   installmentMode: InstallmentType.SINGLE as InstallmentMode,
   singleDueDate: '',
   singleAmount: '',
-  bulkInterval: InstallmentInterval.MONTHLY,
   bulkCount: '1',
   bulkStartDate: '',
   bulkAmount: '',
@@ -78,6 +78,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         borrower: value.borrower.trim(),
         amount: parseFloat(value.amount),
         currency: value.currency as (typeof CURRENCIES)[number],
+        installmentInterval: value.installmentInterval as InstallmentInterval,
         interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : undefined,
         phone: value.phone.trim() || undefined,
         email: value.email.trim() || undefined,
@@ -175,28 +176,6 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         <p className="text-xs text-muted-foreground">Bulk installment schedule</p>
 
         <div className="grid grid-cols-2 gap-3">
-          <form.Field name="bulkInterval">
-            {(field) => (
-              <Field>
-                <FieldLabel htmlFor={field.name}>
-                  Interval <span className="text-destructive">*</span>
-                </FieldLabel>
-                <Select value={field.state.value} onValueChange={field.handleChange}>
-                  <SelectTrigger id={field.name}>
-                    <SelectValue placeholder="Select interval" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INSTALLMENT_INTERVAL_VALUES.map((interval) => (
-                      <SelectItem key={interval} value={interval}>
-                        {INSTALLMENT_INTERVAL_LABELS[interval]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            )}
-          </form.Field>
-
           <form.Field
               name="bulkCount"
               validators={{
@@ -524,6 +503,28 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
               )}
             </form.Field>
 
+            <form.Field name="installmentInterval">
+              {(field) => (
+                <Field>
+                  <FieldLabel htmlFor={field.name}>
+                    Interval <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Select value={field.state.value} onValueChange={field.handleChange}>
+                    <SelectTrigger id={field.name}>
+                      <SelectValue placeholder="Select interval" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INSTALLMENT_INTERVAL_VALUES.map((interval) => (
+                        <SelectItem key={interval} value={interval}>
+                          {INSTALLMENT_INTERVAL_LABELS[interval]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            </form.Field>
+
             <form.Subscribe selector={(state) => state.values.installmentMode}>
               {(installmentMode) =>
                 installmentMode === InstallmentType.BULK
@@ -542,7 +543,7 @@ function buildInstallmentsPayload(value: DefaultValues) {
   if (value.installmentMode === InstallmentType.BULK) {
     return {
       type: InstallmentType.BULK as const,
-      interval: value.bulkInterval as InstallmentInterval,
+      interval: value.installmentInterval as InstallmentInterval,
       count: parseInt(value.bulkCount, 10),
       startDate: value.bulkStartDate,
       amount: parseFloat(value.bulkAmount),

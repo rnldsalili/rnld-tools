@@ -3,7 +3,7 @@ import { differenceInYears } from 'date-fns';
 import { dashboardSummaryQuerySchema } from './dashboard.schema';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
-import { replaceImageKeysWithPresignedUrls } from '@/api/lib/image-url-transformer';
+import { replaceImageKeysWithPresignedUrls } from '@/api/lib/storage/image-url-transformer';
 import { validate } from '@/api/lib/validator';
 
 

@@ -1,6 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 import { format } from 'date-fns';
-import { CheckCircleIcon, PencilIcon, PlusIcon } from 'lucide-react';
+import {
+  DownloadIcon,
+  Loader2Icon,
+  PencilIcon,
+  PlusIcon,
+  Share2Icon,
+} from 'lucide-react';
 import { useState } from 'react';
 import {
   Badge,
@@ -11,16 +18,23 @@ import {
   SectionCardContent,
   SectionCardHeader,
 } from '@workspace/ui';
-import { INSTALLMENTS_LIMIT, InstallmentStatus } from '@workspace/constants';
+import {
+  INSTALLMENTS_LIMIT,
+  INSTALLMENT_INTERVAL_LABELS,
+  InstallmentStatus,
+} from '@workspace/constants';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanInstallment } from '@/app/hooks/use-loan';
-import {  useLoan } from '@/app/hooks/use-loan';
+import { useLoan } from '@/app/hooks/use-loan';
+import { useDocumentLinks } from '@/app/hooks/use-document-links';
 import { formatCurrency } from '@/app/lib/format';
 import { AddInstallmentDialog } from '@/app/components/loans/add-installment-dialog';
 import { EditInstallmentDialog } from '@/app/components/loans/edit-installment-dialog';
 import { EditLoanDialog } from '@/app/components/loans/edit-loan-dialog';
 import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
 import { MarkPaidDialog } from '@/app/components/loans/mark-paid-dialog';
+import { ShareDocumentDialog } from '@/app/components/loans/share-document-dialog';
+import { DocumentPDFDocument } from '@/app/components/loans/document-pdf-document';
 
 export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
   head: () => ({ meta: [{ title: 'RTools - Loan Detail' }] }),
@@ -35,6 +49,7 @@ function LoanDetailPage() {
   const [markPaidInstallment, setMarkPaidInstallment] = useState<LoanInstallment | null>(null);
   const [isEditLoanOpen, setIsEditLoanOpen] = useState(false);
   const [isAddInstallmentOpen, setIsAddInstallmentOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   const { data, isLoading } = useLoan({
     loanId,
@@ -42,9 +57,16 @@ function LoanDetailPage() {
     limit: INSTALLMENTS_LIMIT,
   });
 
+  const { data: documentLinksData } = useDocumentLinks(loanId);
+
   const loan = data?.data.loan;
   const installments = loan?.installments ?? [];
   const installmentsPagination = loan?.installmentsPagination;
+
+  const maybeTemplateEntries = (documentLinksData as { data?: { templates?: unknown } } | undefined)?.data?.templates;
+  const templateEntries = Array.isArray(maybeTemplateEntries)
+    ? maybeTemplateEntries
+    : [];
 
   const columns: Array<ColumnDef<LoanInstallment>> = [
     {
@@ -83,27 +105,26 @@ function LoanDetailPage() {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-end text-sm">
           {row.original.status !== InstallmentStatus.PAID && (
-            <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => setMarkPaidInstallment(row.original)}
-            >
-              <CheckCircleIcon className="size-3.5" />
-              Mark as Paid
-            </Button>
+            <>
+              <button
+                  type="button"
+                  className="font-medium text-foreground transition-colors hover:text-primary"
+                  onClick={() => setMarkPaidInstallment(row.original)}
+              >
+                Mark as Paid
+              </button>
+              <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
+            </>
           )}
-          <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5"
+          <button
+              type="button"
+              className="font-medium text-foreground transition-colors hover:text-primary"
               onClick={() => setSelectedInstallment(row.original)}
           >
-            <PencilIcon className="size-3.5" />
             Edit
-          </Button>
+          </button>
         </div>
       ),
     },
@@ -112,22 +133,33 @@ function LoanDetailPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-4">
-        {/* Side-by-side on lg+: loan details left, installments right */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-          {/* Loan Details — card variant matching installments */}
-          <SectionCard className="lg:w-96 lg:shrink-0">
+        {/* Row 1: Loan Details (left) | Documents (right) */}
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          {/* Loan Details */}
+          <SectionCard className="min-w-0">
             <SectionCardHeader className="flex justify-between items-center">
               <span className="text-sm font-semibold">Loan Details</span>
               {loan && (
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={() => setIsEditLoanOpen(true)}
-                >
-                  <PencilIcon className="size-3.5" />
-                  Edit
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setIsShareDialogOpen(true)}
+                  >
+                    <Share2Icon className="size-3.5" />
+                    Share
+                  </Button>
+                  <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => setIsEditLoanOpen(true)}
+                  >
+                    <PencilIcon className="size-3.5" />
+                    Edit
+                  </Button>
+                </div>
               )}
             </SectionCardHeader>
             <SectionCardContent>
@@ -142,6 +174,12 @@ function LoanDetailPage() {
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:grid-cols-2">
                     <LoanField label="Borrower" value={loan.borrower} />
                     <LoanField label="Amount" value={formatCurrency(loan.amount, loan.currency)} />
+                    <LoanField
+                        label="Installment Interval"
+                        value={INSTALLMENT_INTERVAL_LABELS[
+                          loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS
+                        ]}
+                    />
                     <LoanField
                         label="Interest Rate"
                         value={loan.interestRate != null ? `${loan.interestRate}%` : '—'}
@@ -161,53 +199,127 @@ function LoanDetailPage() {
             </SectionCardContent>
           </SectionCard>
 
-          {/* Installments */}
-          <div className="min-w-0 flex-1">
-            <DataTable
-                variant="card"
-                columns={columns}
-                data={installments}
-                isLoading={isLoading}
-                getRowClassName={(row) => {
-                  const isOverdue =
-                    row.status === InstallmentStatus.PENDING &&
-                    new Date(row.dueDate) < new Date();
-                  return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
-                }}
-                toolbar={(
-                <div className="flex w-full items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Installments</span>
-                    {!isLoading && installmentsPagination && (
-                      <Badge className="bg-muted text-muted-foreground border-0 text-xs">
-                        {installmentsPagination.total}
-                      </Badge>
-                    )}
-                  </div>
-                  <Button
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => setIsAddInstallmentOpen(true)}
-                      disabled={isLoading || !loan}
-                  >
-                    <PlusIcon className="size-3.5" />
-                    Add Installment
-                  </Button>
+          {/* Documents */}
+          <SectionCard className="min-w-0">
+            <SectionCardHeader>
+              <span className="text-sm font-semibold">Documents</span>
+            </SectionCardHeader>
+            <SectionCardContent>
+              {templateEntries.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No document templates configured.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {templateEntries.map(({ template, tokens, document }) => (
+                    <div key={template.id} className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium">{template.name}</span>
+                          {document?.signedAt ? (
+                            <Badge className="bg-green-600 hover:bg-green-600 text-white text-xs">Signed</Badge>
+                          ) : tokens.length > 0 ? (
+                            <Badge variant="secondary" className="text-xs">Unsigned</Badge>
+                          ) : null}
+                        </div>
+                        {loan && template.content && (
+                          <PDFDownloadLink
+                              document={(
+                                <DocumentPDFDocument
+                                    loan={loan}
+                                    title={template.name}
+                                    content={template.content as never}
+                                    requiresSignature={template.requiresSignature}
+                                    signatureUrl={document?.signatureUrl ?? null}
+                                    signedAt={document?.signedAt ? String(document.signedAt) : null}
+                                />
+                              )}
+                              fileName={`${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.borrower.replace(/\s+/g, '-').toLowerCase()}.pdf`}
+                          >
+                            {({ loading }) => (
+                              <Button variant="ghost" size="sm" className="gap-1.5 shrink-0 h-6 text-xs" disabled={loading}>
+                                {loading ? <Loader2Icon className="size-3 animate-spin" /> : <DownloadIcon className="size-3" />}
+                                PDF
+                              </Button>
+                            )}
+                          </PDFDownloadLink>
+                        )}
+                      </div>
+                      {document?.signedAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Signed on {format(new Date(document.signedAt), 'MMM d, yyyy h:mm a')}
+                        </p>
+                      )}
+                      {tokens.length > 0 && (
+                        <div className="flex flex-col gap-1">
+                          {tokens.map((t) => (
+                            <div
+                                key={t.token}
+                                className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+                            >
+                              {t.isExpired ? (
+                                <Badge variant="destructive" className="text-xs">Expired</Badge>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs">Active</Badge>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {t.isExpired
+                                  ? `Expired ${format(new Date(t.expiresAt), 'MMM d, yyyy')}`
+                                  : `Expires ${format(new Date(t.expiresAt), 'MMM d, yyyy')}`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
-                footer={
-                installmentsPagination && installmentsPagination.totalPages > 1 ? (
-                  <Pagination
-                      page={installmentsPage}
-                      totalPages={installmentsPagination.totalPages}
-                      onPageChange={setInstallmentsPage}
-                      isLoading={isLoading}
-                  />
-                ) : undefined
-              }
-            />
-          </div>
+            </SectionCardContent>
+          </SectionCard>
         </div>
+
+        {/* Row 2: Installments (full width) */}
+        <DataTable
+            columns={columns}
+            data={installments}
+            isLoading={isLoading}
+            getRowClassName={(row) => {
+              const isOverdue =
+                row.status === InstallmentStatus.PENDING &&
+                new Date(row.dueDate) < new Date();
+              return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
+            }}
+            toolbar={(
+            <div className="flex w-full items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-semibold">Installments</span>
+                {!isLoading && installmentsPagination && (
+                  <Badge className="bg-muted text-muted-foreground border-0 text-xs">
+                    {installmentsPagination.total}
+                  </Badge>
+                )}
+              </div>
+              <Button
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setIsAddInstallmentOpen(true)}
+                  disabled={isLoading || !loan}
+              >
+                <PlusIcon className="size-3.5" />
+                Add Installment
+              </Button>
+            </div>
+          )}
+            footer={
+            installmentsPagination && installmentsPagination.totalPages > 1 ? (
+              <Pagination
+                  page={installmentsPage}
+                  totalPages={installmentsPagination.totalPages}
+                  onPageChange={setInstallmentsPage}
+                  isLoading={isLoading}
+              />
+            ) : undefined
+          }
+        />
       </div>
 
       {/* Edit Installment Dialog */}
@@ -243,6 +355,15 @@ function LoanDetailPage() {
         <EditLoanDialog
             loan={loan}
             onClose={() => setIsEditLoanOpen(false)}
+        />
+      )}
+
+      {/* Share Document Dialog */}
+      {loan && (
+        <ShareDocumentDialog
+            loanId={loanId}
+            open={isShareDialogOpen}
+            onOpenChange={setIsShareDialogOpen}
         />
       )}
     </div>

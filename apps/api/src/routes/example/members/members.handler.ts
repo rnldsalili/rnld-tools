@@ -7,9 +7,9 @@ import {
 import { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
-import { replaceImageKeysWithPresignedUrls } from '@/api/lib/image-url-transformer';
-import { getR2BucketName } from '@/api/lib/r2-presigner';
-import { processImageUpload } from '@/api/lib/storage';
+import { replaceImageKeysWithPresignedUrls } from '@/api/lib/storage/image-url-transformer';
+import { getR2BucketName } from '@/api/lib/storage/presign';
+import { processImageUpload } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
 
 

@@ -1,14 +1,24 @@
 import { useForm } from '@tanstack/react-form';
 import { toast } from 'sonner';
 import {
+  INSTALLMENT_INTERVAL_LABELS,
+  INSTALLMENT_INTERVAL_VALUES,
+} from '@workspace/constants';
+import {
   Button,
   Field,
   FieldError,
   FieldLabel,
   Input,
   Modal,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Textarea,
 } from '@workspace/ui';
+import type { InstallmentInterval } from '@workspace/constants';
 import { useUpdateLoan } from '@/app/hooks/use-loan';
 import { toFieldErrors } from '@/app/lib/form';
 
@@ -16,6 +26,7 @@ interface LoanEditData {
   id: string;
   borrower: string;
   amount: number;
+  installmentInterval: string;
   interestRate: number | null;
   phone: string | null;
   email: string | null;
@@ -34,6 +45,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
     defaultValues: {
       borrower: loan.borrower,
       amount: String(loan.amount),
+      installmentInterval: loan.installmentInterval,
       interestRate: loan.interestRate != null ? String(loan.interestRate) : '',
       phone: loan.phone ?? '',
       email: loan.email ?? '',
@@ -46,6 +58,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
           body: {
             borrower: value.borrower,
             amount: parseFloat(value.amount),
+            installmentInterval: value.installmentInterval as InstallmentInterval,
             interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
             phone: value.phone || null,
             email: value.email || null,
@@ -131,6 +144,28 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
                   onBlur={field.handleBlur}
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field name="installmentInterval">
+          {(field) => (
+            <Field>
+              <FieldLabel htmlFor={field.name}>
+                Installment Interval <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Select value={field.state.value} onValueChange={field.handleChange}>
+                <SelectTrigger id={field.name}>
+                  <SelectValue placeholder="Select interval" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INSTALLMENT_INTERVAL_VALUES.map((interval) => (
+                    <SelectItem key={interval} value={interval}>
+                      {INSTALLMENT_INTERVAL_LABELS[interval]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           )}
         </form.Field>

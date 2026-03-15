@@ -101,5 +101,7 @@ export { Modal } from '@workspace/ui/components/composite/modal';
 
 export { Toaster } from '@workspace/ui/components/sonner';
 
+export { Switch } from '@workspace/ui/components/switch';
+
 // Utilities
 export { cn } from '@workspace/ui/lib/utils';

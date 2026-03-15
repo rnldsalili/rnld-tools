@@ -11,6 +11,8 @@ import {
   MoonIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
+  ScrollTextIcon,
+  SettingsIcon,
   ShuffleIcon,
   SunIcon,
   WrenchIcon,
@@ -48,6 +50,10 @@ const TOOL_NAV_ITEMS: Array<NavItem> = [
   { to: '/password-generator', icon: KeyRoundIcon, label: 'Password Generator' },
   { to: '/uuid-generator', icon: HashIcon, label: 'UUID Generator' },
   { to: '/secret-generator', icon: ShuffleIcon, label: 'Secret Generator' },
+];
+
+const SETTINGS_NAV_ITEMS: Array<NavItem> = [
+  { to: '/settings/documents', icon: ScrollTextIcon, label: 'Documents' },
 ];
 
 function SidebarNavItem({
@@ -221,6 +227,25 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
             </div>
 
             {TOOL_NAV_ITEMS.map((item) => (
+              <SidebarNavItem
+                  key={item.to}
+                  item={item}
+                  isCollapsed={isCollapsed}
+                  currentPath={currentPath}
+              />
+            ))}
+
+            {/* Settings section */}
+            <div className={cn('mt-4', !isCollapsed && 'px-2.5')}>
+              {!isCollapsed && (
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                  Settings
+                </p>
+              )}
+              {isCollapsed && <div className="h-px bg-border mb-2" />}
+            </div>
+
+            {SETTINGS_NAV_ITEMS.map((item) => (
               <SidebarNavItem
                   key={item.to}
                   item={item}

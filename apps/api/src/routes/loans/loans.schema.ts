@@ -53,6 +53,7 @@ export const loanCreateSchema = z.object({
   borrower: z.string().trim().min(1),
   amount: z.number().positive(),
   currency: z.enum(CURRENCIES),
+  installmentInterval: z.enum(InstallmentInterval),
   interestRate: z.number().min(0).optional(),
   phone: z.string().trim().optional(),
   email: z.string().trim().pipe(z.email()).optional(),
@@ -63,9 +64,9 @@ export const loanCreateSchema = z.object({
 export const loanUpdateSchema = z.object({
   borrower: z.string().trim().min(1).optional(),
   amount: z.number().positive().optional(),
+  installmentInterval: z.enum(InstallmentInterval).optional(),
   interestRate: z.number().min(0).optional().nullable(),
   phone: z.string().trim().optional().nullable(),
   email: z.string().trim().pipe(z.email()).optional().nullable(),
   description: z.string().trim().optional().nullable(),
 });
-

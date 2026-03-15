@@ -17,6 +17,6 @@
     "typecheck": "bun run --filter '!@workspace/eslint-config' --filter '!@workspace/typescript-config' typecheck"
   },
   "devDependencies": {
-    "shadcn": "^4.0.2"
+    "shadcn": "^4.0.8"
   }
 }

@@ -16,9 +16,9 @@
 	"vars": {
 		"BETTER_AUTH_URL": "http://localhost:3000",
 		"CORS_ORIGINS": "http://localhost:3010",
-		// "R2_ACCOUNT_ID": "YOUR_R2_ACCOUNT_ID",
-		// "R2_BUCKET_NAME": "rnld-tools-dev",
-		// "R2_PRESIGNED_URL_TTL_SECONDS": "900"
+		"R2_ACCOUNT_ID": "35ade4713beefb2c7f971921950b34c2",
+		"R2_BUCKET_NAME": "rnld-tools-dev",
+		"R2_PRESIGNED_URL_TTL_SECONDS": "900"
 	},
 	"d1_databases": [
 		{
@@ -27,12 +27,19 @@
 			"database_id": "YOUR_D1_DATABASE_ID_DEV"
 		}
 	],
-	// "r2_buckets": [
-	// 	{
-	// 		"binding": "STORAGE",
-	// 		"bucket_name": "rnld-tools-dev",
-	// 	}
-	// ],
+	"kv_namespaces": [
+		{
+			"binding": "KV",
+			"id": "YOUR_KV_NAMESPACE_ID_DEV"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "STORAGE",
+			"bucket_name": "rnld-tools-dev",
+			"remote": true
+		}
+	],
 	"ratelimits": [
 		{
 			"name": "RATE_LIMITER",
@@ -49,9 +56,9 @@
 			"vars": {
 				"BETTER_AUTH_URL": "https://tools-api.ronald.it.com",
 				"CORS_ORIGINS": "https://tools.ronald.it.com",
-				// "R2_ACCOUNT_ID": "YOUR_R2_ACCOUNT_ID",
-				// "R2_BUCKET_NAME": "rnld-tools-prod",
-				// "R2_PRESIGNED_URL_TTL_SECONDS": "900"
+				"R2_ACCOUNT_ID": "35ade4713beefb2c7f971921950b34c2",
+				"R2_BUCKET_NAME": "rnld-tools-prod",
+				"R2_PRESIGNED_URL_TTL_SECONDS": "900"
 			},
 			"ratelimits": [
 				{
@@ -70,12 +77,18 @@
 					"database_id": "88f61131-bee2-41cc-88d4-2461504045a5"
 				}
 			],
-			// "r2_buckets": [
-			// 	{
-			// 		"binding": "STORAGE",
-			// 		"bucket_name": "rnld-tools-prod"
-			// 	}
-			// ],
+			"kv_namespaces": [
+				{
+					"binding": "KV",
+					"id": "78ea6d64dd9f40968f7bc5de1d6356ff"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "STORAGE",
+					"bucket_name": "rnld-tools-prod"
+				}
+			],
 			"routes": [
 				{
 					"pattern": "tools-api.ronald.it.com",

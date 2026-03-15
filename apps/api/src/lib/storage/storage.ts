@@ -1,7 +1,7 @@
 /**
  * Storage utility functions for managing assets in Cloudflare R2
  */
-import { normalizeImageStorageKey } from '@/api/lib/r2-presigner';
+import { normalizeImageStorageKey } from '@/api/lib/storage/presign';
 
 export type ProcessImageOptions = {
     /**

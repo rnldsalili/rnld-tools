@@ -1,0 +1,214 @@
+import { LoanDocumentLogActorType, LoanDocumentLogEventType } from '@workspace/constants';
+import { documentSignSchema, documentTokenParamSchema } from './public-document.schema';
+import { base64DataUrlToUint8Array } from './public-document.utils';
+import { createHandlers } from '@/api/app';
+import { initializePrisma } from '@/api/lib/db';
+import { parseDocumentContent } from '@/api/lib/documents/content';
+import {
+  getLoanDocumentLogContextByToken,
+  getLoanDocumentRequestMetadata,
+  logLoanDocumentEventSafely,
+} from '@/api/lib/documents/logs';
+import { getR2PresignedGetUrlOrNull } from '@/api/lib/storage/presign';
+import { validate } from '@/api/lib/validator';
+
+export const getPublicDocument = createHandlers(
+  validate('param', documentTokenParamSchema),
+  async (c) => {
+    const { token } = c.req.valid('param');
+    const requestMetadata = getLoanDocumentRequestMetadata(c);
+    const prisma = initializePrisma(c.env);
+
+    const kvEntry = await c.env.KV.get<{ loanId: string; templateId: string }>(token, { type: 'json' });
+
+    if (!kvEntry) {
+      const existingLogContext = await getLoanDocumentLogContextByToken(c, token).catch(() => null);
+
+      if (existingLogContext) {
+        await logLoanDocumentEventSafely(c, {
+          loanId: existingLogContext.loanId,
+          templateId: existingLogContext.templateId,
+          loanDocumentId: existingLogContext.loanDocumentId,
+          token,
+          eventType: LoanDocumentLogEventType.LINK_ACCESS_INVALID_OR_EXPIRED,
+          actorType: LoanDocumentLogActorType.PUBLIC_LINK_VISITOR,
+          ipAddress: requestMetadata.ipAddress,
+          userAgent: requestMetadata.userAgent,
+        });
+      }
+
+      return c.json({ meta: { code: 404, message: 'Document link not found or has expired' } }, 404);
+    }
+
+    const { loanId, templateId } = kvEntry;
+
+    const [loanFound, loanDocumentFound, documentFound] = await Promise.all([
+      prisma.loan.findUnique({
+        where: { id: loanId },
+        include: { installments: { orderBy: { dueDate: 'asc' } } },
+      }),
+      prisma.loanDocument.findUnique({ where: { loanId_templateId: { loanId, templateId } } }),
+      prisma.document.findUnique({ where: { id: templateId } }),
+    ]);
+
+    if (!loanFound) {
+      return c.json({ meta: { code: 404, message: 'Loan not found' } }, 404);
+    }
+
+    if (!documentFound) {
+      return c.json({ meta: { code: 404, message: 'Document template not found' } }, 404);
+    }
+
+    const signatureUrl = await getR2PresignedGetUrlOrNull(c.env, loanDocumentFound?.signatureKey);
+
+    await logLoanDocumentEventSafely(c, {
+      loanId,
+      templateId,
+      loanDocumentId: loanDocumentFound?.id,
+      token,
+      eventType: LoanDocumentLogEventType.LINK_VIEWED,
+      actorType: LoanDocumentLogActorType.PUBLIC_LINK_VISITOR,
+      ipAddress: requestMetadata.ipAddress,
+      userAgent: requestMetadata.userAgent,
+      eventData: {
+        signedAt: loanDocumentFound?.signedAt?.toISOString() ?? null,
+      },
+    });
+
+    return c.json({
+      meta: { code: 200, message: 'Document retrieved successfully' },
+      data: {
+        loan: loanFound,
+        document: {
+          id: documentFound.id,
+          type: documentFound.type,
+          name: documentFound.name,
+          content: parseDocumentContent(documentFound.content),
+          requiresSignature: documentFound.requiresSignature,
+        },
+        signing: {
+          signedAt: loanDocumentFound?.signedAt ?? null,
+          signatureUrl,
+        },
+      },
+    }, 200);
+  },
+);
+
+export const signPublicDocument = createHandlers(
+  validate('param', documentTokenParamSchema),
+  validate('json', documentSignSchema),
+  async (c) => {
+    const { token } = c.req.valid('param');
+    const { signatureData } = c.req.valid('json');
+    const requestMetadata = getLoanDocumentRequestMetadata(c);
+    const prisma = initializePrisma(c.env);
+
+    const kvEntry = await c.env.KV.get<{ loanId: string; templateId: string }>(token, { type: 'json' });
+
+    if (!kvEntry) {
+      const existingLogContext = await getLoanDocumentLogContextByToken(c, token).catch(() => null);
+
+      if (existingLogContext) {
+        await logLoanDocumentEventSafely(c, {
+          loanId: existingLogContext.loanId,
+          templateId: existingLogContext.templateId,
+          loanDocumentId: existingLogContext.loanDocumentId,
+          token,
+          eventType: LoanDocumentLogEventType.SIGN_ATTEMPT_INVALID_OR_EXPIRED,
+          actorType: LoanDocumentLogActorType.PUBLIC_LINK_VISITOR,
+          ipAddress: requestMetadata.ipAddress,
+          userAgent: requestMetadata.userAgent,
+        });
+      }
+
+      return c.json({ meta: { code: 404, message: 'Document link not found or has expired' } }, 404);
+    }
+
+    const { loanId, templateId } = kvEntry;
+
+    const documentFound = await prisma.document.findUnique({ where: { id: templateId } });
+
+    if (!documentFound) {
+      return c.json({ meta: { code: 404, message: 'Document template not found' } }, 404);
+    }
+
+    if (documentFound.requiresSignature && !signatureData) {
+      await logLoanDocumentEventSafely(c, {
+        loanId,
+        templateId,
+        token,
+        eventType: LoanDocumentLogEventType.SIGN_ATTEMPT_MISSING_SIGNATURE,
+        actorType: LoanDocumentLogActorType.PUBLIC_LINK_VISITOR,
+        ipAddress: requestMetadata.ipAddress,
+        userAgent: requestMetadata.userAgent,
+      });
+
+      return c.json({ meta: { code: 400, message: 'Signature is required for this document' } }, 400);
+    }
+
+    const existingLoanDocument = await prisma.loanDocument.findUnique({
+      where: { loanId_templateId: { loanId, templateId } },
+    });
+
+    if (existingLoanDocument?.signedAt) {
+      await logLoanDocumentEventSafely(c, {
+        loanId,
+        templateId,
+        loanDocumentId: existingLoanDocument.id,
+        token,
+        eventType: LoanDocumentLogEventType.SIGN_ATTEMPT_DUPLICATE,
+        actorType: LoanDocumentLogActorType.PUBLIC_LINK_VISITOR,
+        ipAddress: requestMetadata.ipAddress,
+        userAgent: requestMetadata.userAgent,
+        eventData: {
+          signedAt: existingLoanDocument.signedAt.toISOString(),
+        },
+      });
+
+      return c.json({ meta: { code: 409, message: 'Document has already been signed' } }, 409);
+    }
+
+    let signatureKey: string | null = null;
+    if (documentFound.requiresSignature && signatureData) {
+      const candidateSignatureKey = `signatures/${loanId}/${templateId}.png`;
+      const bytes = base64DataUrlToUint8Array(signatureData);
+
+      try {
+        await c.env.STORAGE.put(candidateSignatureKey, bytes, {
+          httpMetadata: { contentType: 'image/png' },
+        });
+        signatureKey = candidateSignatureKey;
+      } catch (storageError) {
+        console.error('Failed to store document signature image', storageError);
+      }
+    }
+
+    const now = new Date();
+    const savedLoanDocument = await prisma.loanDocument.upsert({
+      where: { loanId_templateId: { loanId, templateId } },
+      create: { loanId, templateId, signedAt: now, signatureKey },
+      update: { signedAt: now, signatureKey },
+    });
+
+    await logLoanDocumentEventSafely(c, {
+      loanId,
+      templateId,
+      loanDocumentId: savedLoanDocument.id,
+      token,
+      eventType: LoanDocumentLogEventType.DOCUMENT_SIGNED,
+      actorType: LoanDocumentLogActorType.PUBLIC_LINK_VISITOR,
+      ipAddress: requestMetadata.ipAddress,
+      userAgent: requestMetadata.userAgent,
+      eventData: {
+        signedAt: savedLoanDocument.signedAt?.toISOString() ?? null,
+        signatureStored: signatureKey !== null,
+      },
+    });
+
+    return c.json({
+      meta: { code: 200, message: 'Document signed successfully' },
+      data: { signedAt: savedLoanDocument.signedAt },
+    }, 200);
+  },
+);

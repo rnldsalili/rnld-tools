@@ -194,8 +194,60 @@ export async function getR2PresignedGetUrl(
   });
 }
 
+export async function getR2PresignedGetUrlOrNull(
+  env: CloudflareBindings,
+  key: string | null | undefined,
+  options?: { expiresInSeconds?: number },
+): Promise<string | null> {
+  if (typeof key !== 'string') {
+    return null;
+  }
+
+  const normalizedKey = key.trim();
+  if (!normalizedKey) {
+    return null;
+  }
+
+  if (isHttpUrl(normalizedKey)) {
+    return normalizedKey;
+  }
+
+  const config = resolveR2PresignConfig(env);
+  if (!config) {
+    console.warn('R2 presign config is incomplete; returning null for signature asset URL', {
+      key: normalizedKey,
+    });
+    return null;
+  }
+
+  const objectKey = normalizeImageStorageKey(normalizedKey, {
+    bucketName: config.bucketName,
+  });
+
+  if (!objectKey) {
+    return null;
+  }
+
+  try {
+    const client = getS3Client(config);
+    const command = new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: objectKey,
+    });
+
+    return getSignedUrl(client, command, {
+      expiresIn: options?.expiresInSeconds ?? config.expiresInSeconds,
+    });
+  } catch (presignError) {
+    console.error('Failed to generate R2 presigned GET URL', {
+      key: normalizedKey,
+      presignError,
+    });
+    return null;
+  }
+}
+
 export function getR2BucketName(env: CloudflareBindings): string | undefined {
   const vars = env as unknown as PresignEnv;
   return toNonEmptyString(vars.R2_BUCKET_NAME);
 }
-

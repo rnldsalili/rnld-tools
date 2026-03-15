@@ -29,6 +29,7 @@ model User {
   loansUpdated            Loan[]             @relation("LoanUpdatedBy")
   loanInstallmentsCreated LoanInstallment[]  @relation("LoanInstallmentCreatedBy")
   loanInstallmentsUpdated LoanInstallment[]  @relation("LoanInstallmentUpdatedBy")
+  loanDocumentLogs        LoanDocumentLog[]  @relation("LoanDocumentLogActorUser")
 
   @@unique([email])
   @@map("user")
@@ -88,6 +89,26 @@ enum LoanInstallmentStatus {
   OVERDUE
 }
 
+enum DocumentType {
+  LOAN
+}
+
+enum LoanDocumentLogEventType {
+  LINK_CREATED
+  LINK_REVOKED
+  LINK_VIEWED
+  LINK_ACCESS_INVALID_OR_EXPIRED
+  DOCUMENT_SIGNED
+  SIGN_ATTEMPT_INVALID_OR_EXPIRED
+  SIGN_ATTEMPT_DUPLICATE
+  SIGN_ATTEMPT_MISSING_SIGNATURE
+}
+
+enum LoanDocumentLogActorType {
+  AUTHENTICATED_USER
+  PUBLIC_LINK_VISITOR
+}
+
 model Loan {
   id             String   @id @default(cuid())
   borrower       String
@@ -97,14 +118,17 @@ model Loan {
   phone          String?
   email          String?
   description    String?
+  installmentInterval String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   createdByUserId String
   updatedByUserId String
 
-  createdBy    User             @relation("LoanCreatedBy", fields: [createdByUserId], references: [id])
-  updatedBy    User             @relation("LoanUpdatedBy", fields: [updatedByUserId], references: [id])
-  installments LoanInstallment[]
+  createdBy        User               @relation("LoanCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy        User               @relation("LoanUpdatedBy", fields: [updatedByUserId], references: [id])
+  installments     LoanInstallment[]
+  documents        LoanDocument[]
+  loanDocumentLogs LoanDocumentLog[]
 
   @@index([createdByUserId])
   @@index([updatedByUserId])
@@ -132,4 +156,67 @@ model LoanInstallment {
   @@index([createdByUserId])
   @@index([updatedByUserId])
   @@map("loan_installment")
+}
+
+model Document {
+  id                String       @id @default(cuid())
+  type              DocumentType
+  name              String
+  description       String?
+  content           String
+  linkExpiryDays    Int          @default(7)
+  requiresSignature Boolean      @default(true)
+  loanDocuments     LoanDocument[]
+  loanDocumentLogs  LoanDocumentLog[]
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([type])
+  @@map("document")
+}
+
+model LoanDocument {
+  id           String    @id @default(cuid())
+  loanId       String
+  templateId   String
+  signedAt     DateTime?
+  signatureKey String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  loan             Loan              @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  template         Document          @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  loanDocumentLogs LoanDocumentLog[]
+
+  @@unique([loanId, templateId])
+  @@index([loanId])
+  @@index([templateId])
+  @@map("loan_document")
+}
+
+model LoanDocumentLog {
+  id             String                   @id @default(cuid())
+  loanId         String
+  templateId     String
+  loanDocumentId String?
+  token          String?
+  eventType      LoanDocumentLogEventType
+  actorType      LoanDocumentLogActorType
+  actorUserId    String?
+  ipAddress      String?
+  userAgent      String?
+  eventData      String?
+  createdAt      DateTime                 @default(now())
+
+  loan         Loan          @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  template     Document      @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  loanDocument LoanDocument? @relation(fields: [loanDocumentId], references: [id], onDelete: SetNull)
+  actorUser    User?         @relation("LoanDocumentLogActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([loanId, createdAt])
+  @@index([templateId, createdAt])
+  @@index([loanDocumentId])
+  @@index([token])
+  @@index([actorUserId])
+  @@map("loan_document_log")
 }

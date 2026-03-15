@@ -1,4 +1,5 @@
 import { createApp } from '@/api/app';
+import documentsRoute from '@/api/routes/documents/documents.index';
 import authRoutes from '@/api/routes/auth/auth.index';
 import healthRoute from '@/api/routes/health/health.index';
 import loansRoute from '@/api/routes/loans/loans.index';
@@ -13,7 +14,8 @@ export function registerRoutes(app: ReturnType<typeof createApp>) {
     .route('/auth', authRoutes)
     .route('/health', healthRoute)
     .route('/seed', seedRoute)
-    .route('/loans', loansRoute);
+    .route('/loans', loansRoute)
+    .route('/documents', documentsRoute);
 }
 
 // Stand alone router type used for api client

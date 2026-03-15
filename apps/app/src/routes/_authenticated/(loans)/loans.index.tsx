@@ -1,16 +1,16 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { EyeIcon, HandCoinsIcon, PencilIcon, PlusIcon } from 'lucide-react';
+import { HandCoinsIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
-import { Button, DataTable, Input, Pagination } from '@workspace/ui';
 import { LOANS_LIMIT } from '@workspace/constants';
+import { Button, DataTable, Input, Pagination } from '@workspace/ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanListItem } from '@/app/hooks/use-loan';
-import { useDebounce } from '@/app/hooks/use-debounce';
-import {  useLoans } from '@/app/hooks/use-loan';
-import { formatCurrency } from '@/app/lib/format';
 import { CreateLoanDialog } from '@/app/components/loans/create-loan-dialog';
 import { EditLoanDialog } from '@/app/components/loans/edit-loan-dialog';
+import { useDebounce } from '@/app/hooks/use-debounce';
+import { useLoans } from '@/app/hooks/use-loan';
+import { formatCurrency } from '@/app/lib/format';
 
 export const Route = createFileRoute('/_authenticated/(loans)/loans/')({
   head: () => ({ meta: [{ title: 'RTools - Loans' }] }),
@@ -72,22 +72,22 @@ function LoansPage() {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="gap-1.5" asChild>
-            <Link to="/loans/$loanId" params={{ loanId: row.original.id }}>
-              <EyeIcon className="size-3.5" />
-              View
-            </Link>
-          </Button>
-          <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5"
+        <div className="flex items-center justify-end text-sm">
+          <Link
+              to="/loans/$loanId"
+              params={{ loanId: row.original.id }}
+              className="font-medium text-foreground transition-colors hover:text-primary"
+          >
+            View
+          </Link>
+          <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
+          <button
+              type="button"
+              className="font-medium text-foreground transition-colors hover:text-primary"
               onClick={() => setSelectedLoanForEdit(row.original)}
           >
-            <PencilIcon className="size-3.5" />
             Edit
-          </Button>
+          </button>
         </div>
       ),
     },
@@ -100,45 +100,46 @@ function LoansPage() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <HandCoinsIcon className="size-4" />
+            </span>
+            <div>
+              <h1 className="text-lg font-semibold">Loans</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage borrower loans and installments.
+              </p>
+            </div>
+          </div>
+          <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
+            <PlusIcon className="size-3.5" />
+            New Loan
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <Input
+              placeholder="Search by borrower..."
+              value={searchInput}
+              onChange={handleSearchChange}
+              className="max-w-xs"
+          />
+        </div>
+
         <DataTable
-            variant="card"
             columns={columns}
             data={loans}
             isLoading={isLoading}
-            toolbar={(
-            <div className="flex w-full items-center justify-between gap-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  <HandCoinsIcon className="size-3.5" />
-                </span>
-                <div>
-                  <h1 className="text-sm font-semibold leading-tight">Loans</h1>
-                  <p className="text-xs text-muted-foreground">Manage borrower loans and installments.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Input
-                    placeholder="Search by borrower..."
-                    value={searchInput}
-                    onChange={handleSearchChange}
-                    className="max-w-xs"
-                />
-                <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
-                  <PlusIcon className="size-3.5" />
-                  New Loan
-                </Button>
-              </div>
-            </div>
-          )}
             footer={(
-            <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                isLoading={isLoading}
-            />
-          )}
+              <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  isLoading={isLoading}
+              />
+            )}
         />
       </div>
 

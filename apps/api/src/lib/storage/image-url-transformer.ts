@@ -1,4 +1,4 @@
-import { getR2PresignedGetUrl, normalizeImageStorageKey } from '@/api/lib/r2-presigner';
+import { getR2PresignedGetUrl, normalizeImageStorageKey } from '@/api/lib/storage/presign';
 
 type PlainObject = Record<string, unknown>;
 
@@ -65,4 +65,3 @@ export async function replaceImageKeysWithPresignedUrls<T>(
   const cache = new Map<string, string>();
   return (await transformValue(env, value, cache)) as T;
 }
-
