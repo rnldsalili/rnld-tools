@@ -1,8 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { generateHTML } from '@tiptap/html';
-import StarterKit from '@tiptap/starter-kit';
-import TextAlign from '@tiptap/extension-text-align';
-import { INSTALLMENT_INTERVAL_LABELS } from '@workspace/constants';
+import { renderLoanDocumentHtml } from '@workspace/document-renderer';
 import {
   Button,
   Card,
@@ -20,19 +17,10 @@ import { useId, useState } from 'react';
 import type { PublicDocument } from '@/app/hooks/use-public-document';
 import { SignatureCanvas } from '@/app/components/loans/signature-canvas';
 import {
-  LOAN_DOCUMENT_INSTALLMENTS_PLACEHOLDER,
-  LOAN_DOCUMENT_PLACEHOLDER_KEYS,
-  LOAN_DOCUMENT_SIGNATURE_PLACEHOLDER,
-} from '@/app/lib/document-placeholders';
-import {
   PublicDocumentRequestError,
   usePublicDocument,
   useSignPublicDocument,
 } from '@/app/hooks/use-public-document';
-import {
-  collapseFragmentedPlaceholders,
-  normalizeTipTapLineBreaks,
-} from '@/app/lib/document-content';
 
 export const Route = createFileRoute('/_public/documents/$token')({
   head: () => ({ meta: [{ title: 'Document' }] }),
@@ -40,23 +28,9 @@ export const Route = createFileRoute('/_public/documents/$token')({
   component: PublicDocumentPage,
 });
 
-const MISSING_PLACEHOLDER_VALUE = '-';
 const DISPLAY_LOCALE = 'en-US';
 const DISPLAY_TIME_ZONE = 'UTC';
 
-const currencyNumberFormatter = new Intl.NumberFormat(DISPLAY_LOCALE);
-const longDateFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-  timeZone: DISPLAY_TIME_ZONE,
-});
-const shortDateFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  timeZone: DISPLAY_TIME_ZONE,
-});
 const dateTimeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   month: 'short',
   day: 'numeric',
@@ -67,41 +41,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   timeZoneName: 'short',
 });
 
-function formatDisplayNumber(value: number) {
-  return currencyNumberFormatter.format(value);
-}
-
-function formatDisplayDate(value: string | Date) {
-  return longDateFormatter.format(new Date(value));
-}
-
-function formatDisplayShortDate(value: string | Date) {
-  return shortDateFormatter.format(new Date(value));
-}
-
 function formatDisplayDateTime(value: string | Date) {
   return dateTimeFormatter.format(new Date(value));
-}
-
-const PUBLIC_DOCUMENT_PLACEHOLDERS: Record<string, (document: PublicDocument) => string> = {
-  '{{loan.borrower}}': ({ loan }) => loan.borrower,
-  '{{loan.email}}': ({ loan }) => loan.email ?? MISSING_PLACEHOLDER_VALUE,
-  '{{loan.phone}}': ({ loan }) => loan.phone ?? MISSING_PLACEHOLDER_VALUE,
-  '{{loan.amount}}': ({ loan }) => `${formatDisplayNumber(loan.amount)} ${loan.currency}`,
-  '{{loan.currency}}': ({ loan }) => loan.currency,
-  '{{loan.interestRate}}': ({ loan }) =>
-    loan.interestRate != null ? `${loan.interestRate}%` : MISSING_PLACEHOLDER_VALUE,
-  '{{loan.description}}': ({ loan }) => loan.description ?? MISSING_PLACEHOLDER_VALUE,
-  '{{loan.loanDate}}': ({ loan }) => formatDisplayDate(loan.loanDate),
-  '{{loan.installmentCount}}': ({ loan }) => String(loan.installments.length),
-  '{{loan.installmentInterval}}': ({ loan }) =>
-    getInstallmentIntervalLabel(loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS),
-};
-
-function getInstallmentIntervalLabel(
-  installmentInterval: keyof typeof INSTALLMENT_INTERVAL_LABELS,
-) {
-  return INSTALLMENT_INTERVAL_LABELS[installmentInterval].toLowerCase();
 }
 
 function PublicDocumentPage() {
@@ -164,7 +105,26 @@ function PublicDocumentPage() {
     );
   }
 
-  const renderedDocumentHtml = renderPublicDocumentHTML(publicDocument);
+  const renderedDocumentHtml = publicDocument.signing.contentSnapshotHtml ?? renderLoanDocumentHtml({
+    content: publicDocument.document.content,
+    loan: {
+      amount: publicDocument.loan.amount,
+      borrower: publicDocument.loan.borrower,
+      currency: publicDocument.loan.currency,
+      description: publicDocument.loan.description ?? null,
+      email: publicDocument.loan.email ?? null,
+      installmentInterval: publicDocument.loan.installmentInterval,
+      installments: publicDocument.loan.installments.map((installment) => ({
+        amount: installment.amount,
+        dueDate: installment.dueDate,
+      })),
+      interestRate: publicDocument.loan.interestRate ?? null,
+      loanDate: publicDocument.loan.loanDate,
+      phone: publicDocument.loan.phone ?? null,
+    },
+    signatureDataUrl: publicDocument.signing.signatureUrl ?? null,
+    signedAt: publicDocument.signing.signedAt ?? null,
+  });
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -332,127 +292,4 @@ function PublicDocumentConfirmationCard({
       </CardContent>
     </Card>
   );
-}
-
-function buildInstallmentsMarkup(
-  installments: PublicDocument['loan']['installments'],
-  currency: string,
-) {
-  if (installments.length === 0) {
-    return `<p class="text-muted-foreground">${MISSING_PLACEHOLDER_VALUE}</p>`;
-  }
-
-  const installmentRowsMarkup = installments
-    .map(
-      (installment, index) => `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${formatDisplayShortDate(installment.dueDate)}</td>
-          <td>${formatDisplayNumber(installment.amount)} ${currency}</td>
-        </tr>
-      `,
-    )
-    .join('');
-
-  return `
-    <table class="installments-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Due Date</th>
-          <th>Amount</th>
-        </tr>
-      </thead>
-      <tbody>${installmentRowsMarkup}</tbody>
-    </table>
-  `;
-}
-
-function replaceInstallmentsPlaceholderMarkup(html: string, publicDocument: PublicDocument) {
-  const installmentsMarkup = buildInstallmentsMarkup(
-    publicDocument.loan.installments,
-    publicDocument.loan.currency,
-  );
-
-  return html
-    .replace(
-      /<li>\s*<p(?:\s+[^>]*)?>\s*\{\{loan\.installments\}\}\s*<\/p>\s*<\/li>/g,
-      installmentsMarkup,
-    )
-    .replace(
-      new RegExp(`<p(?:\\s+[^>]*)?>\\s*${escapePlaceholderForRegex(LOAN_DOCUMENT_INSTALLMENTS_PLACEHOLDER)}\\s*<\\/p>`, 'g'),
-      installmentsMarkup,
-    )
-    .replaceAll(LOAN_DOCUMENT_INSTALLMENTS_PLACEHOLDER, installmentsMarkup);
-}
-
-function buildSignatureMarkup(publicDocument: PublicDocument) {
-  const signedAtMarkup = publicDocument.signing.signedAt
-    ? `<p class="signature-label">Signed: ${formatDisplayDateTime(publicDocument.signing.signedAt)}</p>`
-    : '';
-  const signatureBodyMarkup = publicDocument.signing.signatureUrl
-    ? `<img src="${publicDocument.signing.signatureUrl}" alt="Borrower signature" class="signature-image" />${signedAtMarkup}`
-    : '<div class="signature-line"></div>';
-
-  return `
-    <div class="signature-block">
-      <p class="signature-label">Borrower&apos;s Signature</p>
-      ${signatureBodyMarkup}
-      <p class="signature-label">${publicDocument.loan.borrower}</p>
-    </div>
-  `;
-}
-
-function escapePlaceholderForRegex(placeholder: string) {
-  return placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function replaceSignaturePlaceholderMarkup(html: string, publicDocument: PublicDocument) {
-  const signatureMarkup = buildSignatureMarkup(publicDocument);
-  const signaturePlaceholderPattern = escapePlaceholderForRegex(LOAN_DOCUMENT_SIGNATURE_PLACEHOLDER);
-
-  return html
-    .replace(
-      new RegExp(`<li>\\s*<p(?:\\s+[^>]*)?>\\s*${signaturePlaceholderPattern}\\s*<\\/p>\\s*<\\/li>`, 'g'),
-      signatureMarkup,
-    )
-    .replace(
-      new RegExp(`<p(?:\\s+[^>]*)?>\\s*${signaturePlaceholderPattern}\\s*<\\/p>`, 'g'),
-      signatureMarkup,
-    )
-    .replaceAll(LOAN_DOCUMENT_SIGNATURE_PLACEHOLDER, signatureMarkup);
-}
-
-function renderPublicDocumentHTML(publicDocument: PublicDocument) {
-  if (!publicDocument.document.content) {
-    return '';
-  }
-
-  const normalizedContent = normalizeTipTapLineBreaks(publicDocument.document.content);
-
-  if (!normalizedContent) {
-    return '';
-  }
-
-  const placeholderNormalizedContent = collapseFragmentedPlaceholders(
-    normalizedContent,
-    LOAN_DOCUMENT_PLACEHOLDER_KEYS,
-  );
-
-  if (!placeholderNormalizedContent) {
-    return '';
-  }
-
-  let html = generateHTML(
-    placeholderNormalizedContent as Parameters<typeof generateHTML>[0],
-    [StarterKit, TextAlign.configure({ types: ['heading', 'paragraph'] })],
-  );
-
-  for (const [placeholder, getValue] of Object.entries(PUBLIC_DOCUMENT_PLACEHOLDERS)) {
-    html = html.replaceAll(placeholder, getValue(publicDocument));
-  }
-
-  html = replaceInstallmentsPlaceholderMarkup(html, publicDocument);
-
-  return replaceSignaturePlaceholderMarkup(html, publicDocument);
 }

@@ -11,13 +11,12 @@
     "build:production": "CLOUDFLARE_ENV=production vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "bunx eslint .",
+    "lint:fix": "bunx eslint . --fix",
     "deploy": "bun run build && wrangler deploy"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.26.1",
-    "@react-pdf/renderer": "^4.3.2",
     "@tabler/icons-react": "^3.40.0",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-devtools": "^0.9.10",
@@ -39,6 +38,7 @@
     "@workspace/api-client": "workspace:*",
     "@workspace/auth-client": "workspace:*",
     "@workspace/constants": "workspace:*",
+    "@workspace/document-renderer": "workspace:*",
     "@workspace/ui": "workspace:*",
     "date-fns": "^4.1.0",
     "jotai": "^2.18.1",

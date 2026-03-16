@@ -9,6 +9,7 @@ import {
   getLoanDocumentRequestMetadata,
   logLoanDocumentEventSafely,
 } from '@/api/lib/documents/logs';
+import { ensureLoanDocumentContentSnapshot, renderLoanDocumentContentSnapshot } from '@/api/lib/documents/snapshot';
 import { getR2PresignedGetUrlOrNull } from '@/api/lib/storage/presign';
 import { validate } from '@/api/lib/validator';
 
@@ -59,6 +60,16 @@ export const getPublicDocument = createHandlers(
       return c.json({ meta: { code: 404, message: 'Document template not found' } }, 404);
     }
 
+    const contentSnapshotHtml = loanDocumentFound?.signedAt
+      ? await ensureLoanDocumentContentSnapshot(c, {
+        contentSnapshotHtml: loanDocumentFound.contentSnapshotHtml,
+        loanDocumentId: loanDocumentFound.id,
+        loanId,
+        signedAt: loanDocumentFound.signedAt,
+        signatureKey: loanDocumentFound.signatureKey,
+        templateId,
+      })
+      : null;
     const signatureUrl = await getR2PresignedGetUrlOrNull(c.env, loanDocumentFound?.signatureKey);
 
     await logLoanDocumentEventSafely(c, {
@@ -87,6 +98,7 @@ export const getPublicDocument = createHandlers(
           requiresSignature: documentFound.requiresSignature,
         },
         signing: {
+          contentSnapshotHtml,
           signedAt: loanDocumentFound?.signedAt ?? null,
           signatureUrl,
         },
@@ -127,7 +139,17 @@ export const signPublicDocument = createHandlers(
 
     const { loanId, templateId } = kvEntry;
 
-    const documentFound = await prisma.document.findUnique({ where: { id: templateId } });
+    const [loanFound, documentFound] = await Promise.all([
+      prisma.loan.findUnique({
+        where: { id: loanId },
+        include: { installments: { orderBy: { dueDate: 'asc' } } },
+      }),
+      prisma.document.findUnique({ where: { id: templateId } }),
+    ]);
+
+    if (!loanFound) {
+      return c.json({ meta: { code: 404, message: 'Loan not found' } }, 404);
+    }
 
     if (!documentFound) {
       return c.json({ meta: { code: 404, message: 'Document template not found' } }, 404);
@@ -185,10 +207,16 @@ export const signPublicDocument = createHandlers(
     }
 
     const now = new Date();
+    const contentSnapshotHtml = renderLoanDocumentContentSnapshot({
+      content: documentFound.content,
+      loan: loanFound,
+      signatureDataUrl: signatureData ?? null,
+      signedAt: now,
+    });
     const savedLoanDocument = await prisma.loanDocument.upsert({
       where: { loanId_templateId: { loanId, templateId } },
-      create: { loanId, templateId, signedAt: now, signatureKey },
-      update: { signedAt: now, signatureKey },
+      create: { loanId, templateId, signedAt: now, signatureKey, contentSnapshotHtml },
+      update: { signedAt: now, signatureKey, contentSnapshotHtml },
     });
 
     await logLoanDocumentEventSafely(c, {

@@ -1,4 +1,5 @@
 import documentLogsRoute from './document-logs/document-logs.index';
+import loanDocumentsRoute from './documents/documents.index';
 import { createLoan, deleteLoan, getLoan, getLoans, updateLoan } from './loans.handler';
 import documentLinksRoute from './document-links/document-links.index';
 import installmentsRoute from './installments/installments.index';
@@ -16,6 +17,7 @@ const loansRoute = createRouter()
   .delete('/:id', ...deleteLoan)
   .route('/:loanId/installments', installmentsRoute)
   .route('/:loanId/document-logs', documentLogsRoute)
+  .route('/:loanId/documents', loanDocumentsRoute)
   .route('/:loanId/document-links', documentLinksRoute);
 
 export default loansRoute;

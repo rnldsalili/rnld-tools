@@ -11,8 +11,8 @@
     "./styles/*": "./src/styles/*.css"
   },
   "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "bunx eslint .",
+    "lint:fix": "bunx eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {

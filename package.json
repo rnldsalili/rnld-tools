@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --parallel dev:app dev:api dev:types",
+    "dev": "bun run --parallel dev:app dev:api",
     "dev:app": "bun run --filter @workspace/app dev",
     "dev:api": "bun run --filter @workspace/api dev",
     "db:generate": "bun run --filter @workspace/api db:generate",

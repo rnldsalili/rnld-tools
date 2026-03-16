@@ -96,11 +96,7 @@ function DocumentTokenRow({
 export function ShareDocumentDialog({ loanId, open, onOpenChange }: ShareDocumentDialogProps) {
   const { data, isLoading } = useDocumentLinks(loanId);
   const { mutateAsync: createLink, isPending: isGenerating, variables: generatingVars } = useCreateDocumentLink();
-
-  const maybeTemplateEntries = (data as { data?: { templates?: unknown } } | undefined)?.data?.templates;
-  const templateEntries = Array.isArray(maybeTemplateEntries)
-    ? maybeTemplateEntries
-    : [];
+  const templateEntries = data?.data.templates ?? [];
 
   async function handleGenerate(templateId: string) {
     try {

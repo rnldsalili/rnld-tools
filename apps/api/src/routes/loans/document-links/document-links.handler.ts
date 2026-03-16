@@ -42,7 +42,14 @@ export const getDocumentLinks = createHandlers(
       c.env.KV.list<KVTokenValue>({ prefix: `doc_${loanId}_` }),
       prisma.loanDocument.findMany({
         where: { loanId },
-        select: { id: true, templateId: true, signedAt: true, signatureKey: true, createdAt: true },
+        select: {
+          id: true,
+          templateId: true,
+          signedAt: true,
+          signatureKey: true,
+          contentSnapshotHtml: true,
+          createdAt: true,
+        },
       }),
     ]);
 
@@ -93,7 +100,13 @@ export const getDocumentLinks = createHandlers(
           },
           tokens: tokensByTemplate[documentTemplate.id] ?? [],
           document: doc
-            ? { id: doc.id, signedAt: doc.signedAt, createdAt: doc.createdAt, signatureUrl }
+            ? {
+              id: doc.id,
+              signedAt: doc.signedAt,
+              createdAt: doc.createdAt,
+              signatureUrl,
+              contentSnapshotHtml: doc.contentSnapshotHtml,
+            }
             : null,
         };
       }),

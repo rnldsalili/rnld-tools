@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { PDFDownloadLink } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import {
   DownloadIcon,
@@ -9,6 +8,7 @@ import {
   Share2Icon,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
   Badge,
   Button,
@@ -26,7 +26,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanInstallment } from '@/app/hooks/use-loan';
 import { useLoan } from '@/app/hooks/use-loan';
-import { useDocumentLinks } from '@/app/hooks/use-document-links';
+import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
 import { formatCurrency } from '@/app/lib/format';
 import { AddInstallmentDialog } from '@/app/components/loans/add-installment-dialog';
 import { EditInstallmentDialog } from '@/app/components/loans/edit-installment-dialog';
@@ -34,7 +34,6 @@ import { EditLoanDialog } from '@/app/components/loans/edit-loan-dialog';
 import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
 import { MarkPaidDialog } from '@/app/components/loans/mark-paid-dialog';
 import { ShareDocumentDialog } from '@/app/components/loans/share-document-dialog';
-import { DocumentPDFDocument } from '@/app/components/loans/document-pdf-document';
 
 export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
   head: () => ({ meta: [{ title: 'RTools - Loan Detail' }] }),
@@ -58,15 +57,15 @@ function LoanDetailPage() {
   });
 
   const { data: documentLinksData } = useDocumentLinks(loanId);
+  const downloadLoanDocumentPdfMutation = useDownloadLoanDocumentPdf();
 
   const loan = data?.data.loan;
   const installments = loan?.installments ?? [];
   const installmentsPagination = loan?.installmentsPagination;
-
-  const maybeTemplateEntries = (documentLinksData as { data?: { templates?: unknown } } | undefined)?.data?.templates;
-  const templateEntries = Array.isArray(maybeTemplateEntries)
-    ? maybeTemplateEntries
-    : [];
+  const templateEntries = documentLinksData?.data.templates ?? [];
+  const activeDownloadTemplateId = downloadLoanDocumentPdfMutation.isPending
+    ? downloadLoanDocumentPdfMutation.variables.templateId
+    : null;
 
   const columns: Array<ColumnDef<LoanInstallment>> = [
     {
@@ -220,27 +219,43 @@ function LoanDetailPage() {
                             <Badge variant="secondary" className="text-xs">Unsigned</Badge>
                           ) : null}
                         </div>
-                        {loan && template.content && (
-                          <PDFDownloadLink
-                              document={(
-                                <DocumentPDFDocument
-                                    loan={loan}
-                                    title={template.name}
-                                    content={template.content as never}
-                                    requiresSignature={template.requiresSignature}
-                                    signatureUrl={document?.signatureUrl ?? null}
-                                    signedAt={document?.signedAt ? String(document.signedAt) : null}
-                                />
-                              )}
-                              fileName={`${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.borrower.replace(/\s+/g, '-').toLowerCase()}.pdf`}
+                        {loan && document?.signedAt ? (
+                          <Button
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1.5 shrink-0 h-6 text-xs"
+                              disabled={
+                                downloadLoanDocumentPdfMutation.isPending
+                                && activeDownloadTemplateId === template.id
+                              }
+                              onClick={async () => {
+                                try {
+                                  await downloadLoanDocumentPdfMutation.mutateAsync({
+                                    fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.borrower.replace(/\s+/g, '-').toLowerCase()}.pdf`,
+                                    loanId,
+                                    templateId: template.id,
+                                  });
+                                } catch (error) {
+                                  toast.error(
+                                    error instanceof Error
+                                      ? error.message
+                                      : 'Failed to download document PDF.',
+                                  );
+                                }
+                              }}
                           >
-                            {({ loading }) => (
-                              <Button variant="ghost" size="sm" className="gap-1.5 shrink-0 h-6 text-xs" disabled={loading}>
-                                {loading ? <Loader2Icon className="size-3 animate-spin" /> : <DownloadIcon className="size-3" />}
-                                PDF
-                              </Button>
-                            )}
-                          </PDFDownloadLink>
+                            {downloadLoanDocumentPdfMutation.isPending
+                              && activeDownloadTemplateId === template.id ? (
+                                <Loader2Icon className="size-3 animate-spin" />
+                              ) : (
+                                <DownloadIcon className="size-3" />
+                              )}
+                            PDF
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            PDF available after signing
+                          </span>
                         )}
                       </div>
                       {document?.signedAt && (

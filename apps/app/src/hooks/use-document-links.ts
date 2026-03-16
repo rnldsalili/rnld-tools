@@ -68,3 +68,34 @@ export function useDeleteDocumentLink() {
     },
   });
 }
+
+export function useDownloadLoanDocumentPdf() {
+  return useMutation({
+    mutationFn: async ({
+      fileName,
+      loanId,
+      templateId,
+    }: {
+      fileName: string;
+      loanId: string;
+      templateId: string;
+    }) => {
+      const response = await apiClient.loans[':loanId'].documents[':templateId'].pdf.$get({
+        param: { loanId, templateId },
+      });
+
+      if (!response.ok) {
+        const data = await response.json() as { meta?: { message?: string } };
+        throw new Error(data.meta?.message ?? 'Failed to download document PDF.');
+      }
+
+      const pdfBlob = await response.blob();
+      const objectUrl = URL.createObjectURL(pdfBlob);
+      const anchorElement = document.createElement('a');
+      anchorElement.href = objectUrl;
+      anchorElement.download = fileName;
+      anchorElement.click();
+      URL.revokeObjectURL(objectUrl);
+    },
+  });
+}

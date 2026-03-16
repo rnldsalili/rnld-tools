@@ -9,5 +9,6 @@
       "@/prisma/*": ["./generated/prisma/*"]
     },
     "types": ["./worker-configuration.d.ts", "node"]
-  }
+  },
+  "exclude": ["src/routes/example/**"]
 }

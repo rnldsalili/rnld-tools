@@ -56,7 +56,8 @@ export const createApp = () => {
     }, 404);
   });
 
-  app.onError((_, c) => {
+  app.onError((error, c) => {
+    console.error(error);
     return c.json({
       meta: {
         code: 500,

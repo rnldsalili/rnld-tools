@@ -1,22 +1,26 @@
 {
-  "name": "@workspace/constants",
+  "name": "@workspace/document-renderer",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts"
   },
   "scripts": {
     "lint": "bunx eslint .",
     "lint:fix": "bunx eslint . --fix",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@tiptap/extension-text-align": "^3.20.1",
+    "@tiptap/html": "^3.20.1",
+    "@tiptap/starter-kit": "^3.20.1",
+    "@workspace/constants": "workspace:*"
+  },
   "devDependencies": {
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "zod": "^4.3.6"
   }
 }

@@ -177,13 +177,14 @@ model Document {
 }
 
 model LoanDocument {
-  id           String    @id @default(cuid())
-  loanId       String
-  templateId   String
-  signedAt     DateTime?
-  signatureKey String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  loanId              String
+  templateId          String
+  signedAt            DateTime?
+  signatureKey        String?
+  contentSnapshotHtml String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   loan             Loan              @relation(fields: [loanId], references: [id], onDelete: Cascade)
   template         Document          @relation(fields: [templateId], references: [id], onDelete: Cascade)
