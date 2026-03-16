@@ -7,7 +7,6 @@ import { Button, DataTable, Input, Pagination } from '@workspace/ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanListItem } from '@/app/hooks/use-loan';
 import { CreateLoanDialog } from '@/app/components/loans/create-loan-dialog';
-import { EditLoanDialog } from '@/app/components/loans/edit-loan-dialog';
 import { useDebounce } from '@/app/hooks/use-debounce';
 import { useLoans } from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
@@ -21,7 +20,6 @@ function LoansPage() {
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedLoanForEdit, setSelectedLoanForEdit] = useState<LoanListItem | null>(null);
   const debouncedSearch = useDebounce(searchInput);
 
   const { data, isLoading } = useLoans({
@@ -80,14 +78,6 @@ function LoansPage() {
           >
             View
           </Link>
-          <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
-          <button
-              type="button"
-              className="font-medium text-foreground transition-colors hover:text-primary"
-              onClick={() => setSelectedLoanForEdit(row.original)}
-          >
-            Edit
-          </button>
         </div>
       ),
     },
@@ -144,13 +134,6 @@ function LoansPage() {
       </div>
 
       <CreateLoanDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-
-      {selectedLoanForEdit && (
-        <EditLoanDialog
-            loan={selectedLoanForEdit}
-            onClose={() => setSelectedLoanForEdit(null)}
-        />
-      )}
     </div>
   );
 }

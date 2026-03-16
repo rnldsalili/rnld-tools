@@ -21,6 +21,7 @@ import {
   Textarea,
 } from '@workspace/ui';
 import type { ColumnDef } from '@tanstack/react-table';
+import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
 import {
   DOCUMENT_TYPE_OPTIONS,
   validateTemplateName,
@@ -180,9 +181,13 @@ function NewTemplateModal({
 
 function DocumentSettingsPage() {
   const { data, isLoading } = useDocumentTemplates();
-  const { mutateAsync: deleteTemplate } = useDeleteDocumentTemplate();
+  const { mutateAsync: deleteTemplate, isPending: isDeletePending } = useDeleteDocumentTemplate();
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
+  const [templatePendingDelete, setTemplatePendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const templates = data?.data.documents ?? [];
   const normalizedSearch = searchInput.trim().toLowerCase();
@@ -198,13 +203,14 @@ function DocumentSettingsPage() {
       })
     : templates;
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? This will also remove all associated documents and links.`)) {
+  async function handleDelete() {
+    if (!templatePendingDelete) {
       return;
     }
 
     try {
-      await deleteTemplate(id);
+      await deleteTemplate(templatePendingDelete.id);
+      setTemplatePendingDelete(null);
       toast.success('Template deleted.');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete template.');
@@ -253,7 +259,7 @@ function DocumentSettingsPage() {
           <button
               type="button"
               className="font-medium text-destructive transition-colors hover:text-destructive/80"
-              onClick={() => handleDelete(row.original.id, row.original.name)}
+              onClick={() => setTemplatePendingDelete({ id: row.original.id, name: row.original.name })}
           >
             Delete
           </button>
@@ -296,6 +302,23 @@ function DocumentSettingsPage() {
       </div>
 
       <NewTemplateModal open={isNewOpen} onOpenChange={setIsNewOpen} />
+      <ConfirmDeleteDialog
+          open={templatePendingDelete !== null}
+          onOpenChange={(open) => {
+            if (!open && !isDeletePending) {
+              setTemplatePendingDelete(null);
+            }
+          }}
+          title="Delete Document Template"
+          description={
+            templatePendingDelete
+              ? `Delete "${templatePendingDelete.name}"? This will permanently remove the template, its associated loan documents, and related document logs. Existing share links may remain in KV until they expire.`
+              : 'This will permanently remove the template, its associated loan documents, and related document logs. Existing share links may remain in KV until they expire.'
+          }
+          confirmLabel="Delete Template"
+          isPending={isDeletePending}
+          onConfirm={handleDelete}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
 import { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
+import { deleteImage } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
 
 const addInterval = (startDate: Date, interval: InstallmentInterval, step: number): Date => {
@@ -225,6 +226,26 @@ export const deleteLoan = createHandlers(
     const prisma = initializePrisma(c.env);
 
     try {
+      const loanDocumentsWithSignatures = await prisma.loanDocument.findMany({
+        where: {
+          loanId,
+          signatureKey: {
+            not: null,
+          },
+        },
+        select: {
+          signatureKey: true,
+        },
+      });
+      const signatureKeys = Array.from(
+        new Set(
+          loanDocumentsWithSignatures
+            .map((loanDocument) => loanDocument.signatureKey)
+            .filter((signatureKey): signatureKey is string => Boolean(signatureKey)),
+        ),
+      );
+
+      await Promise.all(signatureKeys.map((signatureKey) => deleteImage(c.env.STORAGE, signatureKey)));
       await prisma.loan.delete({ where: { id: loanId } });
       return c.json({ meta: { code: 200, message: 'Loan deleted successfully' } }, 200);
     } catch (dbError) {

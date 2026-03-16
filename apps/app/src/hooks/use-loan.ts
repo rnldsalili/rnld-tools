@@ -126,6 +126,25 @@ export function useUpdateLoan() {
   });
 }
 
+export function useDeleteLoan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (loanId: string) => {
+      const res = await apiClient.loans[':id'].$delete({
+        param: { id: loanId },
+      });
+      const data = await res.json() as { meta?: { message?: string } };
+      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to delete loan.');
+      return data;
+    },
+    onSuccess: (_data, loanId) => {
+      queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
+      queryClient.removeQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+    },
+  });
+}
+
 export function useUpdateInstallment() {
   const queryClient = useQueryClient();
 

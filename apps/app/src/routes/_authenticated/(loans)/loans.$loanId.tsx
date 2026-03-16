@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import {
   DownloadIcon,
@@ -6,6 +6,7 @@ import {
   PencilIcon,
   PlusIcon,
   Share2Icon,
+  Trash2Icon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -25,7 +26,8 @@ import {
 } from '@workspace/constants';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanInstallment } from '@/app/hooks/use-loan';
-import { useLoan } from '@/app/hooks/use-loan';
+import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
+import { useDeleteLoan, useLoan } from '@/app/hooks/use-loan';
 import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
 import { formatCurrency } from '@/app/lib/format';
 import { AddInstallmentDialog } from '@/app/components/loans/add-installment-dialog';
@@ -42,6 +44,7 @@ export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
 });
 
 function LoanDetailPage() {
+  const router = useRouter();
   const { loanId } = Route.useParams();
   const [installmentsPage, setInstallmentsPage] = useState(1);
   const [selectedInstallment, setSelectedInstallment] = useState<LoanInstallment | null>(null);
@@ -49,12 +52,14 @@ function LoanDetailPage() {
   const [isEditLoanOpen, setIsEditLoanOpen] = useState(false);
   const [isAddInstallmentOpen, setIsAddInstallmentOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { data, isLoading } = useLoan({
     loanId,
     page: installmentsPage,
     limit: INSTALLMENTS_LIMIT,
   });
+  const { mutateAsync: deleteLoan, isPending: isDeletePending } = useDeleteLoan();
 
   const { data: documentLinksData } = useDocumentLinks(loanId);
   const downloadLoanDocumentPdfMutation = useDownloadLoanDocumentPdf();
@@ -66,6 +71,17 @@ function LoanDetailPage() {
   const activeDownloadTemplateId = downloadLoanDocumentPdfMutation.isPending
     ? downloadLoanDocumentPdfMutation.variables.templateId
     : null;
+
+  async function handleDeleteLoan() {
+    try {
+      await deleteLoan(loanId);
+      setIsDeleteDialogOpen(false);
+      toast.success('Loan deleted successfully.');
+      await router.navigate({ to: '/loans' });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete loan.');
+    }
+  }
 
   const columns: Array<ColumnDef<LoanInstallment>> = [
     {
@@ -157,6 +173,16 @@ function LoanDetailPage() {
                   >
                     <PencilIcon className="size-3.5" />
                     Edit
+                  </Button>
+                  <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1.5 text-destructive hover:text-destructive/80"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      disabled={isDeletePending}
+                  >
+                    <Trash2Icon className="size-3.5" />
+                    Delete
                   </Button>
                 </div>
               )}
@@ -381,6 +407,20 @@ function LoanDetailPage() {
             onOpenChange={setIsShareDialogOpen}
         />
       )}
+
+      <ConfirmDeleteDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={(open) => {
+            if (!isDeletePending) {
+              setIsDeleteDialogOpen(open);
+            }
+          }}
+          title="Delete Loan"
+          description="This will permanently remove the loan, its installments, signed documents, document logs, and stored signature files."
+          confirmLabel="Delete Loan"
+          isPending={isDeletePending}
+          onConfirm={handleDeleteLoan}
+      />
     </div>
   );
 }

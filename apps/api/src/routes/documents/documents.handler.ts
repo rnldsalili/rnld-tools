@@ -2,6 +2,7 @@ import { createDocumentSchema, documentIdParamSchema, documentQuerySchema, updat
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { parseDocumentContent, serializeDocumentContent } from '@/api/lib/documents/content';
+import { deleteImage } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
 
 export const getDocuments = createHandlers(
@@ -135,6 +136,26 @@ export const deleteDocument = createHandlers(
       return c.json({ meta: { code: 404, message: 'Document not found' } }, 404);
     }
 
+    const loanDocumentsWithSignatures = await prisma.loanDocument.findMany({
+      where: {
+        templateId: id,
+        signatureKey: {
+          not: null,
+        },
+      },
+      select: {
+        signatureKey: true,
+      },
+    });
+    const signatureKeys = Array.from(
+      new Set(
+        loanDocumentsWithSignatures
+          .map((loanDocument) => loanDocument.signatureKey)
+          .filter((signatureKey): signatureKey is string => Boolean(signatureKey)),
+      ),
+    );
+
+    await Promise.all(signatureKeys.map((signatureKey) => deleteImage(c.env.STORAGE, signatureKey)));
     await prisma.document.delete({ where: { id } });
 
     return c.json({ meta: { code: 200, message: 'Document deleted successfully' } }, 200);
