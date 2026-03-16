@@ -234,16 +234,18 @@ function LoanDetailPage() {
                 <p className="text-sm text-muted-foreground">No document templates configured.</p>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {templateEntries.map(({ template, tokens, document }) => (
+                  {templateEntries.map(({ template, document }) => (
                     <div key={template.id} className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium">{template.name}</span>
                           {document?.signedAt ? (
                             <Badge className="bg-green-600 hover:bg-green-600 text-white text-xs">Signed</Badge>
-                          ) : tokens.length > 0 ? (
+                          ) : template.requiresSignature ? (
                             <Badge variant="secondary" className="text-xs">Unsigned</Badge>
-                          ) : null}
+                          ) : (
+                            <Badge variant="secondary" className="text-xs">PDF only</Badge>
+                          )}
                         </div>
                         {loan && document?.signedAt ? (
                           <Button
@@ -288,27 +290,6 @@ function LoanDetailPage() {
                         <p className="text-xs text-muted-foreground">
                           Signed on {format(new Date(document.signedAt), 'MMM d, yyyy h:mm a')}
                         </p>
-                      )}
-                      {tokens.length > 0 && (
-                        <div className="flex flex-col gap-1">
-                          {tokens.map((t) => (
-                            <div
-                                key={t.token}
-                                className="flex flex-wrap items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-                            >
-                              {t.isExpired ? (
-                                <Badge variant="destructive" className="text-xs">Expired</Badge>
-                              ) : (
-                                <Badge variant="secondary" className="text-xs">Active</Badge>
-                              )}
-                              <span className="text-xs text-muted-foreground">
-                                {t.isExpired
-                                  ? `Expired ${format(new Date(t.expiresAt), 'MMM d, yyyy')}`
-                                  : `Expires ${format(new Date(t.expiresAt), 'MMM d, yyyy')}`}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
                       )}
                     </div>
                   ))}

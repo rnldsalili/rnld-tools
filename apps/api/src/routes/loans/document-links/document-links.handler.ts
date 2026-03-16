@@ -11,14 +11,6 @@ import { hasDocumentContent, parseDocumentContent } from '@/api/lib/documents/co
 import { getR2PresignedGetUrlOrNull } from '@/api/lib/storage/presign';
 import { validate } from '@/api/lib/validator';
 
-type KVTokenValue = {
-  loanId: string;
-  templateId: string;
-  createdByUserId: string;
-  createdAt: string;
-  expiresAt: string;
-};
-
 function listKey(loanId: string, token: string) {
   return `doc_${loanId}_${token}`;
 }
@@ -34,12 +26,11 @@ export const getDocumentLinks = createHandlers(
       return c.json({ meta: { code: 404, message: 'Loan not found' } }, 404);
     }
 
-    const [documentTemplates, kvList, loanDocuments] = await Promise.all([
+    const [documentTemplates, loanDocuments] = await Promise.all([
       prisma.document.findMany({
         where: { type: DocumentType.LOAN },
         orderBy: { createdAt: 'asc' },
       }),
-      c.env.KV.list<KVTokenValue>({ prefix: `doc_${loanId}_` }),
       prisma.loanDocument.findMany({
         where: { loanId },
         select: {
@@ -52,32 +43,6 @@ export const getDocumentLinks = createHandlers(
         },
       }),
     ]);
-
-    const now = new Date();
-
-    const tokensByTemplate: Record<string, Array<{
-      token: string;
-      expiresAt: string;
-      createdAt: string;
-      isExpired: boolean;
-      templateId: string;
-    }>> = {};
-
-    for (const key of kvList.keys) {
-      const token = key.name.replace(`doc_${loanId}_`, '');
-      const meta = key.metadata;
-      if (!meta?.templateId) continue;
-      const expiresAt = meta.expiresAt || '';
-      const entry = {
-        token,
-        expiresAt,
-        createdAt: meta.createdAt || '',
-        isExpired: expiresAt.length > 0 ? new Date(expiresAt) < now : false,
-        templateId: meta.templateId,
-      };
-      tokensByTemplate[meta.templateId] ??= [];
-      tokensByTemplate[meta.templateId].push(entry);
-    }
 
     const docsByTemplate: Partial<Record<string, typeof loanDocuments[number]>> = {};
     for (const doc of loanDocuments) {
@@ -98,7 +63,7 @@ export const getDocumentLinks = createHandlers(
             requiresSignature: documentTemplate.requiresSignature,
             content: parseDocumentContent(documentTemplate.content),
           },
-          tokens: tokensByTemplate[documentTemplate.id] ?? [],
+          tokens: [],
           document: doc
             ? {
               id: doc.id,
@@ -154,15 +119,7 @@ export const createDocumentLink = createHandlers(
     const expiresAt = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toISOString();
     const ttlSeconds = expiryDays * 24 * 60 * 60;
 
-    const value: KVTokenValue = { loanId, templateId, createdByUserId: authenticatedUser.id, createdAt, expiresAt };
-
-    await Promise.all([
-      c.env.KV.put(token, JSON.stringify({ loanId, templateId }), { expirationTtl: ttlSeconds }),
-      c.env.KV.put(listKey(loanId, token), JSON.stringify(value), {
-        expirationTtl: ttlSeconds,
-        metadata: value,
-      }),
-    ]);
+    await c.env.KV.put(token, JSON.stringify({ loanId, templateId }), { expirationTtl: ttlSeconds });
 
     await logLoanDocumentEventSafely(c, {
       loanId,

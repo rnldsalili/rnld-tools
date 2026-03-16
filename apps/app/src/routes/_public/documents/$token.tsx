@@ -13,7 +13,7 @@ import {
 } from '@workspace/ui';
 import { CheckCircleIcon, Loader2Icon, PenLineIcon, XCircleIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { PublicDocument } from '@/app/hooks/use-public-document';
 import { SignatureCanvas } from '@/app/components/loans/signature-canvas';
 import {
@@ -45,6 +45,14 @@ function formatDisplayDateTime(value: string | Date) {
   return dateTimeFormatter.format(new Date(value));
 }
 
+function getPublicDocumentPageTitle(documentName?: string, borrowerName?: string) {
+  if (!documentName || !borrowerName) {
+    return 'Document';
+  }
+
+  return `${documentName} - ${borrowerName}`;
+}
+
 function PublicDocumentPage() {
   const { token } = Route.useParams();
   const [isLinkUnavailable, setIsLinkUnavailable] = useState(false);
@@ -59,6 +67,10 @@ function PublicDocumentPage() {
   const isUnavailableError =
     publicDocumentQuery.error instanceof PublicDocumentRequestError &&
     [404, 410].includes(publicDocumentQuery.error.status);
+
+  useEffect(() => {
+    document.title = getPublicDocumentPageTitle(documentTemplate?.name, publicDocument?.loan.borrower);
+  }, [documentTemplate?.name, publicDocument?.loan.borrower]);
 
   async function handleConfirm(signatureData?: string) {
     if (!publicDocument) {
