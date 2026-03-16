@@ -39,6 +39,7 @@ const DISPLAY_TIME_ZONE = 'UTC';
 const LOAN_DOCUMENT_INSTALLMENTS_PLACEHOLDER = '{{loan.installments}}';
 const LOAN_DOCUMENT_SIGNATURE_PLACEHOLDER = '{{loan.signature}}';
 const LOAN_DOCUMENT_PLACEHOLDER_KEYS = [
+  '{{currentDate}}',
   '{{loan.borrower}}',
   '{{loan.email}}',
   '{{loan.phone}}',
@@ -171,6 +172,7 @@ export function createLoanDocumentPdfHtmlDocument(documentTitle: string, documen
 
 function getPlaceholderValues(loan: LoanDocumentRenderLoan): Record<string, string> {
   return {
+    '{{currentDate}}': formatDisplayDate(new Date()),
     '{{loan.borrower}}': loan.borrower,
     '{{loan.email}}': loan.email ?? MISSING_PLACEHOLDER_VALUE,
     '{{loan.phone}}': loan.phone ?? MISSING_PLACEHOLDER_VALUE,

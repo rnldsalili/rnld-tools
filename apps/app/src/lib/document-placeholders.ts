@@ -8,6 +8,7 @@ export const LOAN_DOCUMENT_SIGNATURE_PLACEHOLDER = '{{loan.signature}}';
 export const LOAN_DOCUMENT_INSTALLMENTS_PLACEHOLDER = '{{loan.installments}}';
 
 export const LOAN_DOCUMENT_PLACEHOLDERS: Array<LoanDocumentPlaceholderDefinition> = [
+  { key: '{{currentDate}}', label: 'Current Date', isBlock: false },
   { key: '{{loan.borrower}}', label: 'Borrower Name', isBlock: false },
   { key: '{{loan.email}}', label: 'Borrower Email', isBlock: false },
   { key: '{{loan.phone}}', label: 'Borrower Phone', isBlock: false },
