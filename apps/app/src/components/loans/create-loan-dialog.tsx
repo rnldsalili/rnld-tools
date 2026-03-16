@@ -1,4 +1,5 @@
 import { useForm } from '@tanstack/react-form';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
   Button,
@@ -47,23 +48,25 @@ interface DefaultValues {
   bulkAmount: string;
 }
 
-const DEFAULT_VALUES: DefaultValues = {
-  borrower: '',
-  amount: '',
-  currency: Currency.PHP,
-  installmentInterval: InstallmentInterval.MONTHLY,
-  loanDate: '',
-  interestRate: '',
-  phone: '',
-  email: '',
-  description: '',
-  installmentMode: InstallmentType.SINGLE as InstallmentMode,
-  singleDueDate: '',
-  singleAmount: '',
-  bulkCount: '1',
-  bulkStartDate: '',
-  bulkAmount: '',
-};
+function createDefaultValues(): DefaultValues {
+  return {
+    borrower: '',
+    amount: '',
+    currency: Currency.PHP,
+    installmentInterval: InstallmentInterval.MONTHLY,
+    loanDate: format(new Date(), 'yyyy-MM-dd'),
+    interestRate: '',
+    phone: '',
+    email: '',
+    description: '',
+    installmentMode: InstallmentType.SINGLE as InstallmentMode,
+    singleDueDate: '',
+    singleAmount: '',
+    bulkCount: '1',
+    bulkStartDate: '',
+    bulkAmount: '',
+  };
+}
 
 interface CreateLoanDialogProps {
   open: boolean;
@@ -74,7 +77,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
   const { mutateAsync, isPending } = useCreateLoan();
 
   const form = useForm({
-    defaultValues: DEFAULT_VALUES,
+    defaultValues: createDefaultValues(),
     onSubmit: async ({ value }) => {
       const loanPayload: Parameters<typeof mutateAsync>[0]['body'] = {
         borrower: value.borrower.trim(),
@@ -92,7 +95,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
       try {
         await mutateAsync({ body: loanPayload });
         toast.success('Loan created successfully.');
-        form.reset();
+        form.reset(createDefaultValues());
         onOpenChange(false);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'Failed to create loan.');
@@ -102,7 +105,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
-      form.reset();
+      form.reset(createDefaultValues());
     }
     onOpenChange(nextOpen);
   }
@@ -178,39 +181,37 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
       <div className="flex flex-col gap-3 rounded-md border border-border p-3">
         <p className="text-xs text-muted-foreground">Bulk installment schedule</p>
 
-        <div className="grid grid-cols-2 gap-3">
-          <form.Field
-              name="bulkCount"
-              validators={{
-              onChange: ({ value }) => {
-                if (form.getFieldValue('installmentMode') !== InstallmentType.BULK) return undefined;
-                const parsed = parseInt(value, 10);
-                if (!value || isNaN(parsed) || parsed < 1 || parsed > 360)
-                  return 'Count must be 1–360';
-                return undefined;
-              },
-            }}
-          >
-            {(field) => (
-              <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-                <FieldLabel htmlFor={field.name}>
-                  Count <span className="text-destructive">*</span>
-                </FieldLabel>
-                <Input
-                    id={field.name}
-                    type="number"
-                    min="1"
-                    max="360"
-                    placeholder="e.g. 12"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                />
-                <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-              </Field>
-            )}
-          </form.Field>
-        </div>
+        <form.Field
+            name="bulkCount"
+            validators={{
+            onChange: ({ value }) => {
+              if (form.getFieldValue('installmentMode') !== InstallmentType.BULK) return undefined;
+              const parsed = parseInt(value, 10);
+              if (!value || isNaN(parsed) || parsed < 1 || parsed > 360)
+                return 'Count must be 1–360';
+              return undefined;
+            },
+          }}
+        >
+          {(field) => (
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>
+                Count <span className="text-destructive">*</span>
+              </FieldLabel>
+              <Input
+                  id={field.name}
+                  type="number"
+                  min="1"
+                  max="360"
+                  placeholder="e.g. 12"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value)}
+                  onBlur={field.handleBlur}
+              />
+              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
+            </Field>
+          )}
+        </form.Field>
 
         <form.Field
             name="bulkStartDate"
