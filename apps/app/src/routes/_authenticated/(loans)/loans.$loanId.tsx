@@ -254,7 +254,7 @@ function LoanDetailPage() {
                             <Badge variant="secondary" className="text-xs">PDF only</Badge>
                           )}
                         </div>
-                        {loan && document?.signedAt ? (
+                        {loan && (
                           <Button
                               variant="ghost"
                               size="sm"
@@ -287,10 +287,6 @@ function LoanDetailPage() {
                               )}
                             PDF
                           </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            PDF available after signing
-                          </span>
                         )}
                       </div>
                       {document?.signedAt && (

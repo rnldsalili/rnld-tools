@@ -29,7 +29,7 @@ export function renderLoanDocumentContentSnapshot(params: {
   content: string;
   loan: LoanWithInstallments;
   signatureDataUrl?: string | null;
-  signedAt: Date;
+  signedAt?: Date | null;
 }) {
   return renderLoanDocumentHtml({
     content: parseDocumentContent(params.content),
@@ -50,7 +50,7 @@ export function renderLoanDocumentContentSnapshot(params: {
       phone: params.loan.client.phone,
     },
     signatureDataUrl: params.signatureDataUrl ?? null,
-    signedAt: params.signedAt,
+    signedAt: params.signedAt ?? null,
   });
 }
 

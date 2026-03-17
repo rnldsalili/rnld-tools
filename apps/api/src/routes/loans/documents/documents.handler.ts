@@ -3,7 +3,11 @@ import { createLoanDocumentPdfHtmlDocument } from '@workspace/document-renderer/
 import { loanDocumentPdfParamSchema } from './documents.schema';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
-import { ensureLoanDocumentContentSnapshot } from '@/api/lib/documents/snapshot';
+import {
+  ensureLoanDocumentContentSnapshot,
+  renderLoanDocumentContentSnapshot,
+} from '@/api/lib/documents/snapshot';
+import { hasDocumentContent } from '@/api/lib/documents/content';
 import { validate } from '@/api/lib/validator';
 
 export const downloadLoanDocumentPdf = createHandlers(
@@ -15,17 +19,14 @@ export const downloadLoanDocumentPdf = createHandlers(
     const [loanFound, documentTemplate, loanDocumentFound] = await Promise.all([
       prisma.loan.findUnique({
         where: { id: loanId },
-        select: {
-          client: {
-            select: {
-              name: true,
-            },
-          },
+        include: {
+          client: true,
+          installments: { orderBy: { dueDate: 'asc' } },
         },
       }),
       prisma.document.findUnique({
         where: { id: templateId },
-        select: { id: true, name: true },
+        select: { id: true, name: true, content: true },
       }),
       prisma.loanDocument.findUnique({
         where: { loanId_templateId: { loanId, templateId } },
@@ -42,20 +43,25 @@ export const downloadLoanDocumentPdf = createHandlers(
       return c.json({ meta: { code: 404, message: 'Loan document not found' } }, 404);
     }
 
-    if (!loanDocumentFound?.signedAt) {
+    if (!hasDocumentContent(documentTemplate.content)) {
       return c.json({
-        meta: { code: 409, message: 'Document must be signed or confirmed before downloading PDF' },
-      }, 409);
+        meta: { code: 422, message: 'Document template has no content. Please configure it first.' },
+      }, 422);
     }
 
-    const contentSnapshotHtml = await ensureLoanDocumentContentSnapshot(c, {
-      contentSnapshotHtml: loanDocumentFound.contentSnapshotHtml,
-      loanDocumentId: loanDocumentFound.id,
-      loanId,
-      signedAt: loanDocumentFound.signedAt,
-      signatureKey: loanDocumentFound.signatureKey,
-      templateId,
-    });
+    const contentSnapshotHtml = loanDocumentFound?.signedAt
+      ? await ensureLoanDocumentContentSnapshot(c, {
+        contentSnapshotHtml: loanDocumentFound.contentSnapshotHtml,
+        loanDocumentId: loanDocumentFound.id,
+        loanId,
+        signedAt: loanDocumentFound.signedAt,
+        signatureKey: loanDocumentFound.signatureKey,
+        templateId,
+      })
+      : renderLoanDocumentContentSnapshot({
+        content: documentTemplate.content,
+        loan: loanFound,
+      });
 
     if (!contentSnapshotHtml) {
       return c.json({
