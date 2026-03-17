@@ -67,7 +67,7 @@ export const downloadLoanDocumentPdf = createHandlers(
 
     try {
       const page = await browser.newPage();
-      await page.setContent(createLoanDocumentPdfHtmlDocument(documentTemplate.name, contentSnapshotHtml), {
+      await page.setContent(createLoanDocumentPdfHtmlDocument(contentSnapshotHtml), {
         waitUntil: 'load',
       });
 

@@ -1,5 +1,6 @@
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
+import Underline from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import {
@@ -37,11 +38,17 @@ export function AgreementEditor({
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder }),
     ],
     content: content ?? '',
     editable,
+    editorProps: {
+      attributes: {
+        class: 'document-rich-text',
+      },
+    },
     onUpdate: ({ editor: tiptapEditor }) => {
       onChange?.(tiptapEditor.getJSON());
     },
@@ -63,7 +70,7 @@ export function AgreementEditor({
       <EditorContent
           editor={editor}
           className={cn(
-          'prose prose-sm dark:prose-invert max-w-none flex-1 [&_.tiptap]:min-h-48 [&_.tiptap]:p-3 [&_.tiptap]:outline-none',
+          'max-w-none flex-1 [&_.tiptap]:min-h-48 [&_.tiptap]:p-3 [&_.tiptap]:outline-none',
           '[&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:h-0',
         )}
       />
@@ -94,6 +101,8 @@ function ToolbarButton({
             onClick={onClick}
             disabled={disabled}
             type="button"
+            aria-label={tooltip}
+            aria-pressed={isActive}
         >
           {children}
         </Button>

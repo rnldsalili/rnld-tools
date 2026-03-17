@@ -36,7 +36,8 @@ export interface LoanDocumentRenderInput {
 
 const MISSING_PLACEHOLDER_VALUE = '-';
 const DISPLAY_LOCALE = 'en-US';
-const DISPLAY_TIME_ZONE = 'UTC';
+const DISPLAY_TIME_ZONE = 'Asia/Manila';
+const DISPLAY_TIME_ZONE_LABEL = 'PHT';
 const LOAN_DOCUMENT_INSTALLMENTS_PLACEHOLDER = '{{loan.installments}}';
 const LOAN_DOCUMENT_SIGNATURE_PLACEHOLDER = '{{loan.signature}}';
 const LOAN_DOCUMENT_PLACEHOLDER_KEYS = [
@@ -76,7 +77,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   hour: 'numeric',
   minute: '2-digit',
   timeZone: DISPLAY_TIME_ZONE,
-  timeZoneName: 'short',
 });
 
 export function normalizeTipTapLineBreaks(content: unknown): TipTapNode | null {
@@ -132,7 +132,7 @@ export function renderLoanDocumentHtmlWithGenerator(
   });
 }
 
-export function createLoanDocumentPdfHtmlDocument(documentTitle: string, documentHtml: string): string {
+export function createLoanDocumentPdfHtmlDocument(documentHtml: string): string {
   return [
     '<!doctype html>',
     '<html lang="en">',
@@ -159,12 +159,11 @@ export function createLoanDocumentPdfHtmlDocument(documentTitle: string, documen
     '  .installments-table th { background: #f3f4f6; }',
     '  .signature-label { margin: 0 0 4px; font-size: 11px; color: #6b7280; }',
     '  .signature-line { width: 200px; height: 48px; margin: 0 0 4px; border-bottom: 1px solid #111827; }',
-    '  .signature-image { display: block; width: 200px; height: 80px; margin: 8px 0 0; object-fit: contain; }',
+    '  .signature-image { display: block; width: 200px; height: 80px; margin: 0 0 4px; object-fit: contain; }',
     '</style>',
     '</head>',
     '<body>',
     '<main>',
-    `<h1>${escapeHtml(documentTitle)}</h1>`,
     documentHtml,
     '</main>',
     '</body>',
@@ -212,7 +211,7 @@ function formatDisplayShortDate(value: string | Date) {
 }
 
 function formatDisplayDateTime(value: string | Date) {
-  return dateTimeFormatter.format(new Date(value));
+  return `${dateTimeFormatter.format(new Date(value))} ${DISPLAY_TIME_ZONE_LABEL}`;
 }
 
 function escapeHtml(value: string) {
@@ -284,7 +283,6 @@ function buildSignatureMarkup(params: {
 
   return `
     <div class="signature-block">
-      <p class="signature-label">Client&apos;s Signature</p>
       ${signatureBodyMarkup}
       <p class="signature-label">${escapeHtml(params.borrower)}</p>
     </div>

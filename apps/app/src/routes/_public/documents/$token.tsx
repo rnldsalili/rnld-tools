@@ -29,7 +29,8 @@ export const Route = createFileRoute('/_public/documents/$token')({
 });
 
 const DISPLAY_LOCALE = 'en-US';
-const DISPLAY_TIME_ZONE = 'UTC';
+const DISPLAY_TIME_ZONE = 'Asia/Manila';
+const DISPLAY_TIME_ZONE_LABEL = 'PHT';
 
 const dateTimeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   month: 'short',
@@ -38,11 +39,10 @@ const dateTimeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   hour: 'numeric',
   minute: '2-digit',
   timeZone: DISPLAY_TIME_ZONE,
-  timeZoneName: 'short',
 });
 
 function formatDisplayDateTime(value: string | Date) {
-  return dateTimeFormatter.format(new Date(value));
+  return `${dateTimeFormatter.format(new Date(value))} ${DISPLAY_TIME_ZONE_LABEL}`;
 }
 
 function getPublicDocumentPageTitle(documentName?: string, clientName?: string) {
@@ -141,7 +141,7 @@ function PublicDocumentPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
-      <PublicDocumentContentCard title={documentTemplate.name} renderedDocumentHtml={renderedDocumentHtml} />
+      <PublicDocumentContentCard renderedDocumentHtml={renderedDocumentHtml} />
 
       {isDocumentSigned ? (
         <PublicDocumentSignedCard publicDocument={publicDocument} />
@@ -178,30 +178,19 @@ function PublicDocumentUnavailableState({ description }: { description: string }
   );
 }
 
-function PublicDocumentContentCard({
-  title,
-  renderedDocumentHtml,
-}: {
-  title: string;
-  renderedDocumentHtml: string;
-}) {
+function PublicDocumentContentCard({ renderedDocumentHtml }: { renderedDocumentHtml: string }) {
   return (
     <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
       <CardContent>
         <div
             className={cn(
-            'prose prose-sm max-w-none dark:prose-invert',
-            '[&_p]:min-h-lh [&_p]:whitespace-pre-wrap',
-            '[&_li]:whitespace-pre-wrap',
+            'document-rich-text max-w-none',
             '[&_.installments-table]:w-full [&_.installments-table]:border-collapse',
             '[&_.installments-table_th]:border [&_.installments-table_th]:border-border [&_.installments-table_th]:bg-muted [&_.installments-table_th]:px-3 [&_.installments-table_th]:py-2 [&_.installments-table_th]:text-left',
             '[&_.installments-table_td]:border [&_.installments-table_td]:border-border [&_.installments-table_td]:px-3 [&_.installments-table_td]:py-2',
             '[&_.signature-label]:mb-1 [&_.signature-label]:text-xs [&_.signature-label]:text-muted-foreground',
             '[&_.signature-line]:mb-1 [&_.signature-line]:h-12 [&_.signature-line]:w-50 [&_.signature-line]:border-b [&_.signature-line]:border-foreground',
-            '[&_.signature-image]:mt-2 [&_.signature-image]:h-20 [&_.signature-image]:w-50 [&_.signature-image]:object-contain',
+            '[&_.signature-image]:mb-1 [&_.signature-image]:h-20 [&_.signature-image]:w-50 [&_.signature-image]:object-contain',
           )}
             dangerouslySetInnerHTML={{ __html: renderedDocumentHtml }}
         />
