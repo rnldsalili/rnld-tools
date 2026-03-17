@@ -25,20 +25,19 @@ import {
   InstallmentStatus,
   InstallmentType,
 } from '@workspace/constants';
+import { ClientSelector } from '@/app/components/loans/client-selector';
 import { useCreateLoan } from '@/app/hooks/use-loan';
 import { toFieldErrors } from '@/app/lib/form';
 
 type InstallmentMode = 'single' | 'bulk';
 
 interface DefaultValues {
-  borrower: string;
+  clientId: string;
   amount: string;
   currency: string;
   installmentInterval: string;
   loanDate: string;
   interestRate: string;
-  phone: string;
-  email: string;
   description: string;
   installmentMode: InstallmentMode;
   singleDueDate: string;
@@ -50,14 +49,12 @@ interface DefaultValues {
 
 function createDefaultValues(): DefaultValues {
   return {
-    borrower: '',
+    clientId: '',
     amount: '',
     currency: Currency.PHP,
     installmentInterval: InstallmentInterval.MONTHLY,
     loanDate: format(new Date(), 'yyyy-MM-dd'),
     interestRate: '',
-    phone: '',
-    email: '',
     description: '',
     installmentMode: InstallmentType.SINGLE as InstallmentMode,
     singleDueDate: '',
@@ -80,14 +77,12 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
     defaultValues: createDefaultValues(),
     onSubmit: async ({ value }) => {
       const loanPayload: Parameters<typeof mutateAsync>[0]['body'] = {
-        borrower: value.borrower.trim(),
+        clientId: value.clientId,
         amount: parseFloat(value.amount),
         currency: value.currency as (typeof CURRENCIES)[number],
         installmentInterval: value.installmentInterval as InstallmentInterval,
         loanDate: value.loanDate,
         interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : undefined,
-        phone: value.phone.trim() || undefined,
-        email: value.email.trim() || undefined,
         description: value.description.trim() || undefined,
         installments: buildInstallmentsPayload(value),
       };
@@ -310,28 +305,18 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
               Loan Info
             </p>
 
-            {/* Borrower */}
             <form.Field
-                name="borrower"
+                name="clientId"
                 validators={{
-                onChange: ({ value }) =>
-                  !value.trim() ? 'Borrower name is required' : undefined,
+                onChange: ({ value }) => (!value ? 'Client is required' : undefined),
               }}
             >
               {(field) => (
-                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-                  <FieldLabel htmlFor={field.name}>
-                    Borrower <span className="text-destructive">*</span>
-                  </FieldLabel>
-                  <Input
-                      id={field.name}
-                      placeholder="Full name"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      onBlur={field.handleBlur}
-                  />
-                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-                </Field>
+                <ClientSelector
+                    clientId={field.state.value}
+                    errors={field.state.meta.errors}
+                    onChange={field.handleChange}
+                />
               )}
             </form.Field>
 
@@ -441,49 +426,6 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                 </Field>
               )}
             </form.Field>
-
-            {/* Phone + Email */}
-            <div className="grid grid-cols-2 gap-3">
-              <form.Field name="phone">
-                {(field) => (
-                  <Field>
-                    <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
-                    <Input
-                        id={field.name}
-                        placeholder="+63 9XX XXX XXXX"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                    />
-                  </Field>
-                )}
-              </form.Field>
-
-              <form.Field
-                  name="email"
-                  validators={{
-                  onChange: ({ value }) => {
-                    if (!value.trim()) return undefined;
-                    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-                    return isValidEmail ? undefined : 'Invalid email address';
-                  },
-                }}
-              >
-                {(field) => (
-                  <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-                    <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                    <Input
-                        id={field.name}
-                        type="email"
-                        placeholder="borrower@example.com"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                    />
-                    <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-                  </Field>
-                )}
-              </form.Field>
-            </div>
 
             {/* Description */}
             <form.Field name="description">

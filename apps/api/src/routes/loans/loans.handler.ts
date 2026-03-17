@@ -1,4 +1,4 @@
-import { InstallmentInterval, InstallmentType } from '@workspace/constants';
+import { ClientStatus, InstallmentInterval, InstallmentType } from '@workspace/constants';
 import {
   loanCreateSchema,
   loanGetQuerySchema,
@@ -33,6 +33,15 @@ const addInterval = (startDate: Date, interval: InstallmentInterval, step: numbe
   return resultDate;
 };
 
+async function getLoanClientOrNull(prisma: ReturnType<typeof initializePrisma>, clientId: string) {
+  return prisma.client.findUnique({
+    where: { id: clientId },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+}
 
 export const getLoans = createHandlers(
   validate('query', loanListQuerySchema),
@@ -42,7 +51,7 @@ export const getLoans = createHandlers(
 
     const skipCount = (page - 1) * limit;
     const loanFilter: Prisma.LoanWhereInput = search
-      ? { borrower: { contains: search } }
+      ? { client: { is: { name: { contains: search } } } }
       : {};
 
     const [loans, totalLoans] = await Promise.all([
@@ -51,7 +60,10 @@ export const getLoans = createHandlers(
         orderBy: { createdAt: 'desc' },
         skip: skipCount,
         take: limit,
-        include: { _count: { select: { installments: true } } },
+        include: {
+          client: true,
+          _count: { select: { installments: true } },
+        },
       }),
       prisma.loan.count({ where: loanFilter }),
     ]);
@@ -79,7 +91,12 @@ export const getLoan = createHandlers(
     const { page, limit } = c.req.valid('query');
     const prisma = initializePrisma(c.env);
 
-    const loanFound = await prisma.loan.findUnique({ where: { id: loanId } });
+    const loanFound = await prisma.loan.findUnique({
+      where: { id: loanId },
+      include: {
+        client: true,
+      },
+    });
     if (!loanFound) {
       return c.json({ meta: { code: 404, message: 'Loan not found' } }, 404);
     }
@@ -121,19 +138,29 @@ export const createLoan = createHandlers(
     const authenticatedUser = c.get('user');
     const prisma = initializePrisma(c.env);
 
+    const clientFound = await getLoanClientOrNull(prisma, loanPayload.clientId);
+    if (!clientFound) {
+      return c.json({ meta: { code: 404, message: 'Client not found' } }, 404);
+    }
+
+    if (clientFound.status !== ClientStatus.ENABLED) {
+      return c.json({ meta: { code: 422, message: 'Disabled clients cannot be used for new loans' } }, 422);
+    }
+
     const createdLoan = await prisma.loan.create({
       data: {
-        borrower: loanPayload.borrower,
+        client: { connect: { id: loanPayload.clientId } },
         amount: loanPayload.amount,
         currency: loanPayload.currency,
         installmentInterval: loanPayload.installmentInterval,
         loanDate: new Date(loanPayload.loanDate),
         interestRate: loanPayload.interestRate ?? null,
-        phone: loanPayload.phone?.trim() || null,
-        email: loanPayload.email?.trim() || null,
         description: loanPayload.description?.trim() || null,
         createdBy: { connect: { id: authenticatedUser.id } },
         updatedBy: { connect: { id: authenticatedUser.id } },
+      },
+      include: {
+        client: true,
       },
     });
 
@@ -189,20 +216,46 @@ export const updateLoan = createHandlers(
     const prisma = initializePrisma(c.env);
 
     try {
+      const existingLoan = await prisma.loan.findUnique({
+        where: { id: loanId },
+        select: {
+          clientId: true,
+        },
+      });
+
+      if (!existingLoan) {
+        return c.json({ meta: { code: 404, message: 'Loan not found' } }, 404);
+      }
+
+      if (loanUpdatePayload.clientId && loanUpdatePayload.clientId !== existingLoan.clientId) {
+        const nextClient = await getLoanClientOrNull(prisma, loanUpdatePayload.clientId);
+
+        if (!nextClient) {
+          return c.json({ meta: { code: 404, message: 'Client not found' } }, 404);
+        }
+
+        if (nextClient.status !== ClientStatus.ENABLED) {
+          return c.json({ meta: { code: 422, message: 'Disabled clients cannot be assigned to loans' } }, 422);
+        }
+      }
+
       const updatedLoan = await prisma.loan.update({
         where: { id: loanId },
         data: {
-          ...(loanUpdatePayload.borrower !== undefined && { borrower: loanUpdatePayload.borrower }),
+          ...(loanUpdatePayload.clientId !== undefined && {
+            client: { connect: { id: loanUpdatePayload.clientId } },
+          }),
           ...(loanUpdatePayload.amount !== undefined && { amount: loanUpdatePayload.amount }),
           ...(loanUpdatePayload.installmentInterval !== undefined && {
             installmentInterval: loanUpdatePayload.installmentInterval,
           }),
           loanDate: new Date(loanUpdatePayload.loanDate),
           ...(loanUpdatePayload.interestRate !== undefined && { interestRate: loanUpdatePayload.interestRate }),
-          ...(loanUpdatePayload.phone !== undefined && { phone: loanUpdatePayload.phone?.trim() || null }),
-          ...(loanUpdatePayload.email !== undefined && { email: loanUpdatePayload.email?.trim() || null }),
           ...(loanUpdatePayload.description !== undefined && { description: loanUpdatePayload.description?.trim() || null }),
           updatedBy: { connect: { id: authenticatedUser.id } },
+        },
+        include: {
+          client: true,
         },
       });
 

@@ -23,10 +23,13 @@ import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authen
 import { Route as PublicDocumentsTokenRouteImport } from './routes/_public/documents/$token'
 import { Route as AuthenticatedSettingsDocumentsRouteImport } from './routes/_authenticated/settings/documents'
 import { Route as AuthenticatedloansLoansRouteImport } from './routes/_authenticated/(loans)/loans'
+import { Route as AuthenticatedclientsClientsRouteImport } from './routes/_authenticated/(clients)/clients'
 import { Route as AuthenticatedSettingsDocumentsIndexRouteImport } from './routes/_authenticated/settings/documents.index'
 import { Route as AuthenticatedloansLoansIndexRouteImport } from './routes/_authenticated/(loans)/loans.index'
+import { Route as AuthenticatedclientsClientsIndexRouteImport } from './routes/_authenticated/(clients)/clients.index'
 import { Route as AuthenticatedSettingsDocumentsDocumentIdRouteImport } from './routes/_authenticated/settings/documents.$documentId'
 import { Route as AuthenticatedloansLoansLoanIdRouteImport } from './routes/_authenticated/(loans)/loans.$loanId'
+import { Route as AuthenticatedclientsClientsClientIdRouteImport } from './routes/_authenticated/(clients)/clients.$clientId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -97,6 +100,12 @@ const AuthenticatedloansLoansRoute = AuthenticatedloansLoansRouteImport.update({
   path: '/loans',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedclientsClientsRoute =
+  AuthenticatedclientsClientsRouteImport.update({
+    id: '/(clients)/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSettingsDocumentsIndexRoute =
   AuthenticatedSettingsDocumentsIndexRouteImport.update({
     id: '/',
@@ -108,6 +117,12 @@ const AuthenticatedloansLoansIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedloansLoansRoute,
+  } as any)
+const AuthenticatedclientsClientsIndexRoute =
+  AuthenticatedclientsClientsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedclientsClientsRoute,
   } as any)
 const AuthenticatedSettingsDocumentsDocumentIdRoute =
   AuthenticatedSettingsDocumentsDocumentIdRouteImport.update({
@@ -121,6 +136,12 @@ const AuthenticatedloansLoansLoanIdRoute =
     path: '/$loanId',
     getParentRoute: () => AuthenticatedloansLoansRoute,
   } as any)
+const AuthenticatedclientsClientsClientIdRoute =
+  AuthenticatedclientsClientsClientIdRouteImport.update({
+    id: '/$clientId',
+    path: '/$clientId',
+    getParentRoute: () => AuthenticatedclientsClientsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,11 +152,14 @@ export interface FileRoutesByFullPath {
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/loans': typeof AuthenticatedloansLoansRouteWithChildren
   '/settings/documents': typeof AuthenticatedSettingsDocumentsRouteWithChildren
   '/documents/$token': typeof PublicDocumentsTokenRoute
+  '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/settings/documents/$documentId': typeof AuthenticatedSettingsDocumentsDocumentIdRoute
+  '/clients/': typeof AuthenticatedclientsClientsIndexRoute
   '/loans/': typeof AuthenticatedloansLoansIndexRoute
   '/settings/documents/': typeof AuthenticatedSettingsDocumentsIndexRoute
 }
@@ -149,8 +173,10 @@ export interface FileRoutesByTo {
   '/uuid-generator': typeof toolsUuidGeneratorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
+  '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/settings/documents/$documentId': typeof AuthenticatedSettingsDocumentsDocumentIdRoute
+  '/clients': typeof AuthenticatedclientsClientsIndexRoute
   '/loans': typeof AuthenticatedloansLoansIndexRoute
   '/settings/documents': typeof AuthenticatedSettingsDocumentsIndexRoute
 }
@@ -167,11 +193,14 @@ export interface FileRoutesById {
   '/(tools)/secret-generator': typeof toolsSecretGeneratorRoute
   '/(tools)/uuid-generator': typeof toolsUuidGeneratorRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/(clients)/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/_authenticated/(loans)/loans': typeof AuthenticatedloansLoansRouteWithChildren
   '/_authenticated/settings/documents': typeof AuthenticatedSettingsDocumentsRouteWithChildren
   '/_public/documents/$token': typeof PublicDocumentsTokenRoute
+  '/_authenticated/(clients)/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/_authenticated/(loans)/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/_authenticated/settings/documents/$documentId': typeof AuthenticatedSettingsDocumentsDocumentIdRoute
+  '/_authenticated/(clients)/clients/': typeof AuthenticatedclientsClientsIndexRoute
   '/_authenticated/(loans)/loans/': typeof AuthenticatedloansLoansIndexRoute
   '/_authenticated/settings/documents/': typeof AuthenticatedSettingsDocumentsIndexRoute
 }
@@ -186,11 +215,14 @@ export interface FileRouteTypes {
     | '/secret-generator'
     | '/uuid-generator'
     | '/dashboard'
+    | '/clients'
     | '/loans'
     | '/settings/documents'
     | '/documents/$token'
+    | '/clients/$clientId'
     | '/loans/$loanId'
     | '/settings/documents/$documentId'
+    | '/clients/'
     | '/loans/'
     | '/settings/documents/'
   fileRoutesByTo: FileRoutesByTo
@@ -204,8 +236,10 @@ export interface FileRouteTypes {
     | '/uuid-generator'
     | '/dashboard'
     | '/documents/$token'
+    | '/clients/$clientId'
     | '/loans/$loanId'
     | '/settings/documents/$documentId'
+    | '/clients'
     | '/loans'
     | '/settings/documents'
   id:
@@ -221,11 +255,14 @@ export interface FileRouteTypes {
     | '/(tools)/secret-generator'
     | '/(tools)/uuid-generator'
     | '/_authenticated/dashboard'
+    | '/_authenticated/(clients)/clients'
     | '/_authenticated/(loans)/loans'
     | '/_authenticated/settings/documents'
     | '/_public/documents/$token'
+    | '/_authenticated/(clients)/clients/$clientId'
     | '/_authenticated/(loans)/loans/$loanId'
     | '/_authenticated/settings/documents/$documentId'
+    | '/_authenticated/(clients)/clients/'
     | '/_authenticated/(loans)/loans/'
     | '/_authenticated/settings/documents/'
   fileRoutesById: FileRoutesById
@@ -339,6 +376,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedloansLoansRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/(clients)/clients': {
+      id: '/_authenticated/(clients)/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AuthenticatedclientsClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/documents/': {
       id: '/_authenticated/settings/documents/'
       path: '/'
@@ -353,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedloansLoansIndexRouteImport
       parentRoute: typeof AuthenticatedloansLoansRoute
     }
+    '/_authenticated/(clients)/clients/': {
+      id: '/_authenticated/(clients)/clients/'
+      path: '/'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof AuthenticatedclientsClientsIndexRouteImport
+      parentRoute: typeof AuthenticatedclientsClientsRoute
+    }
     '/_authenticated/settings/documents/$documentId': {
       id: '/_authenticated/settings/documents/$documentId'
       path: '/$documentId'
@@ -366,6 +417,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/loans/$loanId'
       preLoaderRoute: typeof AuthenticatedloansLoansLoanIdRouteImport
       parentRoute: typeof AuthenticatedloansLoansRoute
+    }
+    '/_authenticated/(clients)/clients/$clientId': {
+      id: '/_authenticated/(clients)/clients/$clientId'
+      path: '/$clientId'
+      fullPath: '/clients/$clientId'
+      preLoaderRoute: typeof AuthenticatedclientsClientsClientIdRouteImport
+      parentRoute: typeof AuthenticatedclientsClientsRoute
     }
   }
 }
@@ -419,6 +477,24 @@ const AuthenticatedSettingsRouteRouteWithChildren =
     AuthenticatedSettingsRouteRouteChildren,
   )
 
+interface AuthenticatedclientsClientsRouteChildren {
+  AuthenticatedclientsClientsClientIdRoute: typeof AuthenticatedclientsClientsClientIdRoute
+  AuthenticatedclientsClientsIndexRoute: typeof AuthenticatedclientsClientsIndexRoute
+}
+
+const AuthenticatedclientsClientsRouteChildren: AuthenticatedclientsClientsRouteChildren =
+  {
+    AuthenticatedclientsClientsClientIdRoute:
+      AuthenticatedclientsClientsClientIdRoute,
+    AuthenticatedclientsClientsIndexRoute:
+      AuthenticatedclientsClientsIndexRoute,
+  }
+
+const AuthenticatedclientsClientsRouteWithChildren =
+  AuthenticatedclientsClientsRoute._addFileChildren(
+    AuthenticatedclientsClientsRouteChildren,
+  )
+
 interface AuthenticatedloansLoansRouteChildren {
   AuthenticatedloansLoansLoanIdRoute: typeof AuthenticatedloansLoansLoanIdRoute
   AuthenticatedloansLoansIndexRoute: typeof AuthenticatedloansLoansIndexRoute
@@ -438,12 +514,15 @@ const AuthenticatedloansLoansRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedclientsClientsRoute: typeof AuthenticatedclientsClientsRouteWithChildren
   AuthenticatedloansLoansRoute: typeof AuthenticatedloansLoansRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedclientsClientsRoute:
+    AuthenticatedclientsClientsRouteWithChildren,
   AuthenticatedloansLoansRoute: AuthenticatedloansLoansRouteWithChildren,
 }
 

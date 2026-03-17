@@ -28,11 +28,11 @@ function getDocumentShareMessage(templateName: string, url: string) {
 }
 
 async function copyDocumentShareMessage(message: string) {
-  if (!navigator.clipboard?.writeText) {
+  try {
+    await navigator.clipboard.writeText(message);
+  } catch {
     throw new Error('Clipboard is not available.');
   }
-
-  await navigator.clipboard.writeText(message);
 }
 
 async function shareDocumentUrl(url: string, templateName: string) {

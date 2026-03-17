@@ -1,6 +1,7 @@
 // Components
 export { Button, buttonVariants } from '@workspace/ui/components/button';
 export { PasswordInput } from '@workspace/ui/components/composite/password-input';
+export { Combobox, type ComboboxOption } from '@workspace/ui/components/composite/combobox';
 export {
   SectionCard,
   SectionCardHeader,
@@ -49,6 +50,15 @@ export {
 } from '@workspace/ui/components/dropdown-menu';
 
 export { Checkbox } from '@workspace/ui/components/checkbox';
+export {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@workspace/ui/components/command';
 export { Slider } from '@workspace/ui/components/slider';
 export { Label } from '@workspace/ui/components/label';
 export { Separator } from '@workspace/ui/components/separator';
@@ -86,6 +96,12 @@ export {
   DialogTitle,
   DialogTrigger,
 } from '@workspace/ui/components/dialog';
+
+export {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@workspace/ui/components/popover';
 
 export {
   Tooltip,

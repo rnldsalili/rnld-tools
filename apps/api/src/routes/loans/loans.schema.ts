@@ -50,25 +50,21 @@ const installmentCreateSchema = z.discriminatedUnion('type', [
 ]);
 
 export const loanCreateSchema = z.object({
-  borrower: z.string().trim().min(1),
+  clientId: z.string().trim().length(25),
   amount: z.number().positive(),
   currency: z.enum(CURRENCIES),
   installmentInterval: z.enum(InstallmentInterval),
   loanDate: dateStringValidator,
   interestRate: z.number().min(0).optional(),
-  phone: z.string().trim().optional(),
-  email: z.string().trim().pipe(z.email()).optional(),
   description: z.string().trim().optional(),
   installments: installmentCreateSchema.optional(),
 });
 
 export const loanUpdateSchema = z.object({
-  borrower: z.string().trim().min(1).optional(),
+  clientId: z.string().trim().length(25).optional(),
   amount: z.number().positive().optional(),
   installmentInterval: z.enum(InstallmentInterval).optional(),
   loanDate: dateStringValidator,
   interestRate: z.number().min(0).optional().nullable(),
-  phone: z.string().trim().optional().nullable(),
-  email: z.string().trim().pipe(z.email()).optional().nullable(),
   description: z.string().trim().optional().nullable(),
 });

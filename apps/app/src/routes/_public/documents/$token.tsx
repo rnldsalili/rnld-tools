@@ -45,12 +45,12 @@ function formatDisplayDateTime(value: string | Date) {
   return dateTimeFormatter.format(new Date(value));
 }
 
-function getPublicDocumentPageTitle(documentName?: string, borrowerName?: string) {
-  if (!documentName || !borrowerName) {
+function getPublicDocumentPageTitle(documentName?: string, clientName?: string) {
+  if (!documentName || !clientName) {
     return 'Document';
   }
 
-  return `${documentName} - ${borrowerName}`;
+  return `${documentName} - ${clientName}`;
 }
 
 function PublicDocumentPage() {
@@ -69,8 +69,8 @@ function PublicDocumentPage() {
     [404, 410].includes(publicDocumentQuery.error.status);
 
   useEffect(() => {
-    document.title = getPublicDocumentPageTitle(documentTemplate?.name, publicDocument?.loan.borrower);
-  }, [documentTemplate?.name, publicDocument?.loan.borrower]);
+    document.title = getPublicDocumentPageTitle(documentTemplate?.name, publicDocument?.loan.client?.name);
+  }, [documentTemplate?.name, publicDocument?.loan.client?.name]);
 
   async function handleConfirm(signatureData?: string) {
     if (!publicDocument) {
@@ -121,10 +121,11 @@ function PublicDocumentPage() {
     content: publicDocument.document.content,
     loan: {
       amount: publicDocument.loan.amount,
-      borrower: publicDocument.loan.borrower,
+      address: publicDocument.loan.client.address ?? null,
+      borrower: publicDocument.loan.client.name,
       currency: publicDocument.loan.currency,
       description: publicDocument.loan.description ?? null,
-      email: publicDocument.loan.email ?? null,
+      email: publicDocument.loan.client.email ?? null,
       installmentInterval: publicDocument.loan.installmentInterval,
       installments: publicDocument.loan.installments.map((installment) => ({
         amount: installment.amount,
@@ -132,7 +133,7 @@ function PublicDocumentPage() {
       })),
       interestRate: publicDocument.loan.interestRate ?? null,
       loanDate: publicDocument.loan.loanDate,
-      phone: publicDocument.loan.phone ?? null,
+      phone: publicDocument.loan.client.phone ?? null,
     },
     signatureDataUrl: publicDocument.signing.signatureUrl ?? null,
     signedAt: publicDocument.signing.signedAt ?? null,
@@ -193,14 +194,14 @@ function PublicDocumentContentCard({
         <div
             className={cn(
             'prose prose-sm max-w-none dark:prose-invert',
-            '[&_p]:min-h-[1lh] [&_p]:whitespace-pre-wrap',
+            '[&_p]:min-h-lh [&_p]:whitespace-pre-wrap',
             '[&_li]:whitespace-pre-wrap',
             '[&_.installments-table]:w-full [&_.installments-table]:border-collapse',
             '[&_.installments-table_th]:border [&_.installments-table_th]:border-border [&_.installments-table_th]:bg-muted [&_.installments-table_th]:px-3 [&_.installments-table_th]:py-2 [&_.installments-table_th]:text-left',
             '[&_.installments-table_td]:border [&_.installments-table_td]:border-border [&_.installments-table_td]:px-3 [&_.installments-table_td]:py-2',
             '[&_.signature-label]:mb-1 [&_.signature-label]:text-xs [&_.signature-label]:text-muted-foreground',
-            '[&_.signature-line]:mb-1 [&_.signature-line]:h-12 [&_.signature-line]:w-[200px] [&_.signature-line]:border-b [&_.signature-line]:border-foreground',
-            '[&_.signature-image]:mt-2 [&_.signature-image]:h-20 [&_.signature-image]:w-[200px] [&_.signature-image]:object-contain',
+            '[&_.signature-line]:mb-1 [&_.signature-line]:h-12 [&_.signature-line]:w-50 [&_.signature-line]:border-b [&_.signature-line]:border-foreground',
+            '[&_.signature-image]:mt-2 [&_.signature-image]:h-20 [&_.signature-image]:w-50 [&_.signature-image]:object-contain',
           )}
             dangerouslySetInnerHTML={{ __html: renderedDocumentHtml }}
         />
@@ -218,7 +219,7 @@ function PublicDocumentSignedCard({ publicDocument }: { publicDocument: PublicDo
           Document Signed
         </CardTitle>
         <CardDescription>
-          This document has been signed by {publicDocument.loan.borrower}.
+          This document has been signed by {publicDocument.loan.client.name}.
           {publicDocument.signing.signedAt && (
             <> Signed on {formatDisplayDateTime(publicDocument.signing.signedAt)}.</>
           )}

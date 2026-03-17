@@ -1,6 +1,5 @@
 import { LoanDocumentLogActorType, LoanDocumentLogEventType } from '@workspace/constants';
 import { documentSignSchema, documentTokenParamSchema } from './public-document.schema';
-import { base64DataUrlToUint8Array } from './public-document.utils';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { parseDocumentContent } from '@/api/lib/documents/content';
@@ -9,7 +8,11 @@ import {
   getLoanDocumentRequestMetadata,
   logLoanDocumentEventSafely,
 } from '@/api/lib/documents/logs';
-import { ensureLoanDocumentContentSnapshot, renderLoanDocumentContentSnapshot } from '@/api/lib/documents/snapshot';
+import {
+  base64DataUrlToUint8Array,
+  ensureLoanDocumentContentSnapshot,
+  renderLoanDocumentContentSnapshot,
+} from '@/api/lib/documents/snapshot';
 import { getR2PresignedGetUrlOrNull } from '@/api/lib/storage/presign';
 import { validate } from '@/api/lib/validator';
 
@@ -46,7 +49,10 @@ export const getPublicDocument = createHandlers(
     const [loanFound, loanDocumentFound, documentFound] = await Promise.all([
       prisma.loan.findUnique({
         where: { id: loanId },
-        include: { installments: { orderBy: { dueDate: 'asc' } } },
+        include: {
+          client: true,
+          installments: { orderBy: { dueDate: 'asc' } },
+        },
       }),
       prisma.loanDocument.findUnique({ where: { loanId_templateId: { loanId, templateId } } }),
       prisma.document.findUnique({ where: { id: templateId } }),
@@ -142,7 +148,10 @@ export const signPublicDocument = createHandlers(
     const [loanFound, documentFound] = await Promise.all([
       prisma.loan.findUnique({
         where: { id: loanId },
-        include: { installments: { orderBy: { dueDate: 'asc' } } },
+        include: {
+          client: true,
+          installments: { orderBy: { dueDate: 'asc' } },
+        },
       }),
       prisma.document.findUnique({ where: { id: templateId } }),
     ]);

@@ -12,9 +12,9 @@ import {
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   ScrollTextIcon,
-  SettingsIcon,
   ShuffleIcon,
   SunIcon,
+  UsersIcon,
   WrenchIcon,
 } from 'lucide-react';
 import { signOut, useSession } from '@workspace/auth-client';
@@ -43,6 +43,7 @@ interface NavItem {
 
 const NAV_ITEMS: Array<NavItem> = [
   { to: '/dashboard', icon: LayoutDashboardIcon, label: 'Dashboard' },
+  { to: '/clients', icon: UsersIcon, label: 'Clients' },
   { to: '/loans', icon: HandCoinsIcon, label: 'Loans' },
 ];
 
@@ -259,7 +260,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
         {/* Main content area */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           {/* Top bar */}
-          <header className="flex h-14 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 shrink-0">
+          <header className="flex h-14 items-center justify-between border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               {/* Mobile menu toggle (visible on small screens) */}
               <Button

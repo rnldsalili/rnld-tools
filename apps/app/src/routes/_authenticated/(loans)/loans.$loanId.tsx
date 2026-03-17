@@ -8,7 +8,7 @@ import {
   Share2Icon,
   Trash2Icon,
 } from 'lucide-react';
-import { useState } from 'react';
+import {  useState } from 'react';
 import { toast } from 'sonner';
 import {
   Badge,
@@ -24,8 +24,10 @@ import {
   INSTALLMENT_INTERVAL_LABELS,
   InstallmentStatus,
 } from '@workspace/constants';
+import type { ReactNode } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanInstallment } from '@/app/hooks/use-loan';
+import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
 import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
 import { useDeleteLoan, useLoan } from '@/app/hooks/use-loan';
 import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
@@ -197,7 +199,11 @@ function LoanDetailPage() {
               ) : loan ? (
                 <div className="flex flex-col gap-3">
                   <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4 lg:grid-cols-2">
-                    <LoanField label="Borrower" value={loan.borrower} />
+                    <LoanField
+                        label="Client"
+                        value={loan.client.name}
+                        trailing={<ClientStatusBadge status={loan.client.status} />}
+                    />
                     <LoanField label="Amount" value={formatCurrency(loan.amount, loan.currency)} />
                     <LoanField
                         label="Installment Interval"
@@ -209,11 +215,12 @@ function LoanDetailPage() {
                         label="Interest Rate"
                         value={loan.interestRate != null ? `${loan.interestRate}%` : '—'}
                     />
-                    <LoanField label="Phone" value={loan.phone ?? '—'} />
-                    <LoanField label="Email" value={loan.email ?? '—'} />
+                    <LoanField label="Phone" value={loan.client.phone ?? '—'} />
+                    <LoanField label="Email" value={loan.client.email ?? '—'} />
                     <LoanField label="Loan Date" value={format(new Date(loan.loanDate), 'MMM d, yyyy')} />
                     <LoanField label="Updated" value={format(new Date(loan.updatedAt), 'MMM d, yyyy')} />
                   </div>
+                  <LoanField label="Address" value={loan.client.address ?? '—'} />
                   {loan.description && (
                     <div className="border-t border-border pt-3">
                       <LoanField label="Description" value={loan.description} />
@@ -259,7 +266,7 @@ function LoanDetailPage() {
                               onClick={async () => {
                                 try {
                                   await downloadLoanDocumentPdfMutation.mutateAsync({
-                                    fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.borrower.replace(/\s+/g, '-').toLowerCase()}.pdf`,
+                                    fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.client.name.replace(/\s+/g, '-').toLowerCase()}.pdf`,
                                     loanId,
                                     templateId: template.id,
                                   });
@@ -406,10 +413,21 @@ function LoanDetailPage() {
   );
 }
 
-function LoanField({ label, value }: { label: string; value: string }) {
+function LoanField({
+  label,
+  trailing,
+  value,
+}: {
+  label: string;
+  trailing?: ReactNode;
+  value: string;
+}) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>{label}</span>
+        {trailing}
+      </span>
       <span className="text-sm font-medium break-all">{value}</span>
     </div>
   );

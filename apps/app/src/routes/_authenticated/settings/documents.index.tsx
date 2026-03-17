@@ -279,7 +279,7 @@ function DocumentSettingsPage() {
             <div>
               <h1 className="text-lg font-semibold">Document Templates</h1>
               <p className="text-sm text-muted-foreground">
-                Configure document templates that can be shared with borrowers.
+                Configure document templates that can be shared with clients.
               </p>
             </div>
           </div>

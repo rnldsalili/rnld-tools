@@ -33,9 +33,9 @@ function LoansPage() {
 
   const columns: Array<ColumnDef<LoanListItem>> = [
     {
-      accessorKey: 'borrower',
-      header: 'Borrower',
-      cell: ({ row }) => <span className="font-medium">{row.original.borrower}</span>,
+      accessorKey: 'client.name',
+      header: 'Client',
+      cell: ({ row }) => <span className="font-medium">{row.original.client.name}</span>,
     },
     {
       id: 'amount',
@@ -99,7 +99,7 @@ function LoansPage() {
             <div>
               <h1 className="text-lg font-semibold">Loans</h1>
               <p className="text-sm text-muted-foreground">
-                Manage borrower loans and installments.
+                Manage client loans and installments.
               </p>
             </div>
           </div>
@@ -111,7 +111,7 @@ function LoansPage() {
 
         <div className="flex items-center justify-between gap-4">
           <Input
-              placeholder="Search by borrower..."
+              placeholder="Search by client..."
               value={searchInput}
               onChange={handleSearchChange}
               className="max-w-xs"

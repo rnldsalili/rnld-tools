@@ -18,19 +18,26 @@ import {
   SelectValue,
   Textarea,
 } from '@workspace/ui';
-import type { InstallmentInterval } from '@workspace/constants';
+import type { ClientStatus ,
+  InstallmentInterval } from '@workspace/constants';
+import { ClientSelector } from '@/app/components/loans/client-selector';
 import { useUpdateLoan } from '@/app/hooks/use-loan';
 import { toFieldErrors } from '@/app/lib/form';
 
 interface LoanEditData {
+  client: {
+    address: string | null;
+    email: string | null;
+    id: string;
+    name: string;
+    phone: string | null;
+    status: ClientStatus;
+  };
   id: string;
-  borrower: string;
   amount: number;
   installmentInterval: string;
   loanDate: string;
   interestRate: number | null;
-  phone: string | null;
-  email: string | null;
   description: string | null;
 }
 
@@ -44,13 +51,11 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
 
   const form = useForm({
     defaultValues: {
-      borrower: loan.borrower,
+      clientId: loan.client.id,
       amount: String(loan.amount),
       installmentInterval: loan.installmentInterval,
       loanDate: loan.loanDate.slice(0, 10),
       interestRate: loan.interestRate != null ? String(loan.interestRate) : '',
-      phone: loan.phone ?? '',
-      email: loan.email ?? '',
       description: loan.description ?? '',
     },
     onSubmit: async ({ value }) => {
@@ -58,13 +63,11 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
         await mutateAsync({
           loanId: loan.id,
           body: {
-            borrower: value.borrower,
+            clientId: value.clientId,
             amount: parseFloat(value.amount),
             installmentInterval: value.installmentInterval as InstallmentInterval,
             loanDate: value.loanDate,
             interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
-            phone: value.phone || null,
-            email: value.email || null,
             description: value.description || null,
           },
         });
@@ -102,23 +105,18 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
           className="flex flex-col gap-4"
       >
         <form.Field
-            name="borrower"
+            name="clientId"
             validators={{
-            onChange: ({ value }) => (!value.trim() ? 'Borrower is required' : undefined),
+            onChange: ({ value }) => (!value ? 'Client is required' : undefined),
           }}
         >
           {(field) => (
-            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-              <FieldLabel htmlFor={field.name}>Borrower <span className="text-destructive">*</span></FieldLabel>
-              <Input
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  placeholder="Borrower name"
-              />
-              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-            </Field>
+            <ClientSelector
+                clientId={field.state.value}
+                currentClient={loan.client}
+                errors={field.state.meta.errors}
+                onChange={field.handleChange}
+            />
           )}
         </form.Field>
 
@@ -217,46 +215,6 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
                   onBlur={field.handleBlur}
-              />
-              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-            </Field>
-          )}
-        </form.Field>
-
-        <form.Field name="phone">
-          {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
-              <Input
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Optional"
-              />
-            </Field>
-          )}
-        </form.Field>
-
-        <form.Field
-            name="email"
-            validators={{
-            onChange: ({ value }) => {
-              if (!value) return undefined;
-              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-              return emailRegex.test(value) ? undefined : 'Invalid email address';
-            },
-          }}
-        >
-          {(field) => (
-            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-              <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-              <Input
-                  id={field.name}
-                  type="email"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  placeholder="Optional"
               />
               <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>

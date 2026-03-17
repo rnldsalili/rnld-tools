@@ -13,6 +13,11 @@ enum UserRole {
   SUPER_ADMIN
 }
 
+enum ClientStatus {
+  ENABLED
+  DISABLED
+}
+
 model User {
   id            String    @id
   name          String
@@ -27,6 +32,8 @@ model User {
 
   loansCreated            Loan[]             @relation("LoanCreatedBy")
   loansUpdated            Loan[]             @relation("LoanUpdatedBy")
+  clientsCreated          Client[]           @relation("ClientCreatedBy")
+  clientsUpdated          Client[]           @relation("ClientUpdatedBy")
   loanInstallmentsCreated LoanInstallment[]  @relation("LoanInstallmentCreatedBy")
   loanInstallmentsUpdated LoanInstallment[]  @relation("LoanInstallmentUpdatedBy")
   loanDocumentLogs        LoanDocumentLog[]  @relation("LoanDocumentLogActorUser")
@@ -111,12 +118,10 @@ enum LoanDocumentLogActorType {
 
 model Loan {
   id                  String   @id @default(cuid())
-  borrower            String
+  clientId            String
   amount              Float
   currency            String   @default("PHP")
   interestRate        Float?
-  phone               String?
-  email               String?
   description         String?
   installmentInterval String
   loanDate            DateTime
@@ -125,15 +130,39 @@ model Loan {
   createdByUserId     String
   updatedByUserId     String
 
+  client           Client             @relation(fields: [clientId], references: [id], onDelete: Restrict)
   createdBy        User               @relation("LoanCreatedBy", fields: [createdByUserId], references: [id])
   updatedBy        User               @relation("LoanUpdatedBy", fields: [updatedByUserId], references: [id])
   installments     LoanInstallment[]
   documents        LoanDocument[]
   loanDocumentLogs LoanDocumentLog[]
 
+  @@index([clientId])
   @@index([createdByUserId])
   @@index([updatedByUserId])
   @@map("loan")
+}
+
+model Client {
+  id              String       @id @default(cuid())
+  name            String
+  phone           String?
+  email           String?
+  address         String?
+  status          ClientStatus @default(ENABLED)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  createdByUserId String
+  updatedByUserId String
+
+  createdBy User   @relation("ClientCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User   @relation("ClientUpdatedBy", fields: [updatedByUserId], references: [id])
+  loans     Loan[]
+
+  @@index([status])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@map("client")
 }
 
 model LoanInstallment {

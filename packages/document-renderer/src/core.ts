@@ -15,6 +15,7 @@ export interface LoanDocumentRenderInstallment {
 
 export interface LoanDocumentRenderLoan {
   amount: number;
+  address: string | null;
   borrower: string;
   currency: string;
   description: string | null;
@@ -43,6 +44,7 @@ const LOAN_DOCUMENT_PLACEHOLDER_KEYS = [
   '{{loan.borrower}}',
   '{{loan.email}}',
   '{{loan.phone}}',
+  '{{loan.address}}',
   '{{loan.amount}}',
   '{{loan.currency}}',
   '{{loan.interestRate}}',
@@ -176,6 +178,7 @@ function getPlaceholderValues(loan: LoanDocumentRenderLoan): Record<string, stri
     '{{loan.borrower}}': loan.borrower,
     '{{loan.email}}': loan.email ?? MISSING_PLACEHOLDER_VALUE,
     '{{loan.phone}}': loan.phone ?? MISSING_PLACEHOLDER_VALUE,
+    '{{loan.address}}': loan.address ?? MISSING_PLACEHOLDER_VALUE,
     '{{loan.amount}}': `${formatDisplayNumber(loan.amount)} ${loan.currency}`,
     '{{loan.currency}}': loan.currency,
     '{{loan.interestRate}}': loan.interestRate != null ? `${loan.interestRate}%` : MISSING_PLACEHOLDER_VALUE,
@@ -276,12 +279,12 @@ function buildSignatureMarkup(params: {
     ? `<p class="signature-label">Signed: ${escapeHtml(formatDisplayDateTime(params.signedAt))}</p>`
     : '';
   const signatureBodyMarkup = params.signatureDataUrl
-    ? `<img src="${params.signatureDataUrl}" alt="Borrower signature" class="signature-image" />${signedAtMarkup}`
+    ? `<img src="${params.signatureDataUrl}" alt="Client signature" class="signature-image" />${signedAtMarkup}`
     : '<div class="signature-line"></div>';
 
   return `
     <div class="signature-block">
-      <p class="signature-label">Borrower&apos;s Signature</p>
+      <p class="signature-label">Client&apos;s Signature</p>
       ${signatureBodyMarkup}
       <p class="signature-label">${escapeHtml(params.borrower)}</p>
     </div>

@@ -8,10 +8,8 @@ type LoanDocumentSnapshotContext = Context<AppBindings>;
 
 type LoanWithInstallments = {
   amount: number;
-  borrower: string;
   currency: string;
   description: string | null;
-  email: string | null;
   installmentInterval: string;
   installments: Array<{
     amount: number;
@@ -19,7 +17,12 @@ type LoanWithInstallments = {
   }>;
   interestRate: number | null;
   loanDate: Date;
-  phone: string | null;
+  client: {
+    address: string | null;
+    email: string | null;
+    name: string;
+    phone: string | null;
+  };
 };
 
 export function renderLoanDocumentContentSnapshot(params: {
@@ -32,10 +35,11 @@ export function renderLoanDocumentContentSnapshot(params: {
     content: parseDocumentContent(params.content),
     loan: {
       amount: params.loan.amount,
-      borrower: params.loan.borrower,
+      address: params.loan.client.address,
+      borrower: params.loan.client.name,
       currency: params.loan.currency,
       description: params.loan.description,
-      email: params.loan.email,
+      email: params.loan.client.email,
       installmentInterval: params.loan.installmentInterval,
       installments: params.loan.installments.map((installment) => ({
         amount: installment.amount,
@@ -43,11 +47,23 @@ export function renderLoanDocumentContentSnapshot(params: {
       })),
       interestRate: params.loan.interestRate,
       loanDate: params.loan.loanDate,
-      phone: params.loan.phone,
+      phone: params.loan.client.phone,
     },
     signatureDataUrl: params.signatureDataUrl ?? null,
     signedAt: params.signedAt,
   });
+}
+
+export function base64DataUrlToUint8Array(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.replace(/^data:[^;]+;base64,/, '');
+  const binaryStr = atob(base64);
+  const bytes = new Uint8Array(binaryStr.length);
+
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  return bytes;
 }
 
 export async function getSignatureDataUrlFromStorage(
@@ -86,7 +102,10 @@ export async function ensureLoanDocumentContentSnapshot(c: LoanDocumentSnapshotC
   const [loanFound, documentFound, signatureDataUrl] = await Promise.all([
     prisma.loan.findUnique({
       where: { id: params.loanId },
-      include: { installments: { orderBy: { dueDate: 'asc' } } },
+      include: {
+        client: true,
+        installments: { orderBy: { dueDate: 'asc' } },
+      },
     }),
     prisma.document.findUnique({ where: { id: params.templateId } }),
     getSignatureDataUrlFromStorage(c, params.signatureKey),

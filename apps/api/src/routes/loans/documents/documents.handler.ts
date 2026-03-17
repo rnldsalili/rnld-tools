@@ -15,7 +15,13 @@ export const downloadLoanDocumentPdf = createHandlers(
     const [loanFound, documentTemplate, loanDocumentFound] = await Promise.all([
       prisma.loan.findUnique({
         where: { id: loanId },
-        select: { borrower: true },
+        select: {
+          client: {
+            select: {
+              name: true,
+            },
+          },
+        },
       }),
       prisma.document.findUnique({
         where: { id: templateId },
@@ -81,7 +87,7 @@ export const downloadLoanDocumentPdf = createHandlers(
         headers: {
           'Content-Disposition': `attachment; filename="${buildLoanDocumentPdfFileName(
             documentTemplate.name,
-            loanFound.borrower,
+            loanFound.client.name,
           )}"`,
           'Content-Type': 'application/pdf',
         },
@@ -92,11 +98,11 @@ export const downloadLoanDocumentPdf = createHandlers(
   },
 );
 
-function buildLoanDocumentPdfFileName(templateName: string, borrowerName: string) {
+function buildLoanDocumentPdfFileName(templateName: string, clientName: string) {
   const normalizedTemplateName = normalizeFileNameSegment(templateName);
-  const normalizedBorrowerName = normalizeFileNameSegment(borrowerName);
+  const normalizedClientName = normalizeFileNameSegment(clientName);
 
-  return `${normalizedTemplateName}-${normalizedBorrowerName}.pdf`;
+  return `${normalizedTemplateName}-${normalizedClientName}.pdf`;
 }
 
 function normalizeFileNameSegment(value: string) {

@@ -229,7 +229,7 @@ export function DocumentTemplateEditorForm({
                           checked={field.state.value}
                           onCheckedChange={field.handleChange}
                       />
-                      <Label htmlFor={field.name}>Requires borrower signature</Label>
+                      <Label htmlFor={field.name}>Requires client signature</Label>
                     </div>
                   )}
                 </form.Field>
