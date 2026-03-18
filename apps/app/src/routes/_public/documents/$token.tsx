@@ -69,8 +69,8 @@ function PublicDocumentPage() {
     [404, 410].includes(publicDocumentQuery.error.status);
 
   useEffect(() => {
-    document.title = getPublicDocumentPageTitle(documentTemplate?.name, publicDocument?.loan.client?.name);
-  }, [documentTemplate?.name, publicDocument?.loan.client?.name]);
+    document.title = getPublicDocumentPageTitle(documentTemplate?.name, publicDocument?.loan.client.name);
+  }, [documentTemplate?.name, publicDocument?.loan.client.name]);
 
   async function handleConfirm(signatureData?: string) {
     if (!publicDocument) {
@@ -127,7 +127,7 @@ function PublicDocumentPage() {
       description: publicDocument.loan.description ?? null,
       email: publicDocument.loan.client.email ?? null,
       installmentInterval: publicDocument.loan.installmentInterval,
-      installments: publicDocument.loan.installments.map((installment) => ({
+      installments: publicDocument.loan.installments.map((installment: PublicDocument['loan']['installments'][number]) => ({
         amount: installment.amount,
         dueDate: installment.dueDate,
       })),

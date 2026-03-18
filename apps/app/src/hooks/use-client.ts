@@ -40,7 +40,7 @@ export function clientsQueryOptions(params: ClientsQueryParams) {
         },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+       
       return response.json() as Promise<ClientsListResponse>;
     },
   });
@@ -72,7 +72,13 @@ export function enabledClientsQueryOptions() {
         },
       });
 
-      return response.json();
+      const data = await response.json() as { meta?: { message?: string } };
+
+      if (!response.ok) {
+        throw new Error(data.meta?.message ?? 'Failed to load clients.');
+      }
+
+      return data as ClientsListResponse;
     },
   });
 }

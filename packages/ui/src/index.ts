@@ -96,6 +96,13 @@ export {
   DialogTitle,
   DialogTrigger,
 } from '@workspace/ui/components/dialog';
+export {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  tabsListVariants,
+} from '@workspace/ui/components/tabs';
 
 export {
   Popover,

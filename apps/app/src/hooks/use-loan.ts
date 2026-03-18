@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ClientStatus } from '@workspace/constants';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
 import apiClient from '@/app/lib/api';
 
@@ -10,10 +11,51 @@ const LOAN_QUERY_KEY = 'loan';
 // --- Types ---
 
 export type LoansListResponse = InferResponseType<typeof apiClient.loans.$get, 200>;
-export type LoanListItem = LoansListResponse['data']['loans'][number];
+type LoanListItemBase = LoansListResponse['data']['loans'][number];
 
 export type LoanDetailResponse = InferResponseType<typeof apiClient.loans[':id']['$get'], 200>;
-export type LoanDetail = LoanDetailResponse['data']['loan'];
+type LoanDetailBase = LoanDetailResponse['data']['loan'];
+
+type LoanClient = {
+  address: string | null;
+  email: string | null;
+  id: string;
+  name: string;
+  phone: string | null;
+  status: ClientStatus;
+};
+
+type LoanInstallmentsPagination = {
+  limit: number;
+  page: number;
+  total: number;
+  totalPages: number;
+};
+
+export type LoanListItem = LoanListItemBase & {
+  _count: {
+    installments: number;
+  };
+  client: LoanClient;
+};
+
+export type LoanDetail = LoanDetailBase & {
+  client: LoanClient;
+  installmentsPagination: LoanInstallmentsPagination;
+};
+
+type LoansQueryResponse = Omit<LoansListResponse, 'data'> & {
+  data: Omit<LoansListResponse['data'], 'loans'> & {
+    loans: Array<LoanListItem>;
+  };
+};
+
+type LoanQueryResponse = Omit<LoanDetailResponse, 'data'> & {
+  data: {
+    loan: LoanDetail;
+  };
+};
+
 export type LoanInstallment = LoanDetail['installments'][number];
 
 type CreateLoanBody = InferRequestType<typeof apiClient.loans.$post>['json'];
@@ -55,7 +97,7 @@ export function loansQueryOptions(params: LoansQueryParams) {
           limit: String(params.limit),
         },
       });
-      return res.json() as Promise<LoansListResponse>;
+      return res.json() as Promise<LoansQueryResponse>;
     },
   });
 }
@@ -68,7 +110,7 @@ export function loanQueryOptions(params: LoanQueryParams) {
         param: { id: params.loanId },
         query: { page: String(params.page), limit: String(params.limit) },
       });
-      return res.json() as Promise<LoanDetailResponse>;
+      return res.json() as Promise<LoanQueryResponse>;
     },
     enabled: !!params.loanId,
   });

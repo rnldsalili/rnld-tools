@@ -10,7 +10,7 @@ import {
 
 const EDIT_DOCUMENT_TEMPLATE_FORM_ID = 'edit-document-template-form';
 
-export const Route = createFileRoute('/_authenticated/settings/documents/$documentId')({
+export const Route = createFileRoute('/_authenticated/settings/(documents)/documents/$documentId')({
   head: () => ({ meta: [{ title: 'RTools - Edit Document Template' }] }),
   staticData: { title: 'Edit Document Template' },
   component: DocumentTemplateDetailPage,

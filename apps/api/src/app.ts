@@ -5,6 +5,7 @@ import { logger } from 'hono/logger';
 import { rateLimiter } from 'hono-rate-limiter';
 
 import type { auth } from '@/api/lib/auth';
+import type { NotificationBindings } from '@/api/lib/notifications/types';
 
 export type AppVariables = {
   user: AuthUser;
@@ -12,7 +13,7 @@ export type AppVariables = {
 };
 
 export type AppBindings = {
-  Bindings: CloudflareBindings;
+  Bindings: CloudflareBindings & NotificationBindings;
   Variables: AppVariables;
 };
 

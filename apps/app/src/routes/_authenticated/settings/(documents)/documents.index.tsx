@@ -21,6 +21,7 @@ import {
   Textarea,
 } from '@workspace/ui';
 import type { ColumnDef } from '@tanstack/react-table';
+import type { DocumentTemplateItem } from '@/app/hooks/use-document-templates';
 import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
 import {
   DOCUMENT_TYPE_OPTIONS,
@@ -33,7 +34,7 @@ import {
 } from '@/app/hooks/use-document-templates';
 import { toFieldErrors } from '@/app/lib/form';
 
-export const Route = createFileRoute('/_authenticated/settings/documents/')({
+export const Route = createFileRoute('/_authenticated/settings/(documents)/documents/')({
   head: () => ({ meta: [{ title: 'RTools - Document Templates' }] }),
   component: DocumentSettingsPage,
 });
@@ -192,7 +193,7 @@ function DocumentSettingsPage() {
   const templates = data?.data.documents ?? [];
   const normalizedSearch = searchInput.trim().toLowerCase();
   const filteredTemplates = normalizedSearch
-    ? templates.filter((template) => {
+    ? templates.filter((template: DocumentTemplateItem) => {
         const searchableText = [
           template.name,
           template.description ?? '',

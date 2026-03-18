@@ -13,7 +13,7 @@ function SectionCard({ className, ...props }: React.ComponentProps<'div'>) {
 function SectionCardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
-        className={cn('flex h-11 items-center border-b border-border px-4', className)}
+        className={cn('flex min-h-11 items-center border-b border-border px-4 py-3', className)}
         {...props}
     />
   );

@@ -1,0 +1,152 @@
+import { Loader2Icon, MailIcon, PlusIcon } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import {
+  Button,
+  Card,
+  CardContent,
+} from '@workspace/ui';
+import type { NotificationTemplateFormValues, NotificationTemplateListItem  } from '@/app/hooks/use-notifications';
+import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
+import { NotificationCreateTemplateModal } from '@/app/components/settings/notifications/notification-create-template-modal';
+import { NotificationTemplateLibrary } from '@/app/components/settings/notifications/notification-template-library';
+import { NotificationTemplateEditorForm } from '@/app/components/settings/notification-template-editor-form';
+import {
+  useDeleteNotificationTemplate,
+  useNotificationTemplate,
+  useNotificationTemplates,
+  useUpdateNotificationTemplate,
+} from '@/app/hooks/use-notifications';
+
+const EDIT_TEMPLATE_FORM_ID = 'edit-notification-template-form';
+
+export function NotificationTemplatesSection() {
+  const { data: templatesData, isLoading: isTemplatesLoading } = useNotificationTemplates();
+  const { mutateAsync: updateTemplate, isPending: isUpdatePending } = useUpdateNotificationTemplate();
+  const { mutateAsync: deleteTemplate, isPending: isDeletePending } = useDeleteNotificationTemplate();
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
+  const [templatePendingDelete, setTemplatePendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const templates: Array<NotificationTemplateListItem> = templatesData?.data.templates ?? [];
+  const effectiveSelectedTemplateId = templates.some((template) => template.id === selectedTemplateId)
+    ? selectedTemplateId
+    : (templates[0]?.id ?? '');
+  const { data: selectedTemplateData, isLoading: isSelectedTemplateLoading } = useNotificationTemplate(
+    effectiveSelectedTemplateId,
+  );
+  const selectedTemplate = selectedTemplateData?.data.template ?? null;
+
+  async function handleSaveTemplate(values: NotificationTemplateFormValues) {
+    if (!effectiveSelectedTemplateId) {
+      return;
+    }
+
+    try {
+      await updateTemplate({
+        id: effectiveSelectedTemplateId,
+        ...values,
+      });
+      toast.success('Notification template saved.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save notification template.');
+    }
+  }
+
+  async function handleDeleteTemplate() {
+    if (!templatePendingDelete) {
+      return;
+    }
+
+    try {
+      await deleteTemplate(templatePendingDelete.id);
+      setTemplatePendingDelete(null);
+      if (effectiveSelectedTemplateId === templatePendingDelete.id) {
+        setSelectedTemplateId('');
+      }
+      toast.success('Notification template deleted.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete notification template.');
+    }
+  }
+
+  return (
+    <>
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-end">
+          <Button type="button" className="gap-2" onClick={() => setIsCreateOpen(true)}>
+            <PlusIcon className="size-3.5" />
+            New Template
+          </Button>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <NotificationTemplateLibrary
+              templates={templates}
+              isLoading={isTemplatesLoading}
+              selectedTemplateId={effectiveSelectedTemplateId}
+              onSelectTemplate={setSelectedTemplateId}
+          />
+
+          {isSelectedTemplateLoading ? (
+            <Card>
+              <CardContent className="flex justify-center py-10">
+                <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+              </CardContent>
+            </Card>
+          ) : selectedTemplate ? (
+            <NotificationTemplateEditorForm
+                key={selectedTemplate.id}
+                formId={EDIT_TEMPLATE_FORM_ID}
+                template={selectedTemplate}
+                isSaving={isUpdatePending}
+                isDeleting={isDeletePending}
+                onSubmit={handleSaveTemplate}
+                onDelete={() => setTemplatePendingDelete({
+                id: selectedTemplate.id,
+                name: selectedTemplate.name,
+              })}
+            />
+          ) : (
+            <Card>
+              <CardContent className="flex min-h-80 flex-col items-center justify-center gap-3 text-center">
+                <div className="rounded-full bg-muted p-3 text-muted-foreground">
+                  <MailIcon className="size-5" />
+                </div>
+                <div>
+                  <p className="font-medium">Select a template</p>
+                  <p className="text-sm text-muted-foreground">
+                    Choose a template from the library or create a new one to start editing.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      <NotificationCreateTemplateModal
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          onCreated={setSelectedTemplateId}
+      />
+
+      <ConfirmDeleteDialog
+          open={Boolean(templatePendingDelete)}
+          onOpenChange={(open) => {
+          if (!open) {
+            setTemplatePendingDelete(null);
+          }
+        }}
+          title="Delete Notification Template"
+          description={`Delete "${templatePendingDelete?.name ?? ''}"? This cannot be undone.`}
+          confirmLabel="Delete"
+          isPending={isDeletePending}
+          onConfirm={handleDeleteTemplate}
+      />
+    </>
+  );
+}

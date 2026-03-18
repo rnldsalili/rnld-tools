@@ -37,6 +37,7 @@ model User {
   loanInstallmentsCreated LoanInstallment[]  @relation("LoanInstallmentCreatedBy")
   loanInstallmentsUpdated LoanInstallment[]  @relation("LoanInstallmentUpdatedBy")
   loanDocumentLogs        LoanDocumentLog[]  @relation("LoanDocumentLogActorUser")
+  notificationLogsQueued  NotificationLog[]  @relation("NotificationLogQueuedByUser")
 
   @@unique([email])
   @@map("user")
@@ -98,6 +99,40 @@ enum LoanInstallmentStatus {
 
 enum DocumentType {
   LOAN
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+}
+
+enum NotificationEmailProvider {
+  BREVO
+}
+
+enum NotificationSmsProvider {
+  PHILSMS
+  SEMAPHORE
+}
+
+enum NotificationEvent {
+  LOAN_CREATED
+  INSTALLMENT_DUE_REMINDER
+  INSTALLMENT_OVERDUE_REMINDER
+  INSTALLMENT_PAID
+}
+
+enum NotificationContentFormat {
+  RICH_TEXT_JSON
+  PLAIN_TEXT
+}
+
+enum NotificationLogStatus {
+  QUEUED
+  PROCESSING
+  RETRYING
+  SENT
+  FAILED
 }
 
 enum LoanDocumentLogEventType {
@@ -203,6 +238,73 @@ model Document {
 
   @@index([type])
   @@map("document")
+}
+
+model NotificationTemplate {
+  id                  String                    @id @default(cuid())
+  channel             NotificationChannel
+  name                String
+  description         String?
+  subject             String?
+  content             String
+  contentFormat       NotificationContentFormat
+  notificationConfigs NotificationEventConfig[]
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([channel])
+  @@map("notification_template")
+}
+
+model NotificationEventConfig {
+  id            String                    @id @default(cuid())
+  event         NotificationEvent
+  channel       NotificationChannel
+  emailProvider NotificationEmailProvider?
+  smsProvider   NotificationSmsProvider?
+  templateId    String
+  isEnabled     Boolean                   @default(false)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  template NotificationTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+
+  @@unique([event, channel])
+  @@index([templateId])
+  @@index([channel])
+  @@map("notification_event_config")
+}
+
+model NotificationLog {
+  id               String                    @id @default(cuid())
+  channel          NotificationChannel
+  event            NotificationEvent?
+  status           NotificationLogStatus     @default(QUEUED)
+  isTestSend       Boolean                   @default(false)
+  emailProvider    NotificationEmailProvider?
+  smsProvider      NotificationSmsProvider?
+  recipientEmail   String?
+  recipientName    String?
+  recipientPhone   String?
+  subject          String?
+  messageContent   String
+  attemptCount     Int                       @default(0)
+  lastErrorMessage String?
+  queuedAt         DateTime
+  lastAttemptAt    DateTime?
+  sentAt           DateTime?
+  failedAt         DateTime?
+  queuedByUserId   String?
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  queuedByUser User? @relation("NotificationLogQueuedByUser", fields: [queuedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([channel, queuedAt])
+  @@index([event, queuedAt])
+  @@index([status, queuedAt])
+  @@index([queuedByUserId])
+  @@map("notification_log")
 }
 
 model LoanDocument {

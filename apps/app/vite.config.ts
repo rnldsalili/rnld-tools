@@ -12,8 +12,8 @@ function loadWranglerVars(): Record<string, string> {
   const raw = readFileSync(path.resolve(__dirname, 'wrangler.jsonc'), 'utf-8')
   // Strip comments without clobbering // inside string values
   const json = raw
-    .replace(/("(?:[^"\\]|\\.)*")|\/\/[^\n]*/g, (m, str) => str ?? '') // single-line comments
-    .replace(/("(?:[^"\\]|\\.)*")|\/\*[\s\S]*?\*\//g, (m, str) => str ?? '') // block comments
+    .replace(/("(?:[^"\\]|\\.)*")|\/\/[^\n]*/g, (_match, str) => str ?? '') // single-line comments
+    .replace(/("(?:[^"\\]|\\.)*")|\/\*[\s\S]*?\*\//g, (_match, str) => str ?? '') // block comments
     .replace(/,(\s*[}\]])/g, '$1') // trailing commas
   const wrangler = JSON.parse(json)
   const cfEnv = process.env.CLOUDFLARE_ENV

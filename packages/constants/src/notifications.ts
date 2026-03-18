@@ -1,0 +1,137 @@
+export enum NotificationChannel {
+  EMAIL = 'EMAIL',
+  SMS = 'SMS',
+}
+
+export const NOTIFICATION_CHANNELS = [
+  NotificationChannel.EMAIL,
+  NotificationChannel.SMS,
+] as const;
+
+export const NOTIFICATION_CHANNEL_LABELS: Record<NotificationChannel, string> = {
+  [NotificationChannel.EMAIL]: 'Email',
+  [NotificationChannel.SMS]: 'SMS',
+};
+
+export enum NotificationEmailProvider {
+  BREVO = 'BREVO',
+}
+
+export const NOTIFICATION_EMAIL_PROVIDERS = [
+  NotificationEmailProvider.BREVO,
+] as const;
+
+export const NOTIFICATION_EMAIL_PROVIDER_LABELS: Record<NotificationEmailProvider, string> = {
+  [NotificationEmailProvider.BREVO]: 'Brevo',
+};
+
+export enum NotificationSmsProvider {
+  PHILSMS = 'PHILSMS',
+  SEMAPHORE = 'SEMAPHORE',
+}
+
+export const NOTIFICATION_SMS_PROVIDERS = [
+  NotificationSmsProvider.PHILSMS,
+  NotificationSmsProvider.SEMAPHORE,
+] as const;
+
+export const NOTIFICATION_SMS_PROVIDER_LABELS: Record<NotificationSmsProvider, string> = {
+  [NotificationSmsProvider.PHILSMS]: 'PhilSMS',
+  [NotificationSmsProvider.SEMAPHORE]: 'Semaphore',
+};
+
+export const NOTIFICATION_SMS_CONTENT_MAX_LENGTH = 160;
+
+export enum NotificationEvent {
+  LOAN_CREATED = 'LOAN_CREATED',
+  INSTALLMENT_DUE_REMINDER = 'INSTALLMENT_DUE_REMINDER',
+  INSTALLMENT_OVERDUE_REMINDER = 'INSTALLMENT_OVERDUE_REMINDER',
+  INSTALLMENT_PAID = 'INSTALLMENT_PAID',
+}
+
+export const NOTIFICATION_EVENTS = [
+  NotificationEvent.LOAN_CREATED,
+  NotificationEvent.INSTALLMENT_DUE_REMINDER,
+  NotificationEvent.INSTALLMENT_OVERDUE_REMINDER,
+  NotificationEvent.INSTALLMENT_PAID,
+] as const;
+
+export const NOTIFICATION_EVENT_LABELS: Record<NotificationEvent, string> = {
+  [NotificationEvent.LOAN_CREATED]: 'Loan Created',
+  [NotificationEvent.INSTALLMENT_DUE_REMINDER]: 'Installment Due Reminder',
+  [NotificationEvent.INSTALLMENT_OVERDUE_REMINDER]: 'Installment Overdue Reminder',
+  [NotificationEvent.INSTALLMENT_PAID]: 'Installment Paid',
+};
+
+export enum NotificationContentFormat {
+  RICH_TEXT_JSON = 'RICH_TEXT_JSON',
+  PLAIN_TEXT = 'PLAIN_TEXT',
+}
+
+export enum NotificationLogStatus {
+  QUEUED = 'QUEUED',
+  PROCESSING = 'PROCESSING',
+  RETRYING = 'RETRYING',
+  SENT = 'SENT',
+  FAILED = 'FAILED',
+}
+
+export const NOTIFICATION_LOG_STATUSES = [
+  NotificationLogStatus.QUEUED,
+  NotificationLogStatus.PROCESSING,
+  NotificationLogStatus.RETRYING,
+  NotificationLogStatus.SENT,
+  NotificationLogStatus.FAILED,
+] as const;
+
+export const NOTIFICATION_LOG_STATUS_LABELS: Record<NotificationLogStatus, string> = {
+  [NotificationLogStatus.QUEUED]: 'Queued',
+  [NotificationLogStatus.PROCESSING]: 'Processing',
+  [NotificationLogStatus.RETRYING]: 'Retrying',
+  [NotificationLogStatus.SENT]: 'Sent',
+  [NotificationLogStatus.FAILED]: 'Failed',
+};
+
+export const NOTIFICATION_CONTENT_FORMATS = [
+  NotificationContentFormat.RICH_TEXT_JSON,
+  NotificationContentFormat.PLAIN_TEXT,
+] as const;
+
+export const NOTIFICATION_CONTENT_FORMAT_LABELS: Record<NotificationContentFormat, string> = {
+  [NotificationContentFormat.RICH_TEXT_JSON]: 'Rich Text',
+  [NotificationContentFormat.PLAIN_TEXT]: 'Plain Text',
+};
+
+export const NOTIFICATION_PLACEHOLDER_GROUPS = [
+  {
+    label: 'Client',
+    items: [
+      { key: '{{client.name}}', description: 'Client full name' },
+      { key: '{{client.email}}', description: 'Client email address' },
+      { key: '{{client.phone}}', description: 'Client phone number' },
+    ],
+  },
+  {
+    label: 'Loan',
+    items: [
+      { key: '{{loan.id}}', description: 'Loan identifier' },
+      { key: '{{loan.amount}}', description: 'Loan amount' },
+      { key: '{{loan.currency}}', description: 'Loan currency code' },
+      { key: '{{loan.loanDate}}', description: 'Loan date' },
+    ],
+  },
+  {
+    label: 'Installment',
+    items: [
+      { key: '{{installment.amount}}', description: 'Installment amount' },
+      { key: '{{installment.dueDate}}', description: 'Installment due date' },
+      { key: '{{installment.paidAt}}', description: 'Installment paid date' },
+    ],
+  },
+] as const;
+
+export const NOTIFICATION_PLACEHOLDER_KEYS = NOTIFICATION_PLACEHOLDER_GROUPS.flatMap((group) =>
+  group.items.map((item) => item.key),
+);
+
+export const NOTIFICATION_LOGS_LIMIT = 10;

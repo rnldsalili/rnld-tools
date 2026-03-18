@@ -21,15 +21,16 @@ import { Route as toolsSecretGeneratorRouteImport } from './routes/(tools)/secre
 import { Route as toolsPasswordGeneratorRouteImport } from './routes/(tools)/password-generator'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as PublicDocumentsTokenRouteImport } from './routes/_public/documents/$token'
-import { Route as AuthenticatedSettingsDocumentsRouteImport } from './routes/_authenticated/settings/documents'
 import { Route as AuthenticatedloansLoansRouteImport } from './routes/_authenticated/(loans)/loans'
 import { Route as AuthenticatedclientsClientsRouteImport } from './routes/_authenticated/(clients)/clients'
-import { Route as AuthenticatedSettingsDocumentsIndexRouteImport } from './routes/_authenticated/settings/documents.index'
 import { Route as AuthenticatedloansLoansIndexRouteImport } from './routes/_authenticated/(loans)/loans.index'
 import { Route as AuthenticatedclientsClientsIndexRouteImport } from './routes/_authenticated/(clients)/clients.index'
-import { Route as AuthenticatedSettingsDocumentsDocumentIdRouteImport } from './routes/_authenticated/settings/documents.$documentId'
+import { Route as AuthenticatedSettingsnotificationsNotificationsRouteImport } from './routes/_authenticated/settings/(notifications)/notifications'
+import { Route as AuthenticatedSettingsdocumentsDocumentsRouteImport } from './routes/_authenticated/settings/(documents)/documents'
 import { Route as AuthenticatedloansLoansLoanIdRouteImport } from './routes/_authenticated/(loans)/loans.$loanId'
 import { Route as AuthenticatedclientsClientsClientIdRouteImport } from './routes/_authenticated/(clients)/clients.$clientId'
+import { Route as AuthenticatedSettingsdocumentsDocumentsIndexRouteImport } from './routes/_authenticated/settings/(documents)/documents.index'
+import { Route as AuthenticatedSettingsdocumentsDocumentsDocumentIdRouteImport } from './routes/_authenticated/settings/(documents)/documents.$documentId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -89,12 +90,6 @@ const PublicDocumentsTokenRoute = PublicDocumentsTokenRouteImport.update({
   path: '/documents/$token',
   getParentRoute: () => PublicRouteRoute,
 } as any)
-const AuthenticatedSettingsDocumentsRoute =
-  AuthenticatedSettingsDocumentsRouteImport.update({
-    id: '/documents',
-    path: '/documents',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
 const AuthenticatedloansLoansRoute = AuthenticatedloansLoansRouteImport.update({
   id: '/(loans)/loans',
   path: '/loans',
@@ -105,12 +100,6 @@ const AuthenticatedclientsClientsRoute =
     id: '/(clients)/clients',
     path: '/clients',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSettingsDocumentsIndexRoute =
-  AuthenticatedSettingsDocumentsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedSettingsDocumentsRoute,
   } as any)
 const AuthenticatedloansLoansIndexRoute =
   AuthenticatedloansLoansIndexRouteImport.update({
@@ -124,11 +113,17 @@ const AuthenticatedclientsClientsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedclientsClientsRoute,
   } as any)
-const AuthenticatedSettingsDocumentsDocumentIdRoute =
-  AuthenticatedSettingsDocumentsDocumentIdRouteImport.update({
-    id: '/$documentId',
-    path: '/$documentId',
-    getParentRoute: () => AuthenticatedSettingsDocumentsRoute,
+const AuthenticatedSettingsnotificationsNotificationsRoute =
+  AuthenticatedSettingsnotificationsNotificationsRouteImport.update({
+    id: '/(notifications)/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsdocumentsDocumentsRoute =
+  AuthenticatedSettingsdocumentsDocumentsRouteImport.update({
+    id: '/(documents)/documents',
+    path: '/documents',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedloansLoansLoanIdRoute =
   AuthenticatedloansLoansLoanIdRouteImport.update({
@@ -142,6 +137,18 @@ const AuthenticatedclientsClientsClientIdRoute =
     path: '/$clientId',
     getParentRoute: () => AuthenticatedclientsClientsRoute,
   } as any)
+const AuthenticatedSettingsdocumentsDocumentsIndexRoute =
+  AuthenticatedSettingsdocumentsDocumentsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsdocumentsDocumentsRoute,
+  } as any)
+const AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute =
+  AuthenticatedSettingsdocumentsDocumentsDocumentIdRouteImport.update({
+    id: '/$documentId',
+    path: '/$documentId',
+    getParentRoute: () => AuthenticatedSettingsdocumentsDocumentsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -154,14 +161,15 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/loans': typeof AuthenticatedloansLoansRouteWithChildren
-  '/settings/documents': typeof AuthenticatedSettingsDocumentsRouteWithChildren
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
-  '/settings/documents/$documentId': typeof AuthenticatedSettingsDocumentsDocumentIdRoute
+  '/settings/documents': typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
+  '/settings/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
   '/clients/': typeof AuthenticatedclientsClientsIndexRoute
   '/loans/': typeof AuthenticatedloansLoansIndexRoute
-  '/settings/documents/': typeof AuthenticatedSettingsDocumentsIndexRoute
+  '/settings/documents/$documentId': typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
+  '/settings/documents/': typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -175,10 +183,11 @@ export interface FileRoutesByTo {
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
-  '/settings/documents/$documentId': typeof AuthenticatedSettingsDocumentsDocumentIdRoute
+  '/settings/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
   '/clients': typeof AuthenticatedclientsClientsIndexRoute
   '/loans': typeof AuthenticatedloansLoansIndexRoute
-  '/settings/documents': typeof AuthenticatedSettingsDocumentsIndexRoute
+  '/settings/documents/$documentId': typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
+  '/settings/documents': typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -195,14 +204,15 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/(clients)/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/_authenticated/(loans)/loans': typeof AuthenticatedloansLoansRouteWithChildren
-  '/_authenticated/settings/documents': typeof AuthenticatedSettingsDocumentsRouteWithChildren
   '/_public/documents/$token': typeof PublicDocumentsTokenRoute
   '/_authenticated/(clients)/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/_authenticated/(loans)/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
-  '/_authenticated/settings/documents/$documentId': typeof AuthenticatedSettingsDocumentsDocumentIdRoute
+  '/_authenticated/settings/(documents)/documents': typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
+  '/_authenticated/settings/(notifications)/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
   '/_authenticated/(clients)/clients/': typeof AuthenticatedclientsClientsIndexRoute
   '/_authenticated/(loans)/loans/': typeof AuthenticatedloansLoansIndexRoute
-  '/_authenticated/settings/documents/': typeof AuthenticatedSettingsDocumentsIndexRoute
+  '/_authenticated/settings/(documents)/documents/$documentId': typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
+  '/_authenticated/settings/(documents)/documents/': typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -217,13 +227,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/clients'
     | '/loans'
-    | '/settings/documents'
     | '/documents/$token'
     | '/clients/$clientId'
     | '/loans/$loanId'
-    | '/settings/documents/$documentId'
+    | '/settings/documents'
+    | '/settings/notifications'
     | '/clients/'
     | '/loans/'
+    | '/settings/documents/$documentId'
     | '/settings/documents/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -238,9 +249,10 @@ export interface FileRouteTypes {
     | '/documents/$token'
     | '/clients/$clientId'
     | '/loans/$loanId'
-    | '/settings/documents/$documentId'
+    | '/settings/notifications'
     | '/clients'
     | '/loans'
+    | '/settings/documents/$documentId'
     | '/settings/documents'
   id:
     | '__root__'
@@ -257,14 +269,15 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/(clients)/clients'
     | '/_authenticated/(loans)/loans'
-    | '/_authenticated/settings/documents'
     | '/_public/documents/$token'
     | '/_authenticated/(clients)/clients/$clientId'
     | '/_authenticated/(loans)/loans/$loanId'
-    | '/_authenticated/settings/documents/$documentId'
+    | '/_authenticated/settings/(documents)/documents'
+    | '/_authenticated/settings/(notifications)/notifications'
     | '/_authenticated/(clients)/clients/'
     | '/_authenticated/(loans)/loans/'
-    | '/_authenticated/settings/documents/'
+    | '/_authenticated/settings/(documents)/documents/$documentId'
+    | '/_authenticated/settings/(documents)/documents/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -362,13 +375,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDocumentsTokenRouteImport
       parentRoute: typeof PublicRouteRoute
     }
-    '/_authenticated/settings/documents': {
-      id: '/_authenticated/settings/documents'
-      path: '/documents'
-      fullPath: '/settings/documents'
-      preLoaderRoute: typeof AuthenticatedSettingsDocumentsRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
     '/_authenticated/(loans)/loans': {
       id: '/_authenticated/(loans)/loans'
       path: '/loans'
@@ -382,13 +388,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/clients'
       preLoaderRoute: typeof AuthenticatedclientsClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings/documents/': {
-      id: '/_authenticated/settings/documents/'
-      path: '/'
-      fullPath: '/settings/documents/'
-      preLoaderRoute: typeof AuthenticatedSettingsDocumentsIndexRouteImport
-      parentRoute: typeof AuthenticatedSettingsDocumentsRoute
     }
     '/_authenticated/(loans)/loans/': {
       id: '/_authenticated/(loans)/loans/'
@@ -404,12 +403,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedclientsClientsIndexRouteImport
       parentRoute: typeof AuthenticatedclientsClientsRoute
     }
-    '/_authenticated/settings/documents/$documentId': {
-      id: '/_authenticated/settings/documents/$documentId'
-      path: '/$documentId'
-      fullPath: '/settings/documents/$documentId'
-      preLoaderRoute: typeof AuthenticatedSettingsDocumentsDocumentIdRouteImport
-      parentRoute: typeof AuthenticatedSettingsDocumentsRoute
+    '/_authenticated/settings/(notifications)/notifications': {
+      id: '/_authenticated/settings/(notifications)/notifications'
+      path: '/notifications'
+      fullPath: '/settings/notifications'
+      preLoaderRoute: typeof AuthenticatedSettingsnotificationsNotificationsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/(documents)/documents': {
+      id: '/_authenticated/settings/(documents)/documents'
+      path: '/documents'
+      fullPath: '/settings/documents'
+      preLoaderRoute: typeof AuthenticatedSettingsdocumentsDocumentsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/(loans)/loans/$loanId': {
       id: '/_authenticated/(loans)/loans/$loanId'
@@ -424,6 +430,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/clients/$clientId'
       preLoaderRoute: typeof AuthenticatedclientsClientsClientIdRouteImport
       parentRoute: typeof AuthenticatedclientsClientsRoute
+    }
+    '/_authenticated/settings/(documents)/documents/': {
+      id: '/_authenticated/settings/(documents)/documents/'
+      path: '/'
+      fullPath: '/settings/documents/'
+      preLoaderRoute: typeof AuthenticatedSettingsdocumentsDocumentsIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsdocumentsDocumentsRoute
+    }
+    '/_authenticated/settings/(documents)/documents/$documentId': {
+      id: '/_authenticated/settings/(documents)/documents/$documentId'
+      path: '/$documentId'
+      fullPath: '/settings/documents/$documentId'
+      preLoaderRoute: typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRouteImport
+      parentRoute: typeof AuthenticatedSettingsdocumentsDocumentsRoute
     }
   }
 }
@@ -444,32 +464,35 @@ const toolsRouteRouteWithChildren = toolsRouteRoute._addFileChildren(
   toolsRouteRouteChildren,
 )
 
-interface AuthenticatedSettingsDocumentsRouteChildren {
-  AuthenticatedSettingsDocumentsDocumentIdRoute: typeof AuthenticatedSettingsDocumentsDocumentIdRoute
-  AuthenticatedSettingsDocumentsIndexRoute: typeof AuthenticatedSettingsDocumentsIndexRoute
+interface AuthenticatedSettingsdocumentsDocumentsRouteChildren {
+  AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute: typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
+  AuthenticatedSettingsdocumentsDocumentsIndexRoute: typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
 }
 
-const AuthenticatedSettingsDocumentsRouteChildren: AuthenticatedSettingsDocumentsRouteChildren =
+const AuthenticatedSettingsdocumentsDocumentsRouteChildren: AuthenticatedSettingsdocumentsDocumentsRouteChildren =
   {
-    AuthenticatedSettingsDocumentsDocumentIdRoute:
-      AuthenticatedSettingsDocumentsDocumentIdRoute,
-    AuthenticatedSettingsDocumentsIndexRoute:
-      AuthenticatedSettingsDocumentsIndexRoute,
+    AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute:
+      AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute,
+    AuthenticatedSettingsdocumentsDocumentsIndexRoute:
+      AuthenticatedSettingsdocumentsDocumentsIndexRoute,
   }
 
-const AuthenticatedSettingsDocumentsRouteWithChildren =
-  AuthenticatedSettingsDocumentsRoute._addFileChildren(
-    AuthenticatedSettingsDocumentsRouteChildren,
+const AuthenticatedSettingsdocumentsDocumentsRouteWithChildren =
+  AuthenticatedSettingsdocumentsDocumentsRoute._addFileChildren(
+    AuthenticatedSettingsdocumentsDocumentsRouteChildren,
   )
 
 interface AuthenticatedSettingsRouteRouteChildren {
-  AuthenticatedSettingsDocumentsRoute: typeof AuthenticatedSettingsDocumentsRouteWithChildren
+  AuthenticatedSettingsdocumentsDocumentsRoute: typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
+  AuthenticatedSettingsnotificationsNotificationsRoute: typeof AuthenticatedSettingsnotificationsNotificationsRoute
 }
 
 const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
   {
-    AuthenticatedSettingsDocumentsRoute:
-      AuthenticatedSettingsDocumentsRouteWithChildren,
+    AuthenticatedSettingsdocumentsDocumentsRoute:
+      AuthenticatedSettingsdocumentsDocumentsRouteWithChildren,
+    AuthenticatedSettingsnotificationsNotificationsRoute:
+      AuthenticatedSettingsnotificationsNotificationsRoute,
   }
 
 const AuthenticatedSettingsRouteRouteWithChildren =

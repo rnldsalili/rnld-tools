@@ -19,8 +19,9 @@ export function SignatureCanvas({
   const padRef = useRef<SignaturePad | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const canvasElement = canvasRef.current;
+    if (!canvasElement) return;
+    const currentCanvas: HTMLCanvasElement = canvasElement;
 
     let isMounted = true;
     let resizeCanvas = () => {};
@@ -32,7 +33,7 @@ export function SignatureCanvas({
         return;
       }
 
-      const pad = new SignaturePad(canvas, {
+      const pad = new SignaturePad(currentCanvas, {
         backgroundColor: 'rgba(255, 255, 255, 0)',
         penColor: '#000000',
       });
@@ -40,9 +41,9 @@ export function SignatureCanvas({
 
       resizeCanvas = () => {
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        canvas.getContext('2d')?.scale(ratio, ratio);
+        currentCanvas.width = currentCanvas.offsetWidth * ratio;
+        currentCanvas.height = currentCanvas.offsetHeight * ratio;
+        currentCanvas.getContext('2d')?.scale(ratio, ratio);
         pad.clear();
       };
 

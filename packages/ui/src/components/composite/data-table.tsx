@@ -26,6 +26,8 @@ export function DataTable<TData, TValue>({
   variant = 'default',
   getRowClassName,
 }: DataTableProps<TData, TValue>) {
+  // TanStack Table exposes non-memoizable functions; this local table instance is intentional.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

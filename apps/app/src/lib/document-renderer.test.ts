@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  renderLoanDocumentHtml,
   createLoanDocumentPdfHtmlDocument,
+  renderLoanDocumentHtml,
 } from '@workspace/document-renderer';
 
 const baseRenderInput = {

@@ -1,6 +1,7 @@
 import { Link, useLocation, useMatches, useRouter } from '@tanstack/react-router';
 import { useAtom } from 'jotai';
 import {
+  BellRingIcon,
   ChevronRightIcon,
   HandCoinsIcon,
   HashIcon,
@@ -55,6 +56,7 @@ const TOOL_NAV_ITEMS: Array<NavItem> = [
 
 const SETTINGS_NAV_ITEMS: Array<NavItem> = [
   { to: '/settings/documents', icon: ScrollTextIcon, label: 'Documents' },
+  { to: '/settings/notifications', icon: BellRingIcon, label: 'Notifications' },
 ];
 
 function SidebarNavItem({
