@@ -17,10 +17,10 @@ import {
   Textarea,
 } from '@workspace/ui';
 import { toast } from 'sonner';
-import type { ClientStatus } from '@workspace/constants';
 import type { ClientDetail } from '@/app/hooks/use-client';
 import {  useUpdateClient } from '@/app/hooks/use-client';
 import { toFieldErrors } from '@/app/lib/form';
+import { isOneOf } from '@/app/lib/value-guards';
 
 const CLIENT_EDIT_FORM_ID = 'edit-client-form';
 
@@ -158,7 +158,14 @@ export function EditClientDialog({ client, onClose }: EditClientDialogProps) {
                 <FieldLabel htmlFor={field.name}>
                   Status <span className="text-destructive">*</span>
                 </FieldLabel>
-                <Select value={field.state.value} onValueChange={(value) => field.handleChange(value as ClientStatus)}>
+                <Select
+                    value={field.state.value}
+                    onValueChange={(value) => {
+                      if (isOneOf(CLIENT_STATUSES, value)) {
+                        field.handleChange(value);
+                      }
+                    }}
+                >
                   <SelectTrigger id={field.name}>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

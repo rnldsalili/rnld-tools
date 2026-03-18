@@ -16,6 +16,7 @@ import {
   Textarea,
 } from '@workspace/ui';
 import { useCreateNotificationTemplate } from '@/app/hooks/use-notifications';
+import { isNotificationChannel } from '@/app/components/settings/notifications/utils';
 
 const CREATE_TEMPLATE_FORM_ID = 'create-notification-template-form';
 
@@ -95,7 +96,11 @@ export function NotificationCreateTemplateModal({
               <FieldLabel htmlFor={field.name}>Channel</FieldLabel>
               <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value as NotificationChannel)}
+                  onValueChange={(value) => {
+                    if (isNotificationChannel(value)) {
+                      field.handleChange(value);
+                    }
+                  }}
               >
                 <SelectTrigger id={field.name} className="w-full">
                   <SelectValue placeholder="Select channel" />

@@ -24,9 +24,7 @@ export function parseLoanDocumentLogEventData(eventData: string | null): Record<
 
   try {
     const parsedValue = JSON.parse(eventData);
-    return parsedValue && typeof parsedValue === 'object' && !Array.isArray(parsedValue)
-      ? parsedValue as Record<string, unknown>
-      : null;
+    return isPlainRecord(parsedValue) ? parsedValue : null;
   } catch {
     return null;
   }
@@ -93,4 +91,8 @@ export async function getLoanDocumentLogContextByToken(c: LoanDocumentLogContext
       loanDocumentId: true,
     },
   });
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }

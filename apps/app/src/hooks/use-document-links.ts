@@ -1,6 +1,7 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 import type { InferResponseType } from '@workspace/api-client';
-import apiClient from '@/app/lib/api';
+import apiClient, { parseResponse } from '@/app/lib/api';
+import { isPlainRecord } from '@/app/lib/value-guards';
 
 const DOCUMENT_LINKS_QUERY_KEY = 'document-links';
 
@@ -18,14 +19,16 @@ export function documentLinksQueryOptions(loanId: string) {
   return queryOptions({
     queryKey: [DOCUMENT_LINKS_QUERY_KEY, loanId],
     queryFn: async () => {
-      const res = await apiClient.loans[':loanId']['document-links'].$get({
+      const response = await apiClient.loans[':loanId']['document-links'].$get({
         param: { loanId },
       });
-      const data = await res.json() as { meta?: { message?: string } };
-      if (!res.ok) {
-        throw new Error(data.meta?.message ?? 'Failed to load document links.');
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to load document links.');
       }
-      return data as DocumentLinksResponse;
+
+      return result;
     },
     enabled: !!loanId,
   });
@@ -38,13 +41,17 @@ export function useDocumentLinks(loanId: string) {
 export function useCreateDocumentLink() {
   return useMutation({
     mutationFn: async ({ loanId, templateId }: { loanId: string; templateId: string }) => {
-      const res = await apiClient.loans[':loanId']['document-links'].$post({
+      const response = await apiClient.loans[':loanId']['document-links'].$post({
         param: { loanId },
         json: { templateId },
       });
-      const data = await res.json() as CreateDocumentLinkResponse | { meta?: { message?: string } };
-      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to generate document link.');
-      return data as CreateDocumentLinkResponse;
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to generate document link.');
+      }
+
+      return result;
     },
   });
 }
@@ -65,8 +72,11 @@ export function useDownloadLoanDocumentPdf() {
       });
 
       if (!response.ok) {
-        const data = await response.json() as { meta?: { message?: string } };
-        throw new Error(data.meta?.message ?? 'Failed to download document PDF.');
+        const result = await parseResponse(response);
+        const fallbackMessage = 'Failed to download document PDF.';
+        const errorMessage = getResponseMetaMessage(result) || fallbackMessage;
+
+        throw new Error(errorMessage);
       }
 
       const pdfBlob = await response.blob();
@@ -78,4 +88,12 @@ export function useDownloadLoanDocumentPdf() {
       URL.revokeObjectURL(objectUrl);
     },
   });
+}
+
+function getResponseMetaMessage(result: unknown) {
+  if (!isPlainRecord(result) || !isPlainRecord(result.meta)) {
+    return undefined;
+  }
+
+  return typeof result.meta.message === 'string' ? result.meta.message : undefined;
 }

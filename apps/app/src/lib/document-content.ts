@@ -1,3 +1,5 @@
+import { isPlainRecord } from '@/app/lib/value-guards';
+
 export type TipTapNode = {
   type: string;
   text?: string;
@@ -6,12 +8,14 @@ export type TipTapNode = {
   attrs?: Record<string, unknown>;
 };
 
+export type RichTextContent = Record<string, unknown>;
+
 export function normalizeTipTapLineBreaks(content: unknown): TipTapNode | null {
-  if (!content || typeof content !== 'object' || Array.isArray(content)) {
+  if (!isTipTapNode(content)) {
     return null;
   }
 
-  return normalizeNode(content as TipTapNode);
+  return normalizeNode(content);
 }
 
 export function collapseFragmentedPlaceholders(
@@ -141,4 +145,31 @@ function collapseContentPlaceholders(
   }
 
   return collapsedNodes;
+}
+
+function isTipTapNode(value: unknown): value is TipTapNode {
+  if (!isPlainRecord(value) || typeof value.type !== 'string') {
+    return false;
+  }
+
+  if (value.text !== undefined && typeof value.text !== 'string') {
+    return false;
+  }
+
+  if (value.content !== undefined) {
+    if (!Array.isArray(value.content) || value.content.some((item) => !isTipTapNode(item))) {
+      return false;
+    }
+  }
+
+  if (value.marks !== undefined) {
+    if (
+      !Array.isArray(value.marks)
+      || value.marks.some((mark) => !isPlainRecord(mark) || typeof mark.type !== 'string')
+    ) {
+      return false;
+    }
+  }
+
+  return value.attrs === undefined || isPlainRecord(value.attrs);
 }

@@ -1,7 +1,7 @@
 import { DocumentType } from '@workspace/constants';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from '@workspace/api-client';
-import apiClient from '@/app/lib/api';
+import apiClient, { parseResponse } from '@/app/lib/api';
 
 const DOC_TEMPLATES_QUERY_KEY = 'document-templates';
 
@@ -21,14 +21,16 @@ export function documentTemplatesQueryOptions() {
   return queryOptions({
     queryKey: [DOC_TEMPLATES_QUERY_KEY],
     queryFn: async () => {
-      const res = await apiClient.documents.$get({
+      const response = await apiClient.documents.$get({
         query: { type: DocumentType.LOAN },
       });
-      const data = await res.json() as { meta?: { message?: string } };
-      if (!res.ok) {
-        throw new Error(data.meta?.message ?? 'Failed to load document templates.');
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to load document templates.');
       }
-      return data as DocumentTemplatesResponse;
+
+      return result;
     },
   });
 }
@@ -37,13 +39,16 @@ export function documentTemplateQueryOptions(id: string) {
   return queryOptions({
     queryKey: [DOC_TEMPLATES_QUERY_KEY, id],
     queryFn: async () => {
-      const res = await apiClient.documents[':id'].$get({ param: { id } });
-      if (res.status === 404) return null;
-      const data = await res.json() as { meta?: { message?: string } };
-      if (!res.ok) {
-        throw new Error(data.meta?.message ?? 'Failed to load document template.');
+      const response = await apiClient.documents[':id'].$get({ param: { id } });
+      const result = await parseResponse(response);
+
+      if (response.status === 404) return null;
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to load document template.');
       }
-      return data as DocumentTemplateDetailResponse;
+
+      return result;
     },
     enabled: !!id,
   });
@@ -69,12 +74,16 @@ export function useCreateDocumentTemplate() {
       linkExpiryDays?: number;
       requiresSignature?: boolean;
     }) => {
-      const res = await apiClient.documents.$post({
+      const response = await apiClient.documents.$post({
         json: body,
       });
-      const data = await res.json() as { meta?: { message?: string } };
-      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to create template.');
-      return data;
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to create template.');
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DOC_TEMPLATES_QUERY_KEY] });
@@ -103,13 +112,17 @@ export function useUpdateDocumentTemplate() {
       linkExpiryDays: number;
       requiresSignature: boolean;
     }) => {
-      const res = await apiClient.documents[':id'].$put({
+      const response = await apiClient.documents[':id'].$put({
         param: { id },
         json: { type, name, description, content, linkExpiryDays, requiresSignature },
       });
-      const data = await res.json() as { meta?: { message?: string } };
-      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to update template.');
-      return data;
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to update template.');
+      }
+
+      return result;
     },
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: [DOC_TEMPLATES_QUERY_KEY] });
@@ -123,10 +136,14 @@ export function useDeleteDocumentTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await apiClient.documents[':id'].$delete({ param: { id } });
-      const data = await res.json() as { meta?: { message?: string } };
-      if (!res.ok) throw new Error(data.meta?.message ?? 'Failed to delete template.');
-      return data;
+      const response = await apiClient.documents[':id'].$delete({ param: { id } });
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to delete template.');
+      }
+
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DOC_TEMPLATES_QUERY_KEY] });

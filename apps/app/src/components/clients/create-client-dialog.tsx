@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { useCreateClient } from '@/app/hooks/use-client';
 import { toFieldErrors } from '@/app/lib/form';
+import { isOneOf } from '@/app/lib/value-guards';
 
 const CLIENT_FORM_ID = 'create-client-form';
 
@@ -163,7 +164,14 @@ export function CreateClientDialog({ onOpenChange, open }: CreateClientDialogPro
                 <FieldLabel htmlFor={field.name}>
                   Status <span className="text-destructive">*</span>
                 </FieldLabel>
-                <Select value={field.state.value} onValueChange={(value) => field.handleChange(value as ClientStatus)}>
+                <Select
+                    value={field.state.value}
+                    onValueChange={(value) => {
+                      if (isOneOf(CLIENT_STATUSES, value)) {
+                        field.handleChange(value);
+                      }
+                    }}
+                >
                   <SelectTrigger id={field.name}>
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

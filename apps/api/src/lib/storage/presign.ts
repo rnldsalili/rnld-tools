@@ -47,11 +47,10 @@ function toValidExpiresIn(value: unknown): number {
 }
 
 function resolveR2PresignConfig(env: CloudflareBindings): R2PresignConfig | null {
-  const vars = env as unknown as PresignEnv;
-  const accountId = toNonEmptyString(vars.R2_ACCOUNT_ID);
-  const bucketName = toNonEmptyString(vars.R2_BUCKET_NAME);
-  const accessKeyId = toNonEmptyString(vars.R2_ACCESS_KEY_ID);
-  const secretAccessKey = toNonEmptyString(vars.R2_SECRET_ACCESS_KEY);
+  const accountId = getEnvString(env, 'R2_ACCOUNT_ID');
+  const bucketName = getEnvString(env, 'R2_BUCKET_NAME');
+  const accessKeyId = getEnvString(env, 'R2_ACCESS_KEY_ID');
+  const secretAccessKey = getEnvString(env, 'R2_SECRET_ACCESS_KEY');
 
   if (!accountId || !bucketName || !accessKeyId || !secretAccessKey) {
     return null;
@@ -62,7 +61,7 @@ function resolveR2PresignConfig(env: CloudflareBindings): R2PresignConfig | null
     bucketName,
     accessKeyId,
     secretAccessKey,
-    expiresInSeconds: toValidExpiresIn(vars.R2_PRESIGNED_URL_TTL_SECONDS),
+    expiresInSeconds: toValidExpiresIn(Reflect.get(env, 'R2_PRESIGNED_URL_TTL_SECONDS')),
   };
 }
 
@@ -248,6 +247,9 @@ export async function getR2PresignedGetUrlOrNull(
 }
 
 export function getR2BucketName(env: CloudflareBindings): string | undefined {
-  const vars = env as unknown as PresignEnv;
-  return toNonEmptyString(vars.R2_BUCKET_NAME);
+  return getEnvString(env, 'R2_BUCKET_NAME');
+}
+
+function getEnvString(env: CloudflareBindings, key: keyof PresignEnv) {
+  return toNonEmptyString(Reflect.get(env, key));
 }

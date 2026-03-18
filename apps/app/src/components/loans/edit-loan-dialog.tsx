@@ -18,11 +18,11 @@ import {
   SelectValue,
   Textarea,
 } from '@workspace/ui';
-import type { ClientStatus ,
-  InstallmentInterval } from '@workspace/constants';
+import type { ClientStatus } from '@workspace/constants';
 import { ClientSelector } from '@/app/components/loans/client-selector';
 import { useUpdateLoan } from '@/app/hooks/use-loan';
 import { toFieldErrors } from '@/app/lib/form';
+import { isOneOf } from '@/app/lib/value-guards';
 
 interface LoanEditData {
   client: {
@@ -60,12 +60,16 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
     },
     onSubmit: async ({ value }) => {
       try {
+        if (!isOneOf(INSTALLMENT_INTERVAL_VALUES, value.installmentInterval)) {
+          throw new Error('Invalid installment interval.');
+        }
+
         await mutateAsync({
           loanId: loan.id,
           body: {
             clientId: value.clientId,
             amount: parseFloat(value.amount),
-            installmentInterval: value.installmentInterval as InstallmentInterval,
+            installmentInterval: value.installmentInterval,
             loanDate: value.loanDate,
             interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
             description: value.description || null,
@@ -155,7 +159,14 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
               <FieldLabel htmlFor={field.name}>
                 Installment Interval <span className="text-destructive">*</span>
               </FieldLabel>
-              <Select value={field.state.value} onValueChange={field.handleChange}>
+              <Select
+                  value={field.state.value}
+                  onValueChange={(value) => {
+                    if (isOneOf(INSTALLMENT_INTERVAL_VALUES, value)) {
+                      field.handleChange(value);
+                    }
+                  }}
+              >
                 <SelectTrigger id={field.name}>
                   <SelectValue placeholder="Select interval" />
                 </SelectTrigger>

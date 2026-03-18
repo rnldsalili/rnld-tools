@@ -6,6 +6,7 @@ import {
   NOTIFICATION_LOG_STATUS_LABELS,
   NOTIFICATION_SMS_PROVIDER_LABELS,
   NotificationChannel,
+  NotificationContentFormat,
 } from '@workspace/constants';
 import {
   createNotificationTemplateSchema,
@@ -18,8 +19,6 @@ import {
   updateNotificationEventConfigSchema,
   updateNotificationTemplateSchema,
 } from './notifications.schema';
-import type { NotificationContentFormat } from '@workspace/constants';
-import type { NotificationEnv } from '@/api/lib/notifications/types';
 import type { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import {
@@ -95,7 +94,7 @@ export const getNotificationTemplateById = createHandlers(
         template: {
           ...notificationTemplate,
           content: parseNotificationTemplateContent(
-            notificationTemplate.contentFormat as NotificationContentFormat,
+            getNotificationContentFormat(notificationTemplate.contentFormat),
             notificationTemplate.content,
           ),
         },
@@ -135,7 +134,7 @@ export const createNotificationTemplate = createHandlers(
         template: {
           ...createdTemplate,
           content: parseNotificationTemplateContent(
-            createdTemplate.contentFormat as NotificationContentFormat,
+            getNotificationContentFormat(createdTemplate.contentFormat),
             createdTemplate.content,
           ),
         },
@@ -186,7 +185,7 @@ export const updateNotificationTemplate = createHandlers(
         template: {
           ...updatedTemplate,
           content: parseNotificationTemplateContent(
-            updatedTemplate.contentFormat as NotificationContentFormat,
+            getNotificationContentFormat(updatedTemplate.contentFormat),
             updatedTemplate.content,
           ),
         },
@@ -285,8 +284,8 @@ export const getNotificationEventConfigs = createHandlers(
       data: {
         eventConfigs,
         providerStatus: {
-          email: getEmailProviderStatus(c.env as NotificationEnv),
-          sms: getSmsProviderStatus(c.env as NotificationEnv),
+          email: getEmailProviderStatus(c.env),
+          sms: getSmsProviderStatus(c.env),
         },
         providerLabels: {
           email: NOTIFICATION_EMAIL_PROVIDER_LABELS,
@@ -600,3 +599,9 @@ export const testSendNotification = createHandlers(
     }, 202);
   },
 );
+
+function getNotificationContentFormat(value: string): NotificationContentFormat {
+  return value === NotificationContentFormat.PLAIN_TEXT
+    ? NotificationContentFormat.PLAIN_TEXT
+    : NotificationContentFormat.RICH_TEXT_JSON;
+}

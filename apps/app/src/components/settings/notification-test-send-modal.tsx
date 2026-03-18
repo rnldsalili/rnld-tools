@@ -24,9 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@workspace/ui';
-import type { NotificationSmsProvider } from '@workspace/constants';
+import {
+  isNotificationEmailProvider,
+  isNotificationEvent,
+  isNotificationSmsProvider,
+} from '@/app/components/settings/notifications/utils';
 import { useTestNotification } from '@/app/hooks/use-notifications';
 import { DEFAULT_SMS_NOTIFICATION_PROVIDER } from '@/app/lib/notifications';
+import { isPlainRecord } from '@/app/lib/value-guards';
 
 const TEST_SEND_FORM_ID = 'notification-test-send-form';
 
@@ -62,6 +67,10 @@ export function NotificationTestSendModal({
     onSubmit: async ({ value }) => {
       try {
         if (channel === NotificationChannel.EMAIL) {
+          if (!isPlainRecord(content)) {
+            throw new Error('Email template content is invalid.');
+          }
+
           await testNotification({
             channel,
             event: value.event,
@@ -71,7 +80,7 @@ export function NotificationTestSendModal({
             recipientName: value.recipientName.trim() || undefined,
             emailProvider: value.emailProvider,
             subject: subject ?? templateName,
-            content: content as Record<string, unknown>,
+            content,
           });
         } else {
           await testNotification({
@@ -130,7 +139,14 @@ export function NotificationTestSendModal({
           {(field) => (
             <Field>
               <FieldLabel htmlFor={field.name}>Event Context</FieldLabel>
-              <Select value={field.state.value} onValueChange={(value) => field.handleChange(value as NotificationEvent)}>
+              <Select
+                  value={field.state.value}
+                  onValueChange={(value) => {
+                    if (isNotificationEvent(value)) {
+                      field.handleChange(value);
+                    }
+                  }}
+              >
                 <SelectTrigger id={field.name} className="w-full">
                   <SelectValue placeholder="Select event" />
                 </SelectTrigger>
@@ -154,7 +170,11 @@ export function NotificationTestSendModal({
                   <FieldLabel htmlFor={field.name}>Provider</FieldLabel>
                   <Select
                       value={field.state.value}
-                      onValueChange={(value) => field.handleChange(value as NotificationEmailProvider)}
+                      onValueChange={(value) => {
+                        if (isNotificationEmailProvider(value)) {
+                          field.handleChange(value);
+                        }
+                      }}
                   >
                     <SelectTrigger id={field.name} className="w-full">
                       <SelectValue placeholder="Select provider" />
@@ -208,7 +228,11 @@ export function NotificationTestSendModal({
                   <FieldLabel htmlFor={field.name}>Provider</FieldLabel>
                   <Select
                       value={field.state.value}
-                      onValueChange={(value) => field.handleChange(value as NotificationSmsProvider)}
+                      onValueChange={(value) => {
+                        if (isNotificationSmsProvider(value)) {
+                          field.handleChange(value);
+                        }
+                      }}
                   >
                     <SelectTrigger id={field.name} className="w-full">
                       <SelectValue placeholder="Select provider" />

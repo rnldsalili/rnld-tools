@@ -100,13 +100,14 @@ function SidebarNavItem({
 
 function Breadcrumb() {
   const matches = useMatches();
+  const router = useRouter();
 
   const crumbs = matches
-    .filter((match) => (match.staticData as { title?: string }).title)
     .map((match) => ({
-      title: (match.staticData as { title: string }).title,
+      title: getMatchTitle(match.staticData),
       pathname: match.pathname,
-    }));
+    }))
+    .filter((match): match is { title: string; pathname: string } => Boolean(match.title));
 
   if (crumbs.length === 0) return null;
 
@@ -120,18 +121,28 @@ function Breadcrumb() {
             {isLast ? (
               <span className="text-foreground font-medium">{crumb.title}</span>
             ) : (
-              <Link
-                  to={crumb.pathname as any}
+              <button
+                  type="button"
                   className="hover:text-foreground transition-colors"
+                  onClick={() => router.history.push(crumb.pathname)}
               >
                 {crumb.title}
-              </Link>
+              </button>
             )}
           </span>
         );
       })}
     </nav>
   );
+}
+
+function getMatchTitle(staticData: unknown) {
+  if (!staticData || typeof staticData !== 'object') {
+    return null;
+  }
+
+  const title = Reflect.get(staticData, 'title');
+  return typeof title === 'string' ? title : null;
 }
 
 interface NavigationLayoutProps {

@@ -40,6 +40,9 @@ import {
   getNotificationLogRecipient,
   getNotificationLogStatusLabel,
   getNotificationProviderLabel,
+  isNotificationChannel,
+  isNotificationEvent,
+  isNotificationLogStatus,
 } from '@/app/components/settings/notifications/utils';
 import { useDebounce } from '@/app/hooks/use-debounce';
 import { useNotificationLogs } from '@/app/hooks/use-notifications';
@@ -50,6 +53,10 @@ type NotificationLogChannelFilter = NotificationChannel | typeof ALL_FILTER_VALU
 type NotificationLogEventFilter = NotificationEvent | typeof ALL_FILTER_VALUE;
 type NotificationLogStatusFilter = NotificationLogStatusType | typeof ALL_FILTER_VALUE;
 type NotificationLogTestFilter = 'ALL' | 'TEST' | 'LIVE';
+
+function isNotificationLogTestFilter(value: unknown): value is NotificationLogTestFilter {
+  return value === 'ALL' || value === 'TEST' || value === 'LIVE';
+}
 
 export function NotificationHistorySection() {
   const [historySearchInput, setHistorySearchInput] = useState('');
@@ -188,9 +195,11 @@ export function NotificationHistorySection() {
               <Select
                   value={historyChannelFilter}
                   onValueChange={(value) => {
-                  setHistoryChannelFilter(value as NotificationLogChannelFilter);
-                  setHistoryPage(1);
-                }}
+                    if (value === ALL_FILTER_VALUE || isNotificationChannel(value)) {
+                      setHistoryChannelFilter(value);
+                      setHistoryPage(1);
+                    }
+                  }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All channels" />
@@ -205,9 +214,11 @@ export function NotificationHistorySection() {
               <Select
                   value={historyEventFilter}
                   onValueChange={(value) => {
-                  setHistoryEventFilter(value as NotificationLogEventFilter);
-                  setHistoryPage(1);
-                }}
+                    if (value === ALL_FILTER_VALUE || isNotificationEvent(value)) {
+                      setHistoryEventFilter(value);
+                      setHistoryPage(1);
+                    }
+                  }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All events" />
@@ -225,9 +236,11 @@ export function NotificationHistorySection() {
               <Select
                   value={historyStatusFilter}
                   onValueChange={(value) => {
-                  setHistoryStatusFilter(value as NotificationLogStatusFilter);
-                  setHistoryPage(1);
-                }}
+                    if (value === ALL_FILTER_VALUE || isNotificationLogStatus(value)) {
+                      setHistoryStatusFilter(value);
+                      setHistoryPage(1);
+                    }
+                  }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All statuses" />
@@ -245,9 +258,11 @@ export function NotificationHistorySection() {
               <Select
                   value={historyTestFilter}
                   onValueChange={(value) => {
-                  setHistoryTestFilter(value as NotificationLogTestFilter);
-                  setHistoryPage(1);
-                }}
+                    if (isNotificationLogTestFilter(value)) {
+                      setHistoryTestFilter(value);
+                      setHistoryPage(1);
+                    }
+                  }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="All types" />

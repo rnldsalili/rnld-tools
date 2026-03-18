@@ -33,6 +33,7 @@ import {
   useDocumentTemplates,
 } from '@/app/hooks/use-document-templates';
 import { toFieldErrors } from '@/app/lib/form';
+import { isOneOf } from '@/app/lib/value-guards';
 
 export const Route = createFileRoute('/_authenticated/settings/(documents)/documents/')({
   head: () => ({ meta: [{ title: 'RTools - Document Templates' }] }),
@@ -121,7 +122,11 @@ function NewTemplateModal({
               </FieldLabel>
               <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value as DocumentType)}
+                  onValueChange={(value) => {
+                    if (isOneOf(DOCUMENT_TYPE_OPTIONS.map((option) => option.value), value)) {
+                      field.handleChange(value);
+                    }
+                  }}
               >
                 <SelectTrigger id={field.name} className="w-full">
                   <SelectValue placeholder="Select document type" />

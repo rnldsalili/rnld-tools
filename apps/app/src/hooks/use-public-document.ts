@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
-import apiClient from '@/app/lib/api';
+import apiClient, { parseResponse } from '@/app/lib/api';
 
 const PUBLIC_DOCUMENT_QUERY_KEY = 'public-document';
 
@@ -24,8 +24,12 @@ type SignPublicDocumentBody = InferRequestType<
   typeof apiClient.documents.public[':token']['sign']['$post']
 >['json'];
 
-function toPublicDocumentRequestError(data: { meta?: { message?: string } }, status: number, fallback: string) {
-  return new PublicDocumentRequestError(data.meta?.message ?? fallback, status);
+function toPublicDocumentRequestError(
+  result: { meta: { message: string } },
+  status: number,
+  fallbackMessage: string,
+) {
+  return new PublicDocumentRequestError(result.meta.message || fallbackMessage, status);
 }
 
 export function publicDocumentQueryOptions(token: string) {
@@ -35,13 +39,13 @@ export function publicDocumentQueryOptions(token: string) {
       const response = await apiClient.documents.public[':token'].$get({
         param: { token },
       });
-      const data = await response.json() as { meta?: { message?: string } };
+      const result = await parseResponse(response);
 
       if (!response.ok) {
-        throw toPublicDocumentRequestError(data, response.status, 'Failed to load document.');
+        throw toPublicDocumentRequestError(result, response.status, 'Failed to load document.');
       }
 
-      return data as PublicDocumentResponse;
+      return result;
     },
     enabled: !!token,
   });
@@ -66,13 +70,13 @@ export function useSignPublicDocument() {
         param: { token },
         json: body,
       });
-      const data = await response.json() as { meta?: { message?: string } };
+      const result = await parseResponse(response);
 
       if (!response.ok) {
-        throw toPublicDocumentRequestError(data, response.status, 'Failed to sign document.');
+        throw toPublicDocumentRequestError(result, response.status, 'Failed to sign document.');
       }
 
-      return data;
+      return result;
     },
     onSuccess: (_data, { token }) => {
       queryClient.invalidateQueries({ queryKey: [PUBLIC_DOCUMENT_QUERY_KEY, token] });

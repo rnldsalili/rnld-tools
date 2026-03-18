@@ -21,6 +21,7 @@ import {
   Currency,
   INSTALLMENT_INTERVAL_LABELS,
   INSTALLMENT_INTERVAL_VALUES,
+  INSTALLMENT_TYPES,
   InstallmentInterval,
   InstallmentStatus,
   InstallmentType,
@@ -28,18 +29,17 @@ import {
 import { ClientSelector } from '@/app/components/loans/client-selector';
 import { useCreateLoan } from '@/app/hooks/use-loan';
 import { toFieldErrors } from '@/app/lib/form';
-
-type InstallmentMode = 'single' | 'bulk';
+import { isOneOf } from '@/app/lib/value-guards';
 
 interface DefaultValues {
   clientId: string;
   amount: string;
-  currency: string;
-  installmentInterval: string;
+  currency: (typeof CURRENCIES)[number];
+  installmentInterval: InstallmentInterval;
   loanDate: string;
   interestRate: string;
   description: string;
-  installmentMode: InstallmentMode;
+  installmentMode: InstallmentType;
   singleDueDate: string;
   singleAmount: string;
   bulkCount: string;
@@ -56,7 +56,7 @@ function createDefaultValues(): DefaultValues {
     loanDate: format(new Date(), 'yyyy-MM-dd'),
     interestRate: '',
     description: '',
-    installmentMode: InstallmentType.SINGLE as InstallmentMode,
+    installmentMode: InstallmentType.SINGLE,
     singleDueDate: '',
     singleAmount: '',
     bulkCount: '1',
@@ -79,8 +79,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
       const loanPayload: Parameters<typeof mutateAsync>[0]['body'] = {
         clientId: value.clientId,
         amount: parseFloat(value.amount),
-        currency: value.currency as (typeof CURRENCIES)[number],
-        installmentInterval: value.installmentInterval as InstallmentInterval,
+        currency: value.currency,
+        installmentInterval: value.installmentInterval,
         loanDate: value.loanDate,
         interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : undefined,
         description: value.description.trim() || undefined,
@@ -359,7 +359,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                     <FieldLabel htmlFor={field.name}>
                       Currency <span className="text-destructive">*</span>
                     </FieldLabel>
-                    <Select value={field.state.value} onValueChange={field.handleChange}>
+                    <Select
+                        value={field.state.value}
+                        onValueChange={(value) => {
+                          if (isOneOf(CURRENCIES, value)) {
+                            field.handleChange(value);
+                          }
+                        }}
+                    >
                       <SelectTrigger id={field.name}>
                         <SelectValue placeholder="Select currency" />
                       </SelectTrigger>
@@ -458,7 +465,11 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                   <FieldLabel htmlFor={field.name}>Mode <span className="text-destructive">*</span></FieldLabel>
                   <Select
                       value={field.state.value}
-                      onValueChange={(value) => field.handleChange(value as InstallmentMode)}
+                      onValueChange={(value) => {
+                        if (isOneOf(INSTALLMENT_TYPES, value)) {
+                          field.handleChange(value);
+                        }
+                      }}
                   >
                     <SelectTrigger id={field.name}>
                       <SelectValue placeholder="Select mode" />
@@ -478,7 +489,14 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                   <FieldLabel htmlFor={field.name}>
                     Interval <span className="text-destructive">*</span>
                   </FieldLabel>
-                  <Select value={field.state.value} onValueChange={field.handleChange}>
+                  <Select
+                      value={field.state.value}
+                      onValueChange={(value) => {
+                        if (isOneOf(INSTALLMENT_INTERVAL_VALUES, value)) {
+                          field.handleChange(value);
+                        }
+                      }}
+                  >
                     <SelectTrigger id={field.name}>
                       <SelectValue placeholder="Select interval" />
                     </SelectTrigger>
@@ -512,7 +530,7 @@ function buildInstallmentsPayload(value: DefaultValues) {
   if (value.installmentMode === InstallmentType.BULK) {
     return {
       type: InstallmentType.BULK as const,
-      interval: value.installmentInterval as InstallmentInterval,
+      interval: value.installmentInterval,
       count: parseInt(value.bulkCount, 10),
       startDate: value.bulkStartDate,
       amount: parseFloat(value.bulkAmount),

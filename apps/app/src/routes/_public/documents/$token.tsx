@@ -65,8 +65,8 @@ function PublicDocumentPage() {
   const requiresSignature = documentTemplate?.requiresSignature ?? true;
   const isDocumentSigned = !!publicDocument?.signing.signedAt;
   const isUnavailableError =
-    publicDocumentQuery.error instanceof PublicDocumentRequestError &&
-    [404, 410].includes(publicDocumentQuery.error.status);
+    publicDocumentQuery.error instanceof PublicDocumentRequestError
+    && [404, 410].includes(publicDocumentQuery.error.status);
 
   useEffect(() => {
     document.title = getPublicDocumentPageTitle(documentTemplate?.name, publicDocument?.loan.client.name);

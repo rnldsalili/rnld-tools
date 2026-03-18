@@ -22,6 +22,7 @@ import {
 import {
   INSTALLMENTS_LIMIT,
   INSTALLMENT_INTERVAL_LABELS,
+  INSTALLMENT_INTERVAL_VALUES,
   InstallmentStatus,
 } from '@workspace/constants';
 import type { ReactNode } from 'react';
@@ -31,13 +32,14 @@ import { ClientStatusBadge } from '@/app/components/clients/client-status-badge'
 import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
 import { useDeleteLoan, useLoan } from '@/app/hooks/use-loan';
 import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
-import { formatCurrency } from '@/app/lib/format';
 import { AddInstallmentDialog } from '@/app/components/loans/add-installment-dialog';
 import { EditInstallmentDialog } from '@/app/components/loans/edit-installment-dialog';
 import { EditLoanDialog } from '@/app/components/loans/edit-loan-dialog';
 import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
 import { MarkPaidDialog } from '@/app/components/loans/mark-paid-dialog';
 import { ShareDocumentDialog } from '@/app/components/loans/share-document-dialog';
+import { formatCurrency } from '@/app/lib/format';
+import { isOneOf } from '@/app/lib/value-guards';
 
 export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
   head: () => ({ meta: [{ title: 'RTools - Loan Detail' }] }),
@@ -73,6 +75,9 @@ function LoanDetailPage() {
   const activeDownloadTemplateId = downloadLoanDocumentPdfMutation.isPending
     ? downloadLoanDocumentPdfMutation.variables.templateId
     : null;
+  const installmentIntervalLabel = loan && isOneOf(INSTALLMENT_INTERVAL_VALUES, loan.installmentInterval)
+    ? INSTALLMENT_INTERVAL_LABELS[loan.installmentInterval]
+    : loan?.installmentInterval;
 
   async function handleDeleteLoan() {
     try {
@@ -207,9 +212,7 @@ function LoanDetailPage() {
                     <LoanField label="Amount" value={formatCurrency(loan.amount, loan.currency)} />
                     <LoanField
                         label="Installment Interval"
-                        value={INSTALLMENT_INTERVAL_LABELS[
-                          loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS
-                        ]}
+                        value={installmentIntervalLabel ?? '—'}
                     />
                     <LoanField
                         label="Interest Rate"

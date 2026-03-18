@@ -1,4 +1,7 @@
-import { INSTALLMENT_INTERVAL_LABELS } from '@workspace/constants';
+import {
+  INSTALLMENT_INTERVAL_LABELS,
+  INSTALLMENT_INTERVAL_VALUES,
+} from '@workspace/constants';
 
 export type TipTapNode = {
   type: string;
@@ -80,11 +83,11 @@ const dateTimeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
 });
 
 export function normalizeTipTapLineBreaks(content: unknown): TipTapNode | null {
-  if (!content || typeof content !== 'object' || Array.isArray(content)) {
+  if (!isTipTapNode(content)) {
     return null;
   }
 
-  return normalizeNode(content as TipTapNode);
+  return normalizeNode(content);
 }
 
 export function collapseFragmentedPlaceholders(
@@ -109,7 +112,7 @@ export function renderLoanDocumentHtmlWithGenerator(
 
   const placeholderNormalizedContent = collapseFragmentedPlaceholders(
     normalizedContent,
-    LOAN_DOCUMENT_PLACEHOLDER_KEYS as ReadonlyArray<string>,
+    LOAN_DOCUMENT_PLACEHOLDER_KEYS,
   );
 
   if (!placeholderNormalizedContent) {
@@ -189,10 +192,8 @@ function getPlaceholderValues(loan: LoanDocumentRenderLoan): Record<string, stri
 }
 
 function getInstallmentIntervalLabel(installmentInterval: string) {
-  if (installmentInterval in INSTALLMENT_INTERVAL_LABELS) {
-    return INSTALLMENT_INTERVAL_LABELS[
-      installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS
-    ].toLowerCase();
+  if (isInstallmentInterval(installmentInterval)) {
+    return INSTALLMENT_INTERVAL_LABELS[installmentInterval].toLowerCase();
   }
 
   return installmentInterval.toLowerCase();
@@ -343,6 +344,51 @@ function serializeTipTapNode(node: TipTapNode): string {
 
 function serializeInlineChildren(content: Array<TipTapNode> | undefined) {
   return (content ?? []).map(serializeTipTapNode).join('');
+}
+
+function isTipTapNode(value: unknown): value is TipTapNode {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  if (!('type' in value) || typeof value.type !== 'string') {
+    return false;
+  }
+
+  if ('text' in value && value.text !== undefined && typeof value.text !== 'string') {
+    return false;
+  }
+
+  if ('content' in value && value.content !== undefined) {
+    if (!Array.isArray(value.content) || value.content.some((item) => !isTipTapNode(item))) {
+      return false;
+    }
+  }
+
+  if ('marks' in value && value.marks !== undefined) {
+    if (
+      !Array.isArray(value.marks)
+      || value.marks.some((mark) => (
+        !mark
+        || typeof mark !== 'object'
+        || Array.isArray(mark)
+        || !('type' in mark)
+        || typeof mark.type !== 'string'
+      ))
+    ) {
+      return false;
+    }
+  }
+
+  return !('attrs' in value) || value.attrs === undefined || isPlainRecord(value.attrs);
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isInstallmentInterval(value: string): value is (typeof INSTALLMENT_INTERVAL_VALUES)[number] {
+  return INSTALLMENT_INTERVAL_VALUES.some((candidate) => candidate === value);
 }
 
 function serializeTextNode(node: TipTapNode) {

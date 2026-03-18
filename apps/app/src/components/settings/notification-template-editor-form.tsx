@@ -29,6 +29,7 @@ import { AgreementEditor } from '@/app/components/settings/agreement-editor';
 import { getNotificationChannelLabel } from '@/app/components/settings/notifications/utils';
 import { NotificationPlaceholderPanel } from '@/app/components/settings/notification-placeholder-panel';
 import { NotificationTestSendModal } from '@/app/components/settings/notification-test-send-modal';
+import { isPlainRecord, toPlainRecord } from '@/app/lib/value-guards';
 
 interface NotificationTemplateEditorFormProps {
   formId: string;
@@ -46,10 +47,7 @@ function getDefaultValues(template: NotificationTemplate) {
       name: template.name,
       description: template.description ?? '',
       subject: template.subject ?? '',
-      content:
-        template.content && typeof template.content === 'object' && !Array.isArray(template.content)
-          ? template.content as Record<string, unknown>
-          : {},
+      content: toPlainRecord(template.content),
     } as const;
   }
 
@@ -190,8 +188,8 @@ export function NotificationTemplateEditorForm({
                           <Field>
                             <FieldLabel>Body</FieldLabel>
                             <AgreementEditor
-                                content={field.state.value}
-                                onChange={(content) => field.handleChange(content as Record<string, unknown>)}
+                                content={isPlainRecord(field.state.value) ? field.state.value : {}}
+                                onChange={field.handleChange}
                                 placeholder="Write your email content here..."
                             />
                           </Field>
@@ -205,12 +203,12 @@ export function NotificationTemplateEditorForm({
                           <div className="flex items-center justify-between gap-3">
                             <FieldLabel htmlFor={field.name}>SMS Content</FieldLabel>
                             <span className="text-xs text-muted-foreground">
-                              {field.state.value.length}/{NOTIFICATION_SMS_CONTENT_MAX_LENGTH}
+                              {(typeof field.state.value === 'string' ? field.state.value : '').length}/{NOTIFICATION_SMS_CONTENT_MAX_LENGTH}
                             </span>
                           </div>
                           <Textarea
                               id={field.name}
-                              value={field.state.value}
+                              value={typeof field.state.value === 'string' ? field.state.value : ''}
                               onChange={(event) => field.handleChange(event.target.value)}
                               rows={12}
                               maxLength={NOTIFICATION_SMS_CONTENT_MAX_LENGTH}

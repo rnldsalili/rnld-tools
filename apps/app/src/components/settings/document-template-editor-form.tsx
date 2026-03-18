@@ -23,9 +23,11 @@ import {
   TooltipTrigger,
 } from '@workspace/ui';
 import type { DocumentTemplate } from '@/app/hooks/use-document-templates';
+import type { RichTextContent } from '@/app/lib/document-content';
 import { AgreementEditor } from '@/app/components/settings/agreement-editor';
 import { LOAN_DOCUMENT_PLACEHOLDERS } from '@/app/lib/document-placeholders';
 import { toFieldErrors } from '@/app/lib/form';
+import { isOneOf, toPlainRecord } from '@/app/lib/value-guards';
 
 export const DOCUMENT_TYPE_OPTIONS = [
   { value: DocumentType.LOAN, label: 'Loan' },
@@ -37,7 +39,7 @@ interface EditTemplateFormValues {
   description: string;
   linkExpiryDays: string;
   requiresSignature: boolean;
-  content: Record<string, unknown>;
+  content: RichTextContent;
 }
 
 interface DocumentTemplateEditorSubmitValues {
@@ -46,7 +48,7 @@ interface DocumentTemplateEditorSubmitValues {
   description?: string;
   linkExpiryDays: number;
   requiresSignature: boolean;
-  content: Record<string, unknown>;
+  content: RichTextContent;
 }
 
 interface DocumentTemplateEditorFormProps {
@@ -80,10 +82,7 @@ function getEditTemplateDefaultValues(template: DocumentTemplate): EditTemplateF
     description: template.description ?? '',
     linkExpiryDays: String(template.linkExpiryDays),
     requiresSignature: template.requiresSignature,
-    content:
-      template.content && typeof template.content === 'object'
-        ? (template.content as Record<string, unknown>)
-        : {},
+    content: toPlainRecord(template.content),
   };
 }
 
@@ -130,7 +129,11 @@ export function DocumentTemplateEditorForm({
                       </FieldLabel>
                       <Select
                           value={field.state.value}
-                          onValueChange={(value) => field.handleChange(value as DocumentType)}
+                          onValueChange={(value) => {
+                            if (isOneOf(DOCUMENT_TYPE_OPTIONS.map((option) => option.value), value)) {
+                              field.handleChange(value);
+                            }
+                          }}
                       >
                         <SelectTrigger id={field.name} className="w-full">
                           <SelectValue placeholder="Select document type" />
@@ -246,7 +249,7 @@ export function DocumentTemplateEditorForm({
                 {(field) => (
                   <AgreementEditor
                       content={field.state.value}
-                      onChange={(content) => field.handleChange(content as Record<string, unknown>)}
+                      onChange={field.handleChange}
                   />
                 )}
               </form.Field>

@@ -29,9 +29,9 @@ export function parseNotificationTemplateContent(
   }
 
   try {
-    const parsedContent = JSON.parse(rawContent) as unknown;
-    if (parsedContent && typeof parsedContent === 'object' && !Array.isArray(parsedContent)) {
-      return parsedContent as Record<string, unknown>;
+    const parsedContent = JSON.parse(rawContent);
+    if (isPlainRecord(parsedContent)) {
+      return parsedContent;
     }
   } catch {}
 
@@ -99,8 +99,8 @@ export function renderSmsTemplate(params: {
 }
 
 function assertRichTextContent(content: unknown) {
-  if (content && typeof content === 'object' && !Array.isArray(content)) {
-    return content as Record<string, unknown>;
+  if (isPlainRecord(content)) {
+    return content;
   }
 
   return defaultEmailContent;
@@ -116,7 +116,7 @@ function escapeHtml(value: string) {
 }
 
 function normalizeTipTapLineBreaks(content: Record<string, unknown>): TipTapNode | null {
-  return normalizeNode(content as TipTapNode);
+  return isTipTapNode(content) ? normalizeNode(content) : null;
 }
 
 function normalizeNode(node: TipTapNode): TipTapNode {
@@ -302,4 +302,35 @@ function clampHeadingLevel(level: unknown) {
   }
 
   return 2;
+}
+
+function isTipTapNode(value: unknown): value is TipTapNode {
+  if (!isPlainRecord(value) || typeof value.type !== 'string') {
+    return false;
+  }
+
+  if (value.text !== undefined && typeof value.text !== 'string') {
+    return false;
+  }
+
+  if (value.content !== undefined) {
+    if (!Array.isArray(value.content) || value.content.some((item) => !isTipTapNode(item))) {
+      return false;
+    }
+  }
+
+  if (value.marks !== undefined) {
+    if (
+      !Array.isArray(value.marks)
+      || value.marks.some((mark) => !isPlainRecord(mark) || typeof mark.type !== 'string')
+    ) {
+      return false;
+    }
+  }
+
+  return value.attrs === undefined || isPlainRecord(value.attrs);
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }

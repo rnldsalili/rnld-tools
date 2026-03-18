@@ -23,6 +23,7 @@ import type {
   NotificationLog,
   NotificationLogListItem,
 } from '@/app/hooks/use-notifications';
+import { isOneOf } from '@/app/lib/value-guards';
 
 type NotificationLogProviderSource = Pick<
   NotificationLogListItem,
@@ -40,19 +41,23 @@ export interface NotificationEventConfigGroup {
 }
 
 export function isNotificationChannel(value: unknown): value is NotificationChannel {
-  return typeof value === 'string' && (NOTIFICATION_CHANNELS as ReadonlyArray<string>).includes(value);
+  return isOneOf(NOTIFICATION_CHANNELS, value);
 }
 
 export function isNotificationEmailProvider(value: unknown): value is NotificationEmailProvider {
-  return typeof value === 'string' && (NOTIFICATION_EMAIL_PROVIDERS as ReadonlyArray<string>).includes(value);
+  return isOneOf(NOTIFICATION_EMAIL_PROVIDERS, value);
 }
 
 export function isNotificationSmsProvider(value: unknown): value is NotificationSmsProvider {
-  return typeof value === 'string' && (NOTIFICATION_SMS_PROVIDERS as ReadonlyArray<string>).includes(value);
+  return isOneOf(NOTIFICATION_SMS_PROVIDERS, value);
+}
+
+export function isNotificationEvent(value: unknown): value is NotificationEvent {
+  return isOneOf(NOTIFICATION_EVENTS, value);
 }
 
 export function isNotificationLogStatus(value: unknown): value is NotificationLogStatus {
-  return typeof value === 'string' && (NOTIFICATION_LOG_STATUSES as ReadonlyArray<string>).includes(value);
+  return isOneOf(NOTIFICATION_LOG_STATUSES, value);
 }
 
 export function getNotificationChannelLabel(channel: unknown) {

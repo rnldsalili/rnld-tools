@@ -19,10 +19,11 @@ import {
 import { useEffect } from 'react';
 import { Button, Tooltip, TooltipContent, TooltipTrigger, cn } from '@workspace/ui';
 import type { Editor } from '@tiptap/react';
+import type { RichTextContent } from '@/app/lib/document-content';
 
 interface AgreementEditorProps {
-  content?: object | null;
-  onChange?: (json: object) => void;
+  content?: RichTextContent | null;
+  onChange?: (json: RichTextContent) => void;
   placeholder?: string;
   className?: string;
   editable?: boolean;

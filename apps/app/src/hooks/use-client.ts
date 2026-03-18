@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ClientStatus } from '@workspace/constants';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
-import apiClient from '@/app/lib/api';
+import apiClient, { parseResponse } from '@/app/lib/api';
 
 const CLIENTS_QUERY_KEY = 'clients';
 const CLIENT_QUERY_KEY = 'client';
@@ -40,8 +40,13 @@ export function clientsQueryOptions(params: ClientsQueryParams) {
         },
       });
 
-       
-      return response.json() as Promise<ClientsListResponse>;
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to load clients.');
+      }
+
+      return result;
     },
   });
 }
@@ -54,7 +59,13 @@ export function clientQueryOptions(params: ClientQueryParams) {
         param: { id: params.clientId },
       });
 
-      return response.json() as Promise<ClientDetailResponse>;
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to load client.');
+      }
+
+      return result;
     },
     enabled: !!params.clientId,
   });
@@ -72,13 +83,13 @@ export function enabledClientsQueryOptions() {
         },
       });
 
-      const data = await response.json() as { meta?: { message?: string } };
+      const result = await parseResponse(response);
 
       if (!response.ok) {
-        throw new Error(data.meta?.message ?? 'Failed to load clients.');
+        throw new Error(result.meta.message || 'Failed to load clients.');
       }
 
-      return data as ClientsListResponse;
+      return result;
     },
   });
 }
@@ -101,13 +112,13 @@ export function useCreateClient() {
   return useMutation({
     mutationFn: async (body: CreateClientBody) => {
       const response = await apiClient.clients.$post({ json: body });
-      const data = await response.json() as { meta?: { message?: string } };
+      const result = await parseResponse(response);
 
       if (!response.ok) {
-        throw new Error(data.meta?.message ?? 'Failed to create client.');
+        throw new Error(result.meta.message || 'Failed to create client.');
       }
 
-      return data;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CLIENTS_QUERY_KEY] });
@@ -131,13 +142,13 @@ export function useUpdateClient() {
         param: { id: clientId },
         json: body,
       });
-      const data = await response.json() as { meta?: { message?: string } };
+      const result = await parseResponse(response);
 
       if (!response.ok) {
-        throw new Error(data.meta?.message ?? 'Failed to update client.');
+        throw new Error(result.meta.message || 'Failed to update client.');
       }
 
-      return data;
+      return result;
     },
     onSuccess: (_data, { clientId }) => {
       queryClient.invalidateQueries({ queryKey: [CLIENTS_QUERY_KEY] });

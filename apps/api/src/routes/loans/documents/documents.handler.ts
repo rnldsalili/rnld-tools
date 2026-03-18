@@ -69,7 +69,14 @@ export const downloadLoanDocumentPdf = createHandlers(
       }, 500);
     }
 
-    const browser = await puppeteer.launch((c.env as typeof c.env & { BROWSER: Fetcher }).BROWSER);
+    const browserBinding = getBrowserBinding(c.env);
+    if (!browserBinding) {
+      return c.json({
+        meta: { code: 500, message: 'Browser binding is not configured' },
+      }, 500);
+    }
+
+    const browser = await puppeteer.launch(browserBinding);
 
     try {
       const page = await browser.newPage();
@@ -118,4 +125,16 @@ function normalizeFileNameSegment(value: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     || 'document';
+}
+
+function getBrowserBinding(env: CloudflareBindings): Fetcher | null {
+  const browserBinding = Reflect.get(env, 'BROWSER');
+  return isFetcher(browserBinding) ? browserBinding : null;
+}
+
+function isFetcher(value: unknown): value is Fetcher {
+  return value !== null
+    && typeof value === 'object'
+    && 'fetch' in value
+    && typeof value.fetch === 'function';
 }

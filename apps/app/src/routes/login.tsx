@@ -58,8 +58,7 @@ function LoginPage() {
       return;
     }
 
-    const destination = next && next.startsWith('/') ? next : '/dashboard';
-    await router.navigate({ to: destination as any });
+    router.history.push(resolveLoginDestination(next));
   }
 
   return (
@@ -111,4 +110,17 @@ function LoginPage() {
       </div>
     </BasicLayout>
   );
+}
+
+function resolveLoginDestination(next: string | undefined) {
+  if (!next || !next.startsWith('/') || next.startsWith('//')) {
+    return '/dashboard';
+  }
+
+  try {
+    const parsed = new URL(next, 'https://rtools.local');
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return '/dashboard';
+  }
 }

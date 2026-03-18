@@ -36,13 +36,13 @@ export async function processNotificationQueueBatch(
   batch: MessageBatch<unknown>,
   env: NotificationEnv,
 ) {
-  if (batch.queue === NOTIFICATIONS_EMAIL_QUEUE_NAME) {
-    await processEmailBatch(batch as MessageBatch<EmailNotificationJob>, env);
+  if (isEmailNotificationBatch(batch)) {
+    await processEmailBatch(batch, env);
     return;
   }
 
-  if (batch.queue === NOTIFICATIONS_SMS_QUEUE_NAME) {
-    await processSmsBatch(batch as MessageBatch<SmsNotificationJob>, env);
+  if (isSmsNotificationBatch(batch)) {
+    await processSmsBatch(batch, env);
     return;
   }
 
@@ -197,4 +197,12 @@ function getNotificationErrorMessage(error: unknown) {
   }
 
   return String(error);
+}
+
+function isEmailNotificationBatch(batch: MessageBatch<unknown>): batch is MessageBatch<EmailNotificationJob> {
+  return batch.queue === NOTIFICATIONS_EMAIL_QUEUE_NAME;
+}
+
+function isSmsNotificationBatch(batch: MessageBatch<unknown>): batch is MessageBatch<SmsNotificationJob> {
+  return batch.queue === NOTIFICATIONS_SMS_QUEUE_NAME;
 }

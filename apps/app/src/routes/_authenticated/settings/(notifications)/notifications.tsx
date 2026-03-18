@@ -10,10 +10,15 @@ import {
 import { NotificationEventMappingSection } from '@/app/components/settings/notifications/notification-event-mapping-section';
 import { NotificationHistorySection } from '@/app/components/settings/notifications/notification-history-section';
 import { NotificationTemplatesSection } from '@/app/components/settings/notifications/notification-templates-section';
+import { isOneOf } from '@/app/lib/value-guards';
 
 const NOTIFICATION_SETTINGS_TABS = ['templates', 'event-mapping', 'history'] as const;
 
 type NotificationSettingsTab = typeof NOTIFICATION_SETTINGS_TABS[number];
+
+function isNotificationSettingsTab(value: unknown): value is NotificationSettingsTab {
+  return isOneOf(NOTIFICATION_SETTINGS_TABS, value);
+}
 
 export const Route = createFileRoute('/_authenticated/settings/(notifications)/notifications')({
   head: () => ({ meta: [{ title: 'RTools - Notifications' }] }),
@@ -29,11 +34,15 @@ function NotificationSettingsPage() {
   const { tab = 'templates' } = Route.useSearch();
 
   function handleTabChange(nextTab: string) {
+    if (!isNotificationSettingsTab(nextTab)) {
+      return;
+    }
+
     void router.navigate({
       to: Route.to,
       search: (previousSearch) => ({
         ...previousSearch,
-        tab: nextTab as NotificationSettingsTab,
+        tab: nextTab,
       }),
       replace: true,
     });
