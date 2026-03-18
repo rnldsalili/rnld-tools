@@ -21,6 +21,7 @@ import { Route as toolsSecretGeneratorRouteImport } from './routes/(tools)/secre
 import { Route as toolsPasswordGeneratorRouteImport } from './routes/(tools)/password-generator'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as PublicDocumentsTokenRouteImport } from './routes/_public/documents/$token'
+import { Route as AuthenticatedSettingsAccessRouteImport } from './routes/_authenticated/settings/access'
 import { Route as AuthenticatedloansLoansRouteImport } from './routes/_authenticated/(loans)/loans'
 import { Route as AuthenticatedclientsClientsRouteImport } from './routes/_authenticated/(clients)/clients'
 import { Route as AuthenticatedloansLoansIndexRouteImport } from './routes/_authenticated/(loans)/loans.index'
@@ -90,6 +91,12 @@ const PublicDocumentsTokenRoute = PublicDocumentsTokenRouteImport.update({
   path: '/documents/$token',
   getParentRoute: () => PublicRouteRoute,
 } as any)
+const AuthenticatedSettingsAccessRoute =
+  AuthenticatedSettingsAccessRouteImport.update({
+    id: '/access',
+    path: '/access',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedloansLoansRoute = AuthenticatedloansLoansRouteImport.update({
   id: '/(loans)/loans',
   path: '/loans',
@@ -161,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/loans': typeof AuthenticatedloansLoansRouteWithChildren
+  '/settings/access': typeof AuthenticatedSettingsAccessRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
@@ -180,6 +188,7 @@ export interface FileRoutesByTo {
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/settings/access': typeof AuthenticatedSettingsAccessRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
@@ -204,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/(clients)/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/_authenticated/(loans)/loans': typeof AuthenticatedloansLoansRouteWithChildren
+  '/_authenticated/settings/access': typeof AuthenticatedSettingsAccessRoute
   '/_public/documents/$token': typeof PublicDocumentsTokenRoute
   '/_authenticated/(clients)/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/_authenticated/(loans)/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/clients'
     | '/loans'
+    | '/settings/access'
     | '/documents/$token'
     | '/clients/$clientId'
     | '/loans/$loanId'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/secret-generator'
     | '/uuid-generator'
     | '/dashboard'
+    | '/settings/access'
     | '/documents/$token'
     | '/clients/$clientId'
     | '/loans/$loanId'
@@ -269,6 +281,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/(clients)/clients'
     | '/_authenticated/(loans)/loans'
+    | '/_authenticated/settings/access'
     | '/_public/documents/$token'
     | '/_authenticated/(clients)/clients/$clientId'
     | '/_authenticated/(loans)/loans/$loanId'
@@ -374,6 +387,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/documents/$token'
       preLoaderRoute: typeof PublicDocumentsTokenRouteImport
       parentRoute: typeof PublicRouteRoute
+    }
+    '/_authenticated/settings/access': {
+      id: '/_authenticated/settings/access'
+      path: '/access'
+      fullPath: '/settings/access'
+      preLoaderRoute: typeof AuthenticatedSettingsAccessRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/(loans)/loans': {
       id: '/_authenticated/(loans)/loans'
@@ -483,12 +503,14 @@ const AuthenticatedSettingsdocumentsDocumentsRouteWithChildren =
   )
 
 interface AuthenticatedSettingsRouteRouteChildren {
+  AuthenticatedSettingsAccessRoute: typeof AuthenticatedSettingsAccessRoute
   AuthenticatedSettingsdocumentsDocumentsRoute: typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
   AuthenticatedSettingsnotificationsNotificationsRoute: typeof AuthenticatedSettingsnotificationsNotificationsRoute
 }
 
 const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
   {
+    AuthenticatedSettingsAccessRoute: AuthenticatedSettingsAccessRoute,
     AuthenticatedSettingsdocumentsDocumentsRoute:
       AuthenticatedSettingsdocumentsDocumentsRouteWithChildren,
     AuthenticatedSettingsnotificationsNotificationsRoute:

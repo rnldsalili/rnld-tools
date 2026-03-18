@@ -1,5 +1,6 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
 import { authClient } from '@workspace/auth-client';
+import { AppAuthorizationProvider } from '@/app/components/authorization/authorization-provider';
 import { NavigationLayout } from '@/app/layouts/navigation-layout';
 
 export const Route = createFileRoute('/_authenticated')({
@@ -11,9 +12,10 @@ export const Route = createFileRoute('/_authenticated')({
     }
   },
   component: () => (
-    <NavigationLayout>
-      <Outlet />
-    </NavigationLayout>
+    <AppAuthorizationProvider>
+      <NavigationLayout>
+        <Outlet />
+      </NavigationLayout>
+    </AppAuthorizationProvider>
   ),
 });
-

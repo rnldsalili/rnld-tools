@@ -19,6 +19,7 @@
         "@prisma/client": "^7.4.2",
         "@workspace/constants": "workspace:*",
         "@workspace/document-renderer": "workspace:*",
+        "@workspace/permissions": "workspace:*",
         "better-auth": "^1.5.4",
         "date-fns": "^4.1.0",
         "dotenv": "^17.3.1",
@@ -61,6 +62,7 @@
         "@workspace/auth-client": "workspace:*",
         "@workspace/constants": "workspace:*",
         "@workspace/document-renderer": "workspace:*",
+        "@workspace/permissions": "workspace:*",
         "@workspace/ui": "workspace:*",
         "date-fns": "^4.1.0",
         "jotai": "^2.18.1",
@@ -164,6 +166,23 @@
       },
       "peerDependencies": {
         "typescript": "^5.0.0",
+      },
+    },
+    "packages/permissions": {
+      "name": "@workspace/permissions",
+      "version": "0.0.0",
+      "dependencies": {
+        "@casl/ability": "^6.7.3",
+        "@casl/react": "^5.0.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.14",
+        "@workspace/eslint-config": "workspace:*",
+        "@workspace/typescript-config": "workspace:*",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^19.0.0",
       },
     },
     "packages/typescript-config": {
@@ -381,6 +400,10 @@
     "@better-fetch/fetch": ["@better-fetch/fetch@1.1.21", "", {}, "sha512-/ImESw0sskqlVR94jB+5+Pxjf+xBwDZF/N5+y2/q4EqD7IARUTSpPfIo8uf39SYpCxyOCtbyYpUrZ3F/k0zT4A=="],
 
     "@bramus/specificity": ["@bramus/specificity@2.4.2", "", { "dependencies": { "css-tree": "^3.0.0" }, "bin": { "specificity": "bin/cli.js" } }, "sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw=="],
+
+    "@casl/ability": ["@casl/ability@6.8.0", "", { "dependencies": { "@ucast/mongo2js": "^1.3.0" } }, "sha512-Ipt4mzI4gSgnomFdaPjaLgY2MWuXqAEZLrU6qqWBB7khGiBBuuEp6ytYDnq09bRXqcjaeeHiaCvCGFbBA2SpvA=="],
+
+    "@casl/react": ["@casl/react@5.0.1", "", { "peerDependencies": { "@casl/ability": "^4.0.0 || ^5.1.0 || ^6.0.0", "react": "^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-8E3GkvwlxEW+bkxWTdvjn6SALNJZa9khNk591xTpU27nPK/nzgfqsVfEvrFjYIQ2LODrxXsWLmw7iHPEI0/TaQ=="],
 
     "@chevrotain/cst-dts-gen": ["@chevrotain/cst-dts-gen@10.5.0", "", { "dependencies": { "@chevrotain/gast": "10.5.0", "@chevrotain/types": "10.5.0", "lodash": "4.17.21" } }, "sha512-lhmC/FyqQ2o7pGK4Om+hzuDrm9rhFYIJ/AXoQBeongmn870Xeb0L6oGEiuR8nohFNL5sMaQEJWCxr1oIVIVXrw=="],
 
@@ -1250,6 +1273,14 @@
 
     "@typescript-eslint/visitor-keys": ["@typescript-eslint/visitor-keys@8.56.1", "", { "dependencies": { "@typescript-eslint/types": "8.56.1", "eslint-visitor-keys": "^5.0.0" } }, "sha512-KiROIzYdEV85YygXw6BI/Dx4fnBlFQu6Mq4QE4MOH9fFnhohw6wX/OAvDY2/C+ut0I3RSPKenvZJIVYqJNkhEw=="],
 
+    "@ucast/core": ["@ucast/core@1.10.2", "", {}, "sha512-ons5CwXZ/51wrUPfoduC+cO7AS1/wRb0ybpQJ9RrssossDxVy4t49QxWoWgfBDvVKsz9VXzBk9z0wqTdZ+Cq8g=="],
+
+    "@ucast/js": ["@ucast/js@3.1.0", "", { "dependencies": { "@ucast/core": "1.10.2" } }, "sha512-eJ7yQeYtMK85UZjxoxBEbTWx6UMxEXKbjVyp+NlzrT5oMKV5Gpo/9bjTl3r7msaXTVC8iD9NJacqJ8yp7joX+Q=="],
+
+    "@ucast/mongo": ["@ucast/mongo@2.4.3", "", { "dependencies": { "@ucast/core": "^1.4.1" } }, "sha512-XcI8LclrHWP83H+7H2anGCEeDq0n+12FU2mXCTz6/Tva9/9ddK/iacvvhCyW6cijAAOILmt0tWplRyRhVyZLsA=="],
+
+    "@ucast/mongo2js": ["@ucast/mongo2js@1.4.1", "", { "dependencies": { "@ucast/core": "1.10.2", "@ucast/js": "3.1.0", "@ucast/mongo": "2.4.3" } }, "sha512-9aeg5cmqwRQnKCXHN6I17wk83Rcm487bHelaG8T4vfpWneAI469wSI3Srnbu+PuZ5znWRbnwtVq9RgPL+bN6CA=="],
+
     "@unrs/resolver-binding-android-arm-eabi": ["@unrs/resolver-binding-android-arm-eabi@1.11.1", "", { "os": "android", "cpu": "arm" }, "sha512-ppLRUgHVaGRWUx0R0Ut06Mjo9gBaBkg3v/8AxusGLhsIotbBLuRk51rAzqLC8gq6NyyAojEXglNjzf6R948DNw=="],
 
     "@unrs/resolver-binding-android-arm64": ["@unrs/resolver-binding-android-arm64@1.11.1", "", { "os": "android", "cpu": "arm64" }, "sha512-lCxkVtb4wp1v+EoN+HjIG9cIIzPkX5OtM03pQYkG+U5O/wL53LC4QbIeazgiKqluGeVEeBlZahHalCaBvU1a2g=="],
@@ -1317,6 +1348,8 @@
     "@workspace/document-renderer": ["@workspace/document-renderer@workspace:packages/document-renderer"],
 
     "@workspace/eslint-config": ["@workspace/eslint-config@workspace:packages/eslint-config"],
+
+    "@workspace/permissions": ["@workspace/permissions@workspace:packages/permissions"],
 
     "@workspace/typescript-config": ["@workspace/typescript-config@workspace:packages/typescript-config"],
 

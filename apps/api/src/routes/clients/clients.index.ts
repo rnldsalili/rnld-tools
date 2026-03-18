@@ -1,14 +1,14 @@
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import { createClient, getClient, getClients, updateClient } from './clients.handler';
 import { createRouter } from '@/api/app';
 import { requireAuth } from '@/api/middlewares/auth.middleware';
-import { requireAdminRole } from '@/api/middlewares/role.middleware';
+import { authorize } from '@/api/middlewares/authorization.middleware';
 
 const clientsRoute = createRouter()
   .use('*', requireAuth)
-  .use('*', requireAdminRole)
-  .get('/', ...getClients)
-  .post('/', ...createClient)
-  .get('/:id', ...getClient)
-  .put('/:id', ...updateClient);
+  .get('/', authorize(PermissionModule.CLIENTS, PermissionAction.VIEW), ...getClients)
+  .post('/', authorize(PermissionModule.CLIENTS, PermissionAction.CREATE), ...createClient)
+  .get('/:id', authorize(PermissionModule.CLIENTS, PermissionAction.VIEW), ...getClient)
+  .put('/:id', authorize(PermissionModule.CLIENTS, PermissionAction.UPDATE), ...updateClient);
 
 export default clientsRoute;

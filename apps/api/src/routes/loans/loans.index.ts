@@ -1,3 +1,4 @@
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import documentLogsRoute from './document-logs/document-logs.index';
 import loanDocumentsRoute from './documents/documents.index';
 import { createLoan, deleteLoan, getLoan, getLoans, updateLoan } from './loans.handler';
@@ -5,16 +6,15 @@ import documentLinksRoute from './document-links/document-links.index';
 import installmentsRoute from './installments/installments.index';
 import { createRouter } from '@/api/app';
 import { requireAuth } from '@/api/middlewares/auth.middleware';
-import { requireAdminRole } from '@/api/middlewares/role.middleware';
+import { authorize } from '@/api/middlewares/authorization.middleware';
 
 const loansRoute = createRouter()
   .use('*', requireAuth)
-  .use('*', requireAdminRole)
-  .get('/', ...getLoans)
-  .get('/:id', ...getLoan)
-  .post('/', ...createLoan)
-  .put('/:id', ...updateLoan)
-  .delete('/:id', ...deleteLoan)
+  .get('/', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoans)
+  .get('/:id', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoan)
+  .post('/', authorize(PermissionModule.LOANS, PermissionAction.CREATE), ...createLoan)
+  .put('/:id', authorize(PermissionModule.LOANS, PermissionAction.UPDATE), ...updateLoan)
+  .delete('/:id', authorize(PermissionModule.LOANS, PermissionAction.DELETE), ...deleteLoan)
   .route('/:loanId/installments', installmentsRoute)
   .route('/:loanId/document-logs', documentLogsRoute)
   .route('/:loanId/documents', loanDocumentsRoute)

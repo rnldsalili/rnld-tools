@@ -13,12 +13,15 @@ import {
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   ScrollTextIcon,
+  ShieldCheckIcon,
   ShuffleIcon,
   SunIcon,
   UsersIcon,
   WrenchIcon,
 } from 'lucide-react';
 import { signOut, useSession } from '@workspace/auth-client';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { useAbility } from '@workspace/permissions/react';
 import {
   Button,
   DropdownMenu,
@@ -33,6 +36,7 @@ import {
   TooltipTrigger,
   cn,
 } from '@workspace/ui';
+import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
 import { useTheme } from '@/app/hooks/use-theme';
 import { sidebarCollapsedAtom } from '@/app/stores/sidebar';
 
@@ -40,12 +44,25 @@ interface NavItem {
   to: string;
   icon: React.ElementType;
   label: string;
+  isVisible?: (
+    hasPermission: (module: PermissionModule, action: PermissionAction) => boolean,
+  ) => boolean;
 }
 
 const NAV_ITEMS: Array<NavItem> = [
   { to: '/dashboard', icon: LayoutDashboardIcon, label: 'Dashboard' },
-  { to: '/clients', icon: UsersIcon, label: 'Clients' },
-  { to: '/loans', icon: HandCoinsIcon, label: 'Loans' },
+  {
+    to: '/clients',
+    icon: UsersIcon,
+    label: 'Clients',
+    isVisible: (hasPermission) => hasPermission(PermissionModule.CLIENTS, PermissionAction.VIEW),
+  },
+  {
+    to: '/loans',
+    icon: HandCoinsIcon,
+    label: 'Loans',
+    isVisible: (hasPermission) => hasPermission(PermissionModule.LOANS, PermissionAction.VIEW),
+  },
 ];
 
 const TOOL_NAV_ITEMS: Array<NavItem> = [
@@ -55,8 +72,27 @@ const TOOL_NAV_ITEMS: Array<NavItem> = [
 ];
 
 const SETTINGS_NAV_ITEMS: Array<NavItem> = [
-  { to: '/settings/documents', icon: ScrollTextIcon, label: 'Documents' },
-  { to: '/settings/notifications', icon: BellRingIcon, label: 'Notifications' },
+  {
+    to: '/settings/documents',
+    icon: ScrollTextIcon,
+    label: 'Documents',
+    isVisible: (hasPermission) => hasPermission(PermissionModule.DOCUMENTS, PermissionAction.VIEW),
+  },
+  {
+    to: '/settings/notifications',
+    icon: BellRingIcon,
+    label: 'Notifications',
+    isVisible: (hasPermission) => hasPermission(PermissionModule.NOTIFICATIONS, PermissionAction.VIEW),
+  },
+  {
+    to: '/settings/access',
+    icon: ShieldCheckIcon,
+    label: 'Access',
+    isVisible: (hasPermission) => (
+      hasPermission(PermissionModule.ROLES, PermissionAction.VIEW)
+      || hasPermission(PermissionModule.USERS, PermissionAction.VIEW)
+    ),
+  },
 ];
 
 function SidebarNavItem({
@@ -151,6 +187,8 @@ interface NavigationLayoutProps {
 
 export function NavigationLayout({ children }: NavigationLayoutProps) {
   const { data: session } = useSession();
+  const ability = useAbility();
+  const { authorization } = useAppAuthorization();
   const router = useRouter();
   const { pathname: currentPath } = useLocation();
   const { isDark, mounted, toggle } = useTheme();
@@ -159,6 +197,13 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
   if (!session?.user) {
     return <>{children}</>;
   }
+
+  function hasPermission(module: PermissionModule, action: PermissionAction) {
+    return ability.can(action, module);
+  }
+
+  const visibleNavItems = NAV_ITEMS.filter((item) => item.isVisible?.(hasPermission) ?? true);
+  const visibleSettingsItems = SETTINGS_NAV_ITEMS.filter((item) => item.isVisible?.(hasPermission) ?? true);
 
   const userInitial =
     session.user.name.charAt(0).toUpperCase() ||
@@ -221,7 +266,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
 
           {/* Nav items */}
           <nav className="flex flex-col gap-0.5 p-2 flex-1 overflow-y-auto">
-            {NAV_ITEMS.map((item) => (
+            {visibleNavItems.map((item) => (
               <SidebarNavItem
                   key={item.to}
                   item={item}
@@ -250,23 +295,27 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
             ))}
 
             {/* Settings section */}
-            <div className={cn('mt-4', !isCollapsed && 'px-2.5')}>
-              {!isCollapsed && (
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-                  Settings
-                </p>
-              )}
-              {isCollapsed && <div className="h-px bg-border mb-2" />}
-            </div>
+            {visibleSettingsItems.length > 0 && (
+              <>
+                <div className={cn('mt-4', !isCollapsed && 'px-2.5')}>
+                  {!isCollapsed && (
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                      Settings
+                    </p>
+                  )}
+                  {isCollapsed && <div className="h-px bg-border mb-2" />}
+                </div>
 
-            {SETTINGS_NAV_ITEMS.map((item) => (
-              <SidebarNavItem
-                  key={item.to}
-                  item={item}
-                  isCollapsed={isCollapsed}
-                  currentPath={currentPath}
-              />
-            ))}
+                {visibleSettingsItems.map((item) => (
+                  <SidebarNavItem
+                      key={item.to}
+                      item={item}
+                      isCollapsed={isCollapsed}
+                      currentPath={currentPath}
+                  />
+                ))}
+              </>
+            )}
           </nav>
         </aside>
 
@@ -320,6 +369,14 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
                   <DropdownMenuLabel className="text-xs text-muted-foreground font-normal truncate">
                     {session.user.email}
                   </DropdownMenuLabel>
+                  {authorization?.roles.length ? (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                        {authorization.roles.map((role: { name: string }) => role.name).join(', ')}
+                      </DropdownMenuLabel>
+                    </>
+                  ) : null}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                       onClick={handleSignOut}

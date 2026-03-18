@@ -3,6 +3,8 @@ import {
   NOTIFICATION_SMS_CONTENT_MAX_LENGTH,
   NotificationChannel,
 } from '@workspace/constants';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can } from '@workspace/permissions/react';
 import {
   Loader2Icon,
   SaveIcon,
@@ -34,6 +36,7 @@ import { isPlainRecord, toPlainRecord } from '@/app/lib/value-guards';
 interface NotificationTemplateEditorFormProps {
   formId: string;
   template: NotificationTemplate;
+  isReadOnly?: boolean;
   isSaving?: boolean;
   isDeleting?: boolean;
   onSubmit: (values: NotificationTemplateFormValues) => Promise<void>;
@@ -62,6 +65,7 @@ function getDefaultValues(template: NotificationTemplate) {
 export function NotificationTemplateEditorForm({
   formId,
   template,
+  isReadOnly = false,
   isSaving = false,
   isDeleting = false,
   onSubmit,
@@ -111,29 +115,35 @@ export function NotificationTemplateEditorForm({
                   <Badge variant="secondary">{getNotificationChannelLabel(template.channel)}</Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                      type="button"
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => setIsTestSendOpen(true)}
-                  >
-                    <SendHorizontalIcon className="size-3.5" />
-                    Test Send
-                  </Button>
-                  <Button type="submit" disabled={isSaving} className="gap-2">
-                    {isSaving ? <Loader2Icon className="size-3.5 animate-spin" /> : <SaveIcon className="size-3.5" />}
-                    Save
-                  </Button>
-                  <Button
-                      type="button"
-                      variant="destructive"
-                      className="gap-2"
-                      onClick={onDelete}
-                      disabled={isDeleting}
-                  >
-                    {isDeleting ? <Loader2Icon className="size-3.5 animate-spin" /> : <Trash2Icon className="size-3.5" />}
-                    Delete
-                  </Button>
+                  <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => setIsTestSendOpen(true)}
+                    >
+                      <SendHorizontalIcon className="size-3.5" />
+                      Test Send
+                    </Button>
+                  </Can>
+                  <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
+                    <Button type="submit" disabled={isSaving} className="gap-2">
+                      {isSaving ? <Loader2Icon className="size-3.5 animate-spin" /> : <SaveIcon className="size-3.5" />}
+                      Save
+                    </Button>
+                  </Can>
+                  <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        className="gap-2"
+                        onClick={onDelete}
+                        disabled={isDeleting}
+                    >
+                      {isDeleting ? <Loader2Icon className="size-3.5 animate-spin" /> : <Trash2Icon className="size-3.5" />}
+                      Delete
+                    </Button>
+                  </Can>
                 </div>
               </SectionCardHeader>
               <SectionCardContent>
@@ -147,6 +157,7 @@ export function NotificationTemplateEditorForm({
                             value={field.state.value}
                             onChange={(event) => field.handleChange(event.target.value)}
                             placeholder="e.g. Loan Created Email"
+                            readOnly={isReadOnly}
                         />
                       </Field>
                     )}
@@ -162,6 +173,7 @@ export function NotificationTemplateEditorForm({
                             onChange={(event) => field.handleChange(event.target.value)}
                             rows={3}
                             placeholder="Describe when this template should be used."
+                            readOnly={isReadOnly}
                         />
                       </Field>
                     )}
@@ -178,6 +190,7 @@ export function NotificationTemplateEditorForm({
                                 value={field.state.value}
                                 onChange={(event) => field.handleChange(event.target.value)}
                                 placeholder="Subject line for this email"
+                                readOnly={isReadOnly}
                             />
                           </Field>
                         )}
@@ -191,6 +204,7 @@ export function NotificationTemplateEditorForm({
                                 content={isPlainRecord(field.state.value) ? field.state.value : {}}
                                 onChange={field.handleChange}
                                 placeholder="Write your email content here..."
+                                editable={!isReadOnly}
                             />
                           </Field>
                         )}
@@ -213,6 +227,7 @@ export function NotificationTemplateEditorForm({
                               rows={12}
                               maxLength={NOTIFICATION_SMS_CONTENT_MAX_LENGTH}
                               placeholder="Write the SMS content here..."
+                              readOnly={isReadOnly}
                           />
                         </Field>
                       )}

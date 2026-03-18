@@ -1,7 +1,10 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import { ArrowLeftIcon, FileTextIcon, Loader2Icon, SaveIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui';
+import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { DocumentTemplateEditorForm } from '@/app/components/settings/document-template-editor-form';
 import {
   useDocumentTemplate,
@@ -22,6 +25,17 @@ function DocumentTemplateDetailPage() {
   const { mutateAsync: updateTemplate, isPending } = useUpdateDocumentTemplate();
 
   const template = data?.data.document ?? null;
+  const canViewDocuments = useCan(PermissionModule.DOCUMENTS, PermissionAction.VIEW);
+  const canUpdateDocuments = useCan(PermissionModule.DOCUMENTS, PermissionAction.UPDATE);
+
+  if (!canViewDocuments) {
+    return (
+      <UnauthorizedState
+          title="Document Access Restricted"
+          description="You do not have permission to view this document template."
+      />
+    );
+  }
 
   async function handleSaveTemplate(values: {
     type: Parameters<typeof updateTemplate>[0]['type'];
@@ -67,19 +81,21 @@ function DocumentTemplateDetailPage() {
                 Back
               </Link>
             </Button>
-            <Button
-                type="submit"
-                form={EDIT_DOCUMENT_TEMPLATE_FORM_ID}
-                disabled={isPending || isLoading || !template}
-                className="gap-2"
-            >
-              {isPending ? (
-                <Loader2Icon className="size-3.5 animate-spin" />
-              ) : (
-                <SaveIcon className="size-3.5" />
-              )}
-              Save
-            </Button>
+            <Can I={PermissionAction.UPDATE} a={PermissionModule.DOCUMENTS}>
+              <Button
+                  type="submit"
+                  form={EDIT_DOCUMENT_TEMPLATE_FORM_ID}
+                  disabled={isPending || isLoading || !template}
+                  className="gap-2"
+              >
+                {isPending ? (
+                  <Loader2Icon className="size-3.5 animate-spin" />
+                ) : (
+                  <SaveIcon className="size-3.5" />
+                )}
+                Save
+              </Button>
+            </Can>
           </div>
         </div>
 
@@ -94,6 +110,7 @@ function DocumentTemplateDetailPage() {
               key={template.id}
               formId={EDIT_DOCUMENT_TEMPLATE_FORM_ID}
               template={template}
+              editable={canUpdateDocuments}
               onSubmit={handleSaveTemplate}
           />
         ) : (

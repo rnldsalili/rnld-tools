@@ -1,6 +1,8 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { useForm } from '@tanstack/react-form';
 import { DocumentType } from '@workspace/constants';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import { FileTextIcon, Loader2Icon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -23,6 +25,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table';
 import type { DocumentTemplateItem } from '@/app/hooks/use-document-templates';
 import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
+import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import {
   DOCUMENT_TYPE_OPTIONS,
   validateTemplateName,
@@ -196,6 +199,17 @@ function DocumentSettingsPage() {
   } | null>(null);
 
   const templates = data?.data.documents ?? [];
+  const canViewDocuments = useCan(PermissionModule.DOCUMENTS, PermissionAction.VIEW);
+
+  if (!canViewDocuments) {
+    return (
+      <UnauthorizedState
+          title="Documents Restricted"
+          description="You do not have permission to view document templates."
+      />
+    );
+  }
+
   const normalizedSearch = searchInput.trim().toLowerCase();
   const filteredTemplates = normalizedSearch
     ? templates.filter((template: DocumentTemplateItem) => {
@@ -261,14 +275,18 @@ function DocumentSettingsPage() {
           >
             Edit
           </Link>
-          <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
-          <button
-              type="button"
-              className="font-medium text-destructive transition-colors hover:text-destructive/80"
-              onClick={() => setTemplatePendingDelete({ id: row.original.id, name: row.original.name })}
-          >
-            Delete
-          </button>
+          <Can I={PermissionAction.DELETE} a={PermissionModule.DOCUMENTS}>
+            <>
+              <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
+              <button
+                  type="button"
+                  className="font-medium text-destructive transition-colors hover:text-destructive/80"
+                  onClick={() => setTemplatePendingDelete({ id: row.original.id, name: row.original.name })}
+              >
+                Delete
+              </button>
+            </>
+          </Can>
         </div>
       ),
     },
@@ -289,10 +307,12 @@ function DocumentSettingsPage() {
               </p>
             </div>
           </div>
-          <Button onClick={() => setIsNewOpen(true)} className="gap-2">
-            <PlusIcon className="size-3.5" />
-            New Template
-          </Button>
+          <Can I={PermissionAction.CREATE} a={PermissionModule.DOCUMENTS}>
+            <Button onClick={() => setIsNewOpen(true)} className="gap-2">
+              <PlusIcon className="size-3.5" />
+              New Template
+            </Button>
+          </Can>
         </div>
 
         <div className="flex items-center justify-between gap-4">
@@ -307,24 +327,28 @@ function DocumentSettingsPage() {
         <DataTable columns={columns} data={filteredTemplates} isLoading={isLoading} />
       </div>
 
-      <NewTemplateModal open={isNewOpen} onOpenChange={setIsNewOpen} />
-      <ConfirmDeleteDialog
-          open={templatePendingDelete !== null}
-          onOpenChange={(open) => {
-            if (!open && !isDeletePending) {
-              setTemplatePendingDelete(null);
+      <Can I={PermissionAction.CREATE} a={PermissionModule.DOCUMENTS}>
+        <NewTemplateModal open={isNewOpen} onOpenChange={setIsNewOpen} />
+      </Can>
+      <Can I={PermissionAction.DELETE} a={PermissionModule.DOCUMENTS}>
+        <ConfirmDeleteDialog
+            open={templatePendingDelete !== null}
+            onOpenChange={(open) => {
+              if (!open && !isDeletePending) {
+                setTemplatePendingDelete(null);
+              }
+            }}
+            title="Delete Document Template"
+            description={
+              templatePendingDelete
+                ? `Delete "${templatePendingDelete.name}"? This will permanently remove the template, its associated loan documents, and related document logs. Existing share links may remain in KV until they expire.`
+                : 'This will permanently remove the template, its associated loan documents, and related document logs. Existing share links may remain in KV until they expire.'
             }
-          }}
-          title="Delete Document Template"
-          description={
-            templatePendingDelete
-              ? `Delete "${templatePendingDelete.name}"? This will permanently remove the template, its associated loan documents, and related document logs. Existing share links may remain in KV until they expire.`
-              : 'This will permanently remove the template, its associated loan documents, and related document logs. Existing share links may remain in KV until they expire.'
-          }
-          confirmLabel="Delete Template"
-          isPending={isDeletePending}
-          onConfirm={handleDelete}
-      />
+            confirmLabel="Delete Template"
+            isPending={isDeletePending}
+            onConfirm={handleDelete}
+        />
+      </Can>
     </div>
   );
 }

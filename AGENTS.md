@@ -33,6 +33,9 @@ bun run --filter @workspace/app test     # run frontend tests
 bun run --filter @workspace/app build    # build the frontend
 ```
 
+- Unit tests are not required for changes in this repository.
+- Do not add or maintain `.test.*` unit test files unless the user explicitly asks for them.
+
 ## Architecture
 
 ### API (`apps/api`)

@@ -6,6 +6,8 @@ import {
   NotificationChannel,
   NotificationEmailProvider,
 } from '@workspace/constants';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import { BellRingIcon, Loader2Icon, SaveIcon, TriangleAlertIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -59,6 +61,7 @@ function NotificationEventMappingChannelCard({
   providerStatus: NotificationEventConfigsResponse['data']['providerStatus'];
 }) {
   const { mutateAsync: updateEventConfig, isPending } = useUpdateNotificationEventConfig();
+  const canManageNotifications = useCan(PermissionModule.NOTIFICATIONS, PermissionAction.MANAGE);
   const templatesForChannel = templates.filter((template) => template.channel === item.channel);
   const initialEmailProvider = isNotificationEmailProvider(item.config?.emailProvider)
     ? item.config.emailProvider
@@ -92,6 +95,10 @@ function NotificationEventMappingChannelCard({
   const isProviderConfigured = item.channel === NotificationChannel.EMAIL
     ? providerStatus.email[emailProvider].configured
     : providerStatus.sms[smsProvider].configured;
+  const selectedTemplateName = templatesForChannel.find((template) => template.id === selectedTemplateId)?.name ?? 'No template selected';
+  const selectedProviderLabel = item.channel === NotificationChannel.EMAIL
+    ? NOTIFICATION_EMAIL_PROVIDER_LABELS[emailProvider]
+    : NOTIFICATION_SMS_PROVIDER_LABELS[smsProvider];
 
   return (
     <div className="rounded-2xl border border-border/70 bg-background/70 p-5">
@@ -106,85 +113,111 @@ function NotificationEventMappingChannelCard({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Enabled</span>
-            <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
-          </div>
-          <Button
-              type="button"
-              size="sm"
-              className="gap-2"
-              disabled={isPending || !selectedTemplateId || !isProviderConfigured}
-              onClick={() => void handleSaveConfig()}
-          >
-            {isPending ? <Loader2Icon className="size-3.5 animate-spin" /> : <SaveIcon className="size-3.5" />}
-            Save
-          </Button>
+          {canManageNotifications ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Enabled</span>
+              <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
+            </div>
+          ) : (
+            <Badge variant={isEnabled ? 'default' : 'secondary'}>
+              {isEnabled ? 'Enabled' : 'Disabled'}
+            </Badge>
+          )}
+          <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
+            <Button
+                type="button"
+                size="sm"
+                className="gap-2"
+                disabled={isPending || !selectedTemplateId || !isProviderConfigured}
+                onClick={() => void handleSaveConfig()}
+            >
+              {isPending ? <Loader2Icon className="size-3.5 animate-spin" /> : <SaveIcon className="size-3.5" />}
+              Save
+            </Button>
+          </Can>
         </div>
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
         <Field>
           <FieldLabel>Template</FieldLabel>
-          <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={templatesForChannel.length > 0 ? 'Select template' : 'No templates available'} />
-            </SelectTrigger>
-            <SelectContent>
-              {templatesForChannel.map((template) => (
-                <SelectItem key={template.id} value={template.id}>
-                  {template.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {canManageNotifications ? (
+            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={templatesForChannel.length > 0 ? 'Select template' : 'No templates available'} />
+              </SelectTrigger>
+              <SelectContent>
+                {templatesForChannel.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+              {selectedTemplateName}
+            </div>
+          )}
         </Field>
 
         {item.channel === NotificationChannel.EMAIL ? (
           <Field>
             <FieldLabel>Provider</FieldLabel>
-            <Select
-                value={emailProvider}
-                onValueChange={(value) => {
-                if (isNotificationEmailProvider(value)) {
-                  setEmailProvider(value);
-                }
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {NOTIFICATION_EMAIL_PROVIDERS.map((provider) => (
-                  <SelectItem key={provider} value={provider}>
-                    {NOTIFICATION_EMAIL_PROVIDER_LABELS[provider]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {canManageNotifications ? (
+              <Select
+                  value={emailProvider}
+                  onValueChange={(value) => {
+                    if (isNotificationEmailProvider(value)) {
+                      setEmailProvider(value);
+                    }
+                  }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NOTIFICATION_EMAIL_PROVIDERS.map((provider) => (
+                    <SelectItem key={provider} value={provider}>
+                      {NOTIFICATION_EMAIL_PROVIDER_LABELS[provider]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+                {selectedProviderLabel}
+              </div>
+            )}
           </Field>
         ) : (
           <Field>
             <FieldLabel>Provider</FieldLabel>
-            <Select
-                value={smsProvider}
-                onValueChange={(value) => {
-                if (isNotificationSmsProvider(value)) {
-                  setSmsProvider(value);
-                }
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select provider" />
-              </SelectTrigger>
-              <SelectContent>
-                {NOTIFICATION_SMS_PROVIDERS.map((provider) => (
-                  <SelectItem key={provider} value={provider}>
-                    {NOTIFICATION_SMS_PROVIDER_LABELS[provider]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {canManageNotifications ? (
+              <Select
+                  value={smsProvider}
+                  onValueChange={(value) => {
+                    if (isNotificationSmsProvider(value)) {
+                      setSmsProvider(value);
+                    }
+                  }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NOTIFICATION_SMS_PROVIDERS.map((provider) => (
+                    <SelectItem key={provider} value={provider}>
+                      {NOTIFICATION_SMS_PROVIDER_LABELS[provider]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+                {selectedProviderLabel}
+              </div>
+            )}
           </Field>
         )}
       </div>

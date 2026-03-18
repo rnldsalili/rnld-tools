@@ -1,4 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { useCan } from '@workspace/permissions/react';
 import { BellRingIcon } from 'lucide-react';
 import { z } from 'zod';
 import {
@@ -7,6 +9,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@workspace/ui';
+import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { NotificationEventMappingSection } from '@/app/components/settings/notifications/notification-event-mapping-section';
 import { NotificationHistorySection } from '@/app/components/settings/notifications/notification-history-section';
 import { NotificationTemplatesSection } from '@/app/components/settings/notifications/notification-templates-section';
@@ -32,6 +35,16 @@ export const Route = createFileRoute('/_authenticated/settings/(notifications)/n
 function NotificationSettingsPage() {
   const router = useRouter();
   const { tab = 'templates' } = Route.useSearch();
+  const canViewNotifications = useCan(PermissionModule.NOTIFICATIONS, PermissionAction.VIEW);
+
+  if (!canViewNotifications) {
+    return (
+      <UnauthorizedState
+          title="Notifications Restricted"
+          description="You do not have permission to view notification settings."
+      />
+    );
+  }
 
   function handleTabChange(nextTab: string) {
     if (!isNotificationSettingsTab(nextTab)) {

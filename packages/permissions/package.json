@@ -1,0 +1,28 @@
+{
+  "name": "@workspace/permissions",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/react.tsx"
+  },
+  "scripts": {
+    "lint": "bunx eslint .",
+    "lint:fix": "bunx eslint . --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@casl/ability": "^6.7.3",
+    "@casl/react": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,5 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { CLIENTS_LIMIT } from '@workspace/constants';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import { Button, DataTable, Input, Pagination } from '@workspace/ui';
 import { format } from 'date-fns';
 import { PlusIcon, UsersIcon } from 'lucide-react';
@@ -7,9 +9,10 @@ import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ClientListItem } from '@/app/hooks/use-client';
 import { CreateClientDialog } from '@/app/components/clients/create-client-dialog';
+import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
 import { useDebounce } from '@/app/hooks/use-debounce';
-import {  useClients } from '@/app/hooks/use-client';
+import { useClients } from '@/app/hooks/use-client';
 
 export const Route = createFileRoute('/_authenticated/(clients)/clients/')({
   head: () => ({ meta: [{ title: 'RTools - Clients' }] }),
@@ -30,6 +33,16 @@ function ClientsPage() {
 
   const clients = data?.data.clients ?? [];
   const totalPages = data?.data.pagination.totalPages ?? 1;
+  const canViewClients = useCan(PermissionModule.CLIENTS, PermissionAction.VIEW);
+
+  if (!canViewClients) {
+    return (
+      <UnauthorizedState
+          title="Clients Restricted"
+          description="You do not have permission to view clients."
+      />
+    );
+  }
 
   const columns: Array<ColumnDef<ClientListItem>> = [
     {
@@ -99,10 +112,12 @@ function ClientsPage() {
               </p>
             </div>
           </div>
-          <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
-            <PlusIcon className="size-3.5" />
-            New Client
-          </Button>
+          <Can I={PermissionAction.CREATE} a={PermissionModule.CLIENTS}>
+            <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
+              <PlusIcon className="size-3.5" />
+              New Client
+            </Button>
+          </Can>
         </div>
 
         <Input
@@ -127,7 +142,9 @@ function ClientsPage() {
         />
       </div>
 
-      <CreateClientDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      <Can I={PermissionAction.CREATE} a={PermissionModule.CLIENTS}>
+        <CreateClientDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      </Can>
     </div>
   );
 }

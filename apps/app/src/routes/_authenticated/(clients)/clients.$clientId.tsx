@@ -1,8 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import { Button, SectionCard, SectionCardContent, SectionCardHeader } from '@workspace/ui';
 import { format } from 'date-fns';
 import { PencilIcon } from 'lucide-react';
 import { useState } from 'react';
+import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
 import { EditClientDialog } from '@/app/components/clients/edit-client-dialog';
 import { useClient } from '@/app/hooks/use-client';
@@ -19,18 +22,30 @@ function ClientDetailPage() {
   const { data, isLoading } = useClient({ clientId });
 
   const client = data?.data.client;
+  const canViewClients = useCan(PermissionModule.CLIENTS, PermissionAction.VIEW);
+
+  if (!canViewClients) {
+    return (
+      <UnauthorizedState
+          title="Client Access Restricted"
+          description="You do not have permission to view client details."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
       <SectionCard>
         <SectionCardHeader className="flex items-center justify-between">
           <span className="text-sm font-semibold">Client Details</span>
-          {client && (
-            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setIsEditOpen(true)}>
-              <PencilIcon className="size-3.5" />
-              Edit
-            </Button>
-          )}
+          {client ? (
+            <Can I={PermissionAction.UPDATE} a={PermissionModule.CLIENTS}>
+              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setIsEditOpen(true)}>
+                <PencilIcon className="size-3.5" />
+                Edit
+              </Button>
+            </Can>
+          ) : null}
         </SectionCardHeader>
         <SectionCardContent>
           {isLoading ? (
@@ -66,9 +81,11 @@ function ClientDetailPage() {
         </SectionCardContent>
       </SectionCard>
 
-      {isEditOpen && client && (
+      {isEditOpen && client ? (
+        <Can I={PermissionAction.UPDATE} a={PermissionModule.CLIENTS}>
         <EditClientDialog client={client} onClose={() => setIsEditOpen(false)} />
-      )}
+        </Can>
+      ) : null}
     </div>
   );
 }

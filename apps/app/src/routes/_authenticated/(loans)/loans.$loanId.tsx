@@ -8,7 +8,7 @@ import {
   Share2Icon,
   Trash2Icon,
 } from 'lucide-react';
-import {  useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import {
   Badge,
@@ -25,10 +25,14 @@ import {
   INSTALLMENT_INTERVAL_VALUES,
   InstallmentStatus,
 } from '@workspace/constants';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import type { ReactNode } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanInstallment } from '@/app/hooks/use-loan';
+import type { DocumentLinkTemplateEntry } from '@/app/hooks/use-document-links';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
+import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
 import { useDeleteLoan, useLoan } from '@/app/hooks/use-loan';
 import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
@@ -71,13 +75,23 @@ function LoanDetailPage() {
   const loan = data?.data.loan;
   const installments = loan?.installments ?? [];
   const installmentsPagination = loan?.installmentsPagination;
-  const templateEntries = documentLinksData?.data.templates ?? [];
+  const templateEntries: Array<DocumentLinkTemplateEntry> = documentLinksData?.data.templates ?? [];
   const activeDownloadTemplateId = downloadLoanDocumentPdfMutation.isPending
     ? downloadLoanDocumentPdfMutation.variables.templateId
     : null;
   const installmentIntervalLabel = loan && isOneOf(INSTALLMENT_INTERVAL_VALUES, loan.installmentInterval)
     ? INSTALLMENT_INTERVAL_LABELS[loan.installmentInterval]
     : loan?.installmentInterval;
+  const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
+
+  if (!canViewLoans) {
+    return (
+      <UnauthorizedState
+          title="Loan Access Restricted"
+          description="You do not have permission to view loan details."
+      />
+    );
+  }
 
   async function handleDeleteLoan() {
     try {
@@ -128,25 +142,29 @@ function LoanDetailPage() {
       header: '',
       cell: ({ row }) => (
         <div className="flex items-center justify-end text-sm">
-          {row.original.status !== InstallmentStatus.PAID && (
-            <>
-              <button
-                  type="button"
-                  className="font-medium text-foreground transition-colors hover:text-primary"
-                  onClick={() => setMarkPaidInstallment(row.original)}
-              >
-                Mark as Paid
-              </button>
-              <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
-            </>
-          )}
-          <button
-              type="button"
-              className="font-medium text-foreground transition-colors hover:text-primary"
-              onClick={() => setSelectedInstallment(row.original)}
-          >
-            Edit
-          </button>
+          {row.original.status !== InstallmentStatus.PAID ? (
+            <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+              <>
+                <button
+                    type="button"
+                    className="font-medium text-foreground transition-colors hover:text-primary"
+                    onClick={() => setMarkPaidInstallment(row.original)}
+                >
+                  Mark as Paid
+                </button>
+                <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
+              </>
+            </Can>
+          ) : null}
+          <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+            <button
+                type="button"
+                className="font-medium text-foreground transition-colors hover:text-primary"
+                onClick={() => setSelectedInstallment(row.original)}
+            >
+              Edit
+            </button>
+          </Can>
         </div>
       ),
     },
@@ -163,34 +181,40 @@ function LoanDetailPage() {
               <span className="text-sm font-semibold">Loan Details</span>
               {loan && (
                 <div className="flex items-center gap-1">
-                  <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => setIsShareDialogOpen(true)}
-                  >
-                    <Share2Icon className="size-3.5" />
-                    Share
-                  </Button>
-                  <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={() => setIsEditLoanOpen(true)}
-                  >
-                    <PencilIcon className="size-3.5" />
-                    Edit
-                  </Button>
-                  <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1.5 text-destructive hover:text-destructive/80"
-                      onClick={() => setIsDeleteDialogOpen(true)}
-                      disabled={isDeletePending}
-                  >
-                    <Trash2Icon className="size-3.5" />
-                    Delete
-                  </Button>
+                  <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                    <>
+                      <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => setIsShareDialogOpen(true)}
+                      >
+                        <Share2Icon className="size-3.5" />
+                        Share
+                      </Button>
+                      <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => setIsEditLoanOpen(true)}
+                      >
+                        <PencilIcon className="size-3.5" />
+                        Edit
+                      </Button>
+                    </>
+                  </Can>
+                  <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1.5 text-destructive hover:text-destructive/80"
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                        disabled={isDeletePending}
+                    >
+                      <Trash2Icon className="size-3.5" />
+                      Delete
+                    </Button>
+                  </Can>
                 </div>
               )}
             </SectionCardHeader>
@@ -244,7 +268,7 @@ function LoanDetailPage() {
                 <p className="text-sm text-muted-foreground">No document templates configured.</p>
               ) : (
                 <div className="flex flex-col gap-3">
-                  {templateEntries.map(({ template, document }) => (
+                  {templateEntries.map(({ template, document }: DocumentLinkTemplateEntry) => (
                     <div key={template.id} className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -326,15 +350,17 @@ function LoanDetailPage() {
                   </Badge>
                 )}
               </div>
-              <Button
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => setIsAddInstallmentOpen(true)}
-                  disabled={isLoading || !loan}
-              >
-                <PlusIcon className="size-3.5" />
-                Add Installment
-              </Button>
+              <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                <Button
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setIsAddInstallmentOpen(true)}
+                    disabled={isLoading || !loan}
+                >
+                  <PlusIcon className="size-3.5" />
+                  Add Installment
+                </Button>
+              </Can>
             </div>
           )}
             footer={
@@ -351,63 +377,75 @@ function LoanDetailPage() {
       </div>
 
       {/* Edit Installment Dialog */}
-      {selectedInstallment && (
+      {selectedInstallment ? (
+        <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
         <EditInstallmentDialog
             loanId={loanId}
             installment={selectedInstallment}
             onClose={() => setSelectedInstallment(null)}
         />
-      )}
+        </Can>
+      ) : null}
 
       {/* Mark as Paid Dialog */}
-      {markPaidInstallment && loan && (
+      {markPaidInstallment && loan ? (
+        <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
         <MarkPaidDialog
             loanId={loanId}
             installment={markPaidInstallment}
             currency={loan.currency}
             onClose={() => setMarkPaidInstallment(null)}
         />
-      )}
+        </Can>
+      ) : null}
 
       {/* Add Installment Dialog */}
-      {loan && (
+      {loan ? (
+        <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
         <AddInstallmentDialog
             loanId={loanId}
             open={isAddInstallmentOpen}
             onOpenChange={setIsAddInstallmentOpen}
         />
-      )}
+        </Can>
+      ) : null}
 
       {/* Edit Loan Dialog */}
-      {isEditLoanOpen && loan && (
+      {isEditLoanOpen && loan ? (
+        <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
         <EditLoanDialog
             loan={loan}
             onClose={() => setIsEditLoanOpen(false)}
         />
-      )}
+        </Can>
+      ) : null}
 
       {/* Share Document Dialog */}
-      {loan && (
+      {loan ? (
+        <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
         <ShareDocumentDialog
             loanId={loanId}
             open={isShareDialogOpen}
             onOpenChange={setIsShareDialogOpen}
         />
-      )}
+        </Can>
+      ) : null}
 
-      <ConfirmDeleteDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={(open) => {
-            if (!isDeletePending) {
-              setIsDeleteDialogOpen(open);
-            }
-          }}
-          title="Delete Loan"
-          description="This will permanently remove the loan, its installments, signed documents, document logs, and stored signature files."
-          confirmLabel="Delete Loan"
-          isPending={isDeletePending}
-          onConfirm={handleDeleteLoan}
-      />
+      <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
+        <ConfirmDeleteDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={(open) => {
+              if (!isDeletePending) {
+                setIsDeleteDialogOpen(open);
+              }
+            }}
+            title="Delete Loan"
+            description="This will permanently remove the loan, its installments, signed documents, document logs, and stored signature files."
+            confirmLabel="Delete Loan"
+            isPending={isDeletePending}
+            onConfirm={handleDeleteLoan}
+        />
+      </Can>
     </div>
   );
 }

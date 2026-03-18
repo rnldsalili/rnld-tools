@@ -8,11 +8,6 @@ datasource db {
   provider = "sqlite"
 }
 
-enum UserRole {
-  ADMIN
-  SUPER_ADMIN
-}
-
 enum ClientStatus {
   ENABLED
   DISABLED
@@ -22,13 +17,13 @@ model User {
   id            String    @id
   name          String
   email         String
-  role          UserRole  @default(ADMIN)
   emailVerified Boolean   @default(false)
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  userRoles     UserRole[]
 
   loansCreated            Loan[]             @relation("LoanCreatedBy")
   loansUpdated            Loan[]             @relation("LoanUpdatedBy")
@@ -41,6 +36,47 @@ model User {
 
   @@unique([email])
   @@map("user")
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  slug        String           @unique
+  name        String
+  description String?
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  permissions RolePermission[]
+  userRoles   UserRole[]
+
+  @@map("role")
+}
+
+model RolePermission {
+  id     String @id @default(cuid())
+  roleId String
+  module String
+  action String
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, module, action])
+  @@index([roleId])
+  @@map("role_permission")
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_role")
 }
 
 model Session {

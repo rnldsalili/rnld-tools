@@ -3,12 +3,17 @@ import { cors } from 'hono/cors';
 import { createFactory } from 'hono/factory';
 import { logger } from 'hono/logger';
 import { rateLimiter } from 'hono-rate-limiter';
+import type { AuthorizationSnapshot } from '@workspace/permissions';
 
 import type { auth } from '@/api/lib/auth';
 import type { NotificationBindings } from '@/api/lib/notifications/types';
 
+export type AuthSession = Awaited<ReturnType<ReturnType<typeof auth>['api']['getSession']>>;
+export type AuthSessionUser = NonNullable<AuthSession>['user'];
+export type AuthenticatedUser = AuthSessionUser & AuthorizationSnapshot;
+
 export type AppVariables = {
-  user: AuthUser;
+  user: AuthenticatedUser;
   requestId: string;
 };
 
@@ -16,9 +21,6 @@ export type AppBindings = {
   Bindings: CloudflareBindings & NotificationBindings;
   Variables: AppVariables;
 };
-
-export type AuthSession = Awaited<ReturnType<ReturnType<typeof auth>['api']['getSession']>>;
-export type AuthUser = NonNullable<AuthSession>['user'];
 
 export const createRouter = () => {
   return new Hono<AppBindings>();

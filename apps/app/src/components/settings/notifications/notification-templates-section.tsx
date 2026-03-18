@@ -1,6 +1,8 @@
 import { Loader2Icon, MailIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import {
   Button,
   Card,
@@ -39,6 +41,7 @@ export function NotificationTemplatesSection() {
     effectiveSelectedTemplateId,
   );
   const selectedTemplate = selectedTemplateData?.data.template ?? null;
+  const canManageNotifications = useCan(PermissionModule.NOTIFICATIONS, PermissionAction.MANAGE);
 
   async function handleSaveTemplate(values: NotificationTemplateFormValues) {
     if (!effectiveSelectedTemplateId) {
@@ -77,10 +80,12 @@ export function NotificationTemplatesSection() {
     <>
       <div className="flex flex-col gap-4">
         <div className="flex justify-end">
-          <Button type="button" className="gap-2" onClick={() => setIsCreateOpen(true)}>
-            <PlusIcon className="size-3.5" />
-            New Template
-          </Button>
+          <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
+            <Button type="button" className="gap-2" onClick={() => setIsCreateOpen(true)}>
+              <PlusIcon className="size-3.5" />
+              New Template
+            </Button>
+          </Can>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
@@ -102,6 +107,7 @@ export function NotificationTemplatesSection() {
                 key={selectedTemplate.id}
                 formId={EDIT_TEMPLATE_FORM_ID}
                 template={selectedTemplate}
+                isReadOnly={!canManageNotifications}
                 isSaving={isUpdatePending}
                 isDeleting={isDeletePending}
                 onSubmit={handleSaveTemplate}
@@ -128,25 +134,29 @@ export function NotificationTemplatesSection() {
         </div>
       </div>
 
-      <NotificationCreateTemplateModal
-          open={isCreateOpen}
-          onOpenChange={setIsCreateOpen}
-          onCreated={setSelectedTemplateId}
-      />
+      <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
+        <NotificationCreateTemplateModal
+            open={isCreateOpen}
+            onOpenChange={setIsCreateOpen}
+            onCreated={setSelectedTemplateId}
+        />
+      </Can>
 
-      <ConfirmDeleteDialog
-          open={Boolean(templatePendingDelete)}
-          onOpenChange={(open) => {
-          if (!open) {
-            setTemplatePendingDelete(null);
-          }
-        }}
-          title="Delete Notification Template"
-          description={`Delete "${templatePendingDelete?.name ?? ''}"? This cannot be undone.`}
-          confirmLabel="Delete"
-          isPending={isDeletePending}
-          onConfirm={handleDeleteTemplate}
-      />
+      <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
+        <ConfirmDeleteDialog
+            open={Boolean(templatePendingDelete)}
+            onOpenChange={(open) => {
+              if (!open) {
+                setTemplatePendingDelete(null);
+              }
+            }}
+            title="Delete Notification Template"
+            description={`Delete "${templatePendingDelete?.name ?? ''}"? This cannot be undone.`}
+            confirmLabel="Delete"
+            isPending={isDeletePending}
+            onConfirm={handleDeleteTemplate}
+        />
+      </Can>
     </>
   );
 }

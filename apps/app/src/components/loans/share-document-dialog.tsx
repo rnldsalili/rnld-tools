@@ -11,6 +11,8 @@ import {
   Button,
   Modal,
 } from '@workspace/ui';
+
+import type { DocumentLinkTemplateEntry } from '@/app/hooks/use-document-links';
 import { useCreateDocumentLink, useDocumentLinks } from '@/app/hooks/use-document-links';
 
 interface ShareDocumentDialogProps {
@@ -57,7 +59,7 @@ async function shareDocumentUrl(url: string, templateName: string) {
 export function ShareDocumentDialog({ loanId, open, onOpenChange }: ShareDocumentDialogProps) {
   const { data, isLoading } = useDocumentLinks(loanId);
   const { mutateAsync: createLink, isPending: isGenerating, variables: generatingVars } = useCreateDocumentLink();
-  const templateEntries = data?.data.templates ?? [];
+  const templateEntries: Array<DocumentLinkTemplateEntry> = data?.data.templates ?? [];
 
   async function handleGenerate(templateId: string, templateName: string) {
     try {
@@ -88,7 +90,7 @@ export function ShareDocumentDialog({ loanId, open, onOpenChange }: ShareDocumen
         </div>
       ) : (
         <div className="flex flex-col gap-5">
-          {templateEntries.map(({ template, document }) => {
+          {templateEntries.map(({ template, document }: DocumentLinkTemplateEntry) => {
             const isThisGenerating = isGenerating && generatingVars?.templateId === template.id; // eslint-disable-line @typescript-eslint/no-unnecessary-condition
             return (
               <div key={template.id} className="flex flex-col gap-3">

@@ -3,10 +3,13 @@ import { format } from 'date-fns';
 import { HandCoinsIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { LOANS_LIMIT } from '@workspace/constants';
+import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { Can, useCan } from '@workspace/permissions/react';
 import { Button, DataTable, Input, Pagination } from '@workspace/ui';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanListItem } from '@/app/hooks/use-loan';
 import { CreateLoanDialog } from '@/app/components/loans/create-loan-dialog';
+import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { useDebounce } from '@/app/hooks/use-debounce';
 import { useLoans } from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
@@ -30,6 +33,16 @@ function LoansPage() {
 
   const loans = data?.data.loans ?? [];
   const totalPages = data?.data.pagination.totalPages ?? 1;
+  const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
+
+  if (!canViewLoans) {
+    return (
+      <UnauthorizedState
+          title="Loans Restricted"
+          description="You do not have permission to view loans."
+      />
+    );
+  }
 
   const columns: Array<ColumnDef<LoanListItem>> = [
     {
@@ -103,10 +116,12 @@ function LoansPage() {
               </p>
             </div>
           </div>
-          <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
-            <PlusIcon className="size-3.5" />
-            New Loan
-          </Button>
+          <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
+            <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
+              <PlusIcon className="size-3.5" />
+              New Loan
+            </Button>
+          </Can>
         </div>
 
         <div className="flex items-center justify-between gap-4">
@@ -133,7 +148,9 @@ function LoansPage() {
         />
       </div>
 
-      <CreateLoanDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
+        <CreateLoanDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      </Can>
     </div>
   );
 }

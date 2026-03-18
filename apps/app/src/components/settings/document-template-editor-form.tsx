@@ -54,6 +54,7 @@ interface DocumentTemplateEditorSubmitValues {
 interface DocumentTemplateEditorFormProps {
   formId: string;
   template: DocumentTemplate;
+  editable?: boolean;
   onSubmit: (values: DocumentTemplateEditorSubmitValues) => Promise<void>;
 }
 
@@ -89,6 +90,7 @@ function getEditTemplateDefaultValues(template: DocumentTemplate): EditTemplateF
 export function DocumentTemplateEditorForm({
   formId,
   template,
+  editable = true,
   onSubmit,
 }: DocumentTemplateEditorFormProps) {
   const form = useForm({
@@ -127,25 +129,31 @@ export function DocumentTemplateEditorForm({
                       <FieldLabel htmlFor={field.name}>
                         Document Type <span className="text-destructive">*</span>
                       </FieldLabel>
-                      <Select
-                          value={field.state.value}
-                          onValueChange={(value) => {
-                            if (isOneOf(DOCUMENT_TYPE_OPTIONS.map((option) => option.value), value)) {
-                              field.handleChange(value);
-                            }
-                          }}
-                      >
-                        <SelectTrigger id={field.name} className="w-full">
-                          <SelectValue placeholder="Select document type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DOCUMENT_TYPE_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      {editable ? (
+                        <Select
+                            value={field.state.value}
+                            onValueChange={(value) => {
+                              if (isOneOf(DOCUMENT_TYPE_OPTIONS.map((option) => option.value), value)) {
+                                field.handleChange(value);
+                              }
+                            }}
+                        >
+                          <SelectTrigger id={field.name} className="w-full">
+                            <SelectValue placeholder="Select document type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+                          {DOCUMENT_TYPE_OPTIONS[0].label}
+                        </div>
+                      )}
                     </Field>
                   )}
                 </form.Field>
@@ -167,6 +175,7 @@ export function DocumentTemplateEditorForm({
                           onChange={(event) => field.handleChange(event.target.value)}
                           onBlur={field.handleBlur}
                           placeholder="e.g. Repayment Agreement"
+                          readOnly={!editable}
                       />
                       <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                     </Field>
@@ -183,6 +192,7 @@ export function DocumentTemplateEditorForm({
                           onChange={(event) => field.handleChange(event.target.value)}
                           placeholder="Add context so admins know when to use this template."
                           rows={3}
+                          readOnly={!editable}
                       />
                     </Field>
                   )}
@@ -218,6 +228,7 @@ export function DocumentTemplateEditorForm({
                           onChange={(event) => field.handleChange(event.target.value)}
                           onBlur={field.handleBlur}
                           className="w-full"
+                          readOnly={!editable}
                       />
                       <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                     </Field>
@@ -226,14 +237,20 @@ export function DocumentTemplateEditorForm({
 
                 <form.Field name="requiresSignature">
                   {(field) => (
-                    <div className="flex items-center gap-3">
-                      <Switch
-                          id={field.name}
-                          checked={field.state.value}
-                          onCheckedChange={field.handleChange}
-                      />
-                      <Label htmlFor={field.name}>Requires client signature</Label>
-                    </div>
+                    editable ? (
+                      <div className="flex items-center gap-3">
+                        <Switch
+                            id={field.name}
+                            checked={field.state.value}
+                            onCheckedChange={field.handleChange}
+                        />
+                        <Label htmlFor={field.name}>Requires client signature</Label>
+                      </div>
+                    ) : (
+                      <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-sm">
+                        {field.state.value ? 'Requires client signature' : 'Signature optional'}
+                      </div>
+                    )
                   )}
                 </form.Field>
               </div>
@@ -250,6 +267,7 @@ export function DocumentTemplateEditorForm({
                   <AgreementEditor
                       content={field.state.value}
                       onChange={field.handleChange}
+                      editable={editable}
                   />
                 )}
               </form.Field>
