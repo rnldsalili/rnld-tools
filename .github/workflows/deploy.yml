@@ -68,7 +68,6 @@ jobs:
             BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL,
             BREVO_SENDER_NAME: process.env.BREVO_SENDER_NAME,
             PHILSMS_SENDER_ID: process.env.PHILSMS_SENDER_ID,
-            SEMAPHORE_SENDER_NAME: process.env.SEMAPHORE_SENDER_NAME,
           }))' | bunx wrangler secret bulk --env production
         env:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
@@ -82,7 +81,6 @@ jobs:
           BREVO_SENDER_EMAIL: ${{ vars.BREVO_SENDER_EMAIL }}
           BREVO_SENDER_NAME: ${{ vars.BREVO_SENDER_NAME }}
           PHILSMS_SENDER_ID: ${{ vars.PHILSMS_SENDER_ID }}
-          SEMAPHORE_SENDER_NAME: ${{ vars.SEMAPHORE_SENDER_NAME }}
 
       - name: Prebuild API client
         run: bun run --filter @workspace/api-client build
