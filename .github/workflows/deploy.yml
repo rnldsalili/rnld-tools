@@ -53,9 +53,9 @@ jobs:
           test -n "$BREVO_SENDER_EMAIL"
           test -n "$BREVO_SENDER_NAME"
           test -n "$PHILSMS_SENDER_ID"
-          test -n "$SEMAPHORE_SENDER_NAME"
-          # test -n "$R2_ACCESS_KEY_ID"
-          # test -n "$R2_SECRET_ACCESS_KEY"
+          # test -n "$SEMAPHORE_SENDER_NAME"
+          test -n "$R2_ACCESS_KEY_ID"
+          test -n "$R2_SECRET_ACCESS_KEY"
           bun -e 'console.log(JSON.stringify({
             BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
             SEED_TOKEN: process.env.SEED_TOKEN,
