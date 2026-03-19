@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDetailedErrorMessage } from '@workspace/api-client';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
 import apiClient, { parseResponse } from '@/app/lib/api';
 
@@ -55,17 +56,21 @@ export function useUpdateUserRoles() {
       userId: string;
       body: UpdateUserRolesBody;
     }) => {
-      const response = await apiClient.users[':id'].roles.$put({
-        param: { id: userId },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.users[':id'].roles.$put({
+          param: { id: userId },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update user roles.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update user roles.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update user roles.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
@@ -85,17 +90,21 @@ export function useUpdateUser() {
       userId: string;
       body: UpdateUserBody;
     }) => {
-      const response = await apiClient.users[':id'].$put({
-        param: { id: userId },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.users[':id'].$put({
+          param: { id: userId },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update user.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update user.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update user.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
@@ -109,14 +118,18 @@ export function useCreateUser() {
 
   return useMutation({
     mutationFn: async (body: CreateUserBody) => {
-      const response = await apiClient.users.$post({ json: body });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.users.$post({ json: body });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to create user.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to create user.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to create user.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
@@ -130,14 +143,18 @@ export function useChangeMyPassword() {
 
   return useMutation({
     mutationFn: async (body: ChangeMyPasswordBody) => {
-      const response = await apiClient.users.me['change-password'].$post({ json: body });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.users.me['change-password'].$post({ json: body });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update password.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update password.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update password.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['authorization'] });

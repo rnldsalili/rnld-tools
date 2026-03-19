@@ -117,3 +117,9 @@ export const notificationTestSendSchema = z.discriminatedUnion('channel', [
     path: ['channel'],
   },
 );
+
+export const notificationEmailPreviewSchema = z.object({
+  event: z.enum(NOTIFICATION_EVENTS),
+  subject: z.string().trim().optional(),
+  content: richTextContentSchema,
+});

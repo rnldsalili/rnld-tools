@@ -100,7 +100,7 @@ export function NotificationTestSendModal({
         toast.success(`${channel === NotificationChannel.EMAIL ? 'Email' : 'SMS'} notification queued successfully.`);
         onOpenChange(false);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to queue notification.');
+        toast.error((error as Error).message);
       }
     },
   });

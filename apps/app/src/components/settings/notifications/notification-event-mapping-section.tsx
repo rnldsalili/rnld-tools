@@ -88,7 +88,7 @@ function NotificationEventMappingChannelCard({
       await updateEventConfig(payload);
       toast.success('Notification mapping saved.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save notification mapping.');
+      toast.error((error as Error).message);
     }
   }
 

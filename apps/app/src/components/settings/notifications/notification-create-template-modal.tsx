@@ -51,7 +51,7 @@ export function NotificationCreateTemplateModal({
         form.reset();
         onOpenChange(false);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to create notification template.');
+        toast.error((error as Error).message);
       }
     },
   });

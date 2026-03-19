@@ -28,6 +28,7 @@ import type {
   NotificationTemplateFormValues,
 } from '@/app/hooks/use-notifications';
 import { AgreementEditor } from '@/app/components/settings/agreement-editor';
+import { NotificationEmailPreviewCard } from '@/app/components/settings/notification-email-preview-card';
 import { getNotificationChannelLabel } from '@/app/components/settings/notifications/utils';
 import { NotificationPlaceholderPanel } from '@/app/components/settings/notification-placeholder-panel';
 import { NotificationTestSendModal } from '@/app/components/settings/notification-test-send-modal';
@@ -199,7 +200,13 @@ export function NotificationTemplateEditorForm({
                       <form.Field name="content">
                         {(field) => (
                           <Field>
-                            <FieldLabel>Body</FieldLabel>
+                            <div className="space-y-1">
+                              <FieldLabel>Email Body</FieldLabel>
+                              <p className="text-sm text-muted-foreground">
+                                The system email shell manages the header, footer, spacing, and brand styling.
+                                This editor only controls the inner body content stored with the template.
+                              </p>
+                            </div>
                             <AgreementEditor
                                 content={isPlainRecord(field.state.value) ? field.state.value : {}}
                                 onChange={field.handleChange}
@@ -209,6 +216,11 @@ export function NotificationTemplateEditorForm({
                           </Field>
                         )}
                       </form.Field>
+
+                      <NotificationEmailPreviewCard
+                          subject={formValues.channel === NotificationChannel.EMAIL ? formValues.subject : ''}
+                          content={isPlainRecord(formValues.content) ? formValues.content : {}}
+                      />
                     </>
                   ) : (
                     <form.Field name="content">

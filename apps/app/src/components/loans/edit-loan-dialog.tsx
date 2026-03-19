@@ -77,8 +77,8 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
         });
         toast.success('Loan updated successfully.');
         onClose();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to update loan.');
+      } catch (error) {
+        toast.error((error as Error).message);
       }
     },
   });

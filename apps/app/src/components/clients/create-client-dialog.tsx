@@ -54,7 +54,7 @@ export function CreateClientDialog({ onOpenChange, open }: CreateClientDialogPro
         form.reset();
         onOpenChange(false);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to create client.');
+        toast.error((error as Error).message);
       }
     },
   });

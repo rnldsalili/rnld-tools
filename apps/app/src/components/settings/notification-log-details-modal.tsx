@@ -277,12 +277,12 @@ function NotificationMessageCard({ notificationLog }: { notificationLog: Notific
               <span>Email preview</span>
               <span>{formatNotificationDate(notificationLog.sentAt ?? notificationLog.queuedAt)}</span>
             </div>
-            <div className="max-h-[32rem] overflow-auto bg-background p-4">
-              <div
-                  className="prose prose-sm max-w-none dark:prose-invert"
-                  dangerouslySetInnerHTML={{ __html: notificationLog.messageContent }}
-              />
-            </div>
+            <iframe
+                title="Notification email preview"
+                srcDoc={notificationLog.messageContent}
+                className="h-[32rem] w-full bg-white"
+                sandbox=""
+            />
           </div>
         ) : (
           <div className="overflow-hidden rounded-[1.25rem] border border-border bg-background shadow-sm">

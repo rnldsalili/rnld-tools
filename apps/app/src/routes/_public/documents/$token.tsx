@@ -97,7 +97,7 @@ function PublicDocumentPage() {
         }
       }
 
-      toast.error(error instanceof Error ? error.message : 'Failed to submit document.');
+      toast.error((error as Error).message);
     }
   }
 

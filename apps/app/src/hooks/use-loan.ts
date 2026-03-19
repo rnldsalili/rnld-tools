@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDetailedErrorMessage } from '@workspace/api-client';
 import { ClientStatus } from '@workspace/constants';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
 import apiClient, { parseResponse } from '@/app/lib/api';
@@ -246,14 +247,18 @@ export function useCreateLoan() {
 
   return useMutation({
     mutationFn: async ({ body }: { body: CreateLoanBody }) => {
-      const response = await apiClient.loans.$post({ json: body });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.loans.$post({ json: body });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to create loan.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to create loan.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to create loan.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
@@ -272,17 +277,21 @@ export function useUpdateLoan() {
       loanId: string;
       body: UpdateLoanBody;
     }) => {
-      const response = await apiClient.loans[':id'].$put({
-        param: { id: loanId },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.loans[':id'].$put({
+          param: { id: loanId },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update loan.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update loan.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update loan.');
       }
-
-      return result;
     },
     onSuccess: (_data, { loanId }) => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
@@ -296,16 +305,20 @@ export function useDeleteLoan() {
 
   return useMutation({
     mutationFn: async (loanId: string) => {
-      const response = await apiClient.loans[':id'].$delete({
-        param: { id: loanId },
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.loans[':id'].$delete({
+          param: { id: loanId },
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to delete loan.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to delete loan.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to delete loan.');
       }
-
-      return result;
     },
     onSuccess: (_data, loanId) => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
@@ -327,17 +340,21 @@ export function useUpdateInstallment() {
       installmentId: string;
       body: UpdateInstallmentBody;
     }) => {
-      const response = await apiClient.loans[':loanId'].installments[':installmentId'].$put({
-        param: { loanId, installmentId },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.loans[':loanId'].installments[':installmentId'].$put({
+          param: { loanId, installmentId },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update installment.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update installment.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update installment.');
       }
-
-      return result;
     },
     onSuccess: (_data, { loanId }) => {
       queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
@@ -356,17 +373,21 @@ export function useAddInstallment() {
       loanId: string;
       body: AddInstallmentBody;
     }) => {
-      const response = await apiClient.loans[':loanId'].installments.$post({
-        param: { loanId },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.loans[':loanId'].installments.$post({
+          param: { loanId },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to add installment.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to add installment.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to add installment.');
       }
-
-      return result;
     },
     onSuccess: (_data, { loanId }) => {
       queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
@@ -387,17 +408,21 @@ export function useMarkInstallmentPaid() {
       installmentId: string;
       body: MarkInstallmentPaidBody;
     }) => {
-      const response = await apiClient.loans[':loanId'].installments[':installmentId']['mark-paid'].$post({
-        param: { loanId, installmentId },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.loans[':loanId'].installments[':installmentId']['mark-paid'].$post({
+          param: { loanId, installmentId },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to mark installment as paid.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to mark installment as paid.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to mark installment as paid.');
       }
-
-      return result;
     },
     onSuccess: (_data, { loanId }) => {
       queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });

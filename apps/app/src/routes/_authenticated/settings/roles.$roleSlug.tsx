@@ -152,7 +152,7 @@ function RoleDetailCard({
       });
       toast.success(`${role.name} permissions updated.`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update role permissions.');
+      toast.error((error as Error).message);
     }
   }
 

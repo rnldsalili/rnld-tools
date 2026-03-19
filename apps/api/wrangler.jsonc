@@ -14,6 +14,7 @@
 		"head_sampling_rate": 1
 	},
 	"vars": {
+		"APP_URL": "http://localhost:3010",
 		"BETTER_AUTH_URL": "http://localhost:3000",
 		"CORS_ORIGINS": "http://localhost:3010",
 		"R2_ACCOUNT_ID": "35ade4713beefb2c7f971921950b34c2",
@@ -83,6 +84,7 @@
 		"production": {
 			"name": "rnld-tools-api",
 			"vars": {
+				"APP_URL": "https://tools.ronald.it.com",
 				"BETTER_AUTH_URL": "https://tools-api.ronald.it.com",
 				"CORS_ORIGINS": "https://tools.ronald.it.com",
 				"R2_ACCOUNT_ID": "35ade4713beefb2c7f971921950b34c2",

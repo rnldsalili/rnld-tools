@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDetailedErrorMessage } from '@workspace/api-client';
 import { ClientStatus } from '@workspace/constants';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
 import apiClient, { parseResponse } from '@/app/lib/api';
@@ -111,14 +112,18 @@ export function useCreateClient() {
 
   return useMutation({
     mutationFn: async (body: CreateClientBody) => {
-      const response = await apiClient.clients.$post({ json: body });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.clients.$post({ json: body });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to create client.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to create client.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to create client.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [CLIENTS_QUERY_KEY] });
@@ -138,17 +143,21 @@ export function useUpdateClient() {
       clientId: string;
       body: UpdateClientBody;
     }) => {
-      const response = await apiClient.clients[':id'].$put({
-        param: { id: clientId },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.clients[':id'].$put({
+          param: { id: clientId },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update client.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update client.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update client.');
       }
-
-      return result;
     },
     onSuccess: (_data, { clientId }) => {
       queryClient.invalidateQueries({ queryKey: [CLIENTS_QUERY_KEY] });

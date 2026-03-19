@@ -26,6 +26,7 @@ export interface NotificationTemplateSampleContext {
 
 const DISPLAY_LOCALE = 'en-US';
 const DISPLAY_TIME_ZONE = 'Asia/Manila';
+const defaultNotificationSiteUrl = 'http://localhost:3010';
 const missingValue = '-';
 
 const currencyFormatter = new Intl.NumberFormat(DISPLAY_LOCALE, {
@@ -99,8 +100,10 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
 
 export function getNotificationPlaceholderValues(
   context: NotificationTemplateSampleContext,
+  siteUrl?: string,
 ): Record<string, string> {
   return {
+    '{{siteUrl}}': siteUrl?.trim() || defaultNotificationSiteUrl,
     '{{client.name}}': context.client.name,
     '{{client.email}}': context.client.email || missingValue,
     '{{client.phone}}': context.client.phone || missingValue,
@@ -115,6 +118,10 @@ export function getNotificationPlaceholderValues(
     '{{user.email}}': context.user.email || missingValue,
     '{{user.temporaryPassword}}': context.user.temporaryPassword || missingValue,
   };
+}
+
+export function getNotificationSiteUrl(env: Pick<CloudflareBindings, 'APP_URL'>) {
+  return env.APP_URL.trim() || defaultNotificationSiteUrl;
 }
 
 function formatDate(value: string) {

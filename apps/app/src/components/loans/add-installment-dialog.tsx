@@ -40,8 +40,8 @@ export function AddInstallmentDialog({ loanId, open, onOpenChange }: AddInstallm
         toast.success('Installment added successfully.');
         form.reset();
         onOpenChange(false);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to add installment.');
+      } catch (error) {
+        toast.error((error as Error).message);
       }
     },
   });

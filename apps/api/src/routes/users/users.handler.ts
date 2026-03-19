@@ -31,10 +31,42 @@ import {
   parseNotificationTemplateContent,
   renderEmailTemplate,
 } from '@/api/lib/notifications/renderer';
+import { getNotificationSiteUrl } from '@/api/lib/notifications/placeholders';
 import { generateTemporaryPassword } from '@/api/lib/password';
 import { validate } from '@/api/lib/validator';
 
 const CREDENTIAL_PROVIDER_ID = 'credential';
+
+async function syncUserRoles(
+  prisma: ReturnType<typeof initializePrisma>,
+  userId: string,
+  existingRoleSlugs: Set<string>,
+  nextRoleSlugs: Array<string>,
+) {
+  await prisma.userRole.deleteMany({
+    where: {
+      userId,
+      ...(nextRoleSlugs.length > 0
+        ? {
+          roleSlug: {
+            notIn: nextRoleSlugs,
+          },
+        }
+        : {}),
+    },
+  });
+
+  for (const roleSlug of nextRoleSlugs) {
+    if (!existingRoleSlugs.has(roleSlug)) {
+      await prisma.userRole.create({
+        data: {
+          userId,
+          roleSlug,
+        },
+      });
+    }
+  }
+}
 
 export const getCurrentUser = createHandlers(
   async (c) => {
@@ -224,51 +256,43 @@ export const createUser = createHandlers(
     let notificationLogId: string | null = null;
 
     try {
-      const createdUser = await prisma.$transaction(async (transaction) => {
-        const userId = crypto.randomUUID();
+      const userId = crypto.randomUUID();
+      const trimmedName = name.trim();
 
-        const createdUserRecord = await transaction.user.create({
-          data: {
-            id: userId,
-            email: normalizedEmail,
-            name: name.trim(),
-            emailVerified: true,
-            mustChangePassword: true,
-          },
-        });
-
-        await transaction.account.create({
-          data: {
-            id: crypto.randomUUID(),
-            userId,
-            accountId: userId,
-            providerId: CREDENTIAL_PROVIDER_ID,
-            password: hashedPassword,
-          },
-        });
-
-        for (const roleSlug of uniqueRoleSlugs) {
-          await transaction.userRole.create({
-            data: {
-              userId,
-              roleSlug,
-            },
-          });
-        }
-
-        return transaction.user.findUniqueOrThrow({
-          where: { id: createdUserRecord.id },
-          include: {
-            userRoles: {
-              select: {
-                roleSlug: true,
-              },
-            },
-          },
-        });
+      await prisma.user.create({
+        data: {
+          id: userId,
+          email: normalizedEmail,
+          name: trimmedName,
+          emailVerified: true,
+          mustChangePassword: true,
+        },
       });
 
-      createdUserId = createdUser.id;
+      createdUserId = userId;
+
+      await prisma.account.create({
+        data: {
+          id: crypto.randomUUID(),
+          userId,
+          accountId: userId,
+          providerId: CREDENTIAL_PROVIDER_ID,
+          password: hashedPassword,
+        },
+      });
+
+      await syncUserRoles(prisma, userId, new Set<string>(), uniqueRoleSlugs);
+
+      const createdUser = await prisma.user.findUniqueOrThrow({
+        where: { id: userId },
+        include: {
+          userRoles: {
+            select: {
+              roleSlug: true,
+            },
+          },
+        },
+      });
 
       const renderedEmail = renderEmailTemplate({
         event: NotificationEvent.USER_ACCOUNT_CREATED,
@@ -277,6 +301,7 @@ export const createUser = createHandlers(
           getNotificationContentFormat(notificationEventConfig.template.contentFormat),
           notificationEventConfig.template.content,
         ),
+        siteUrl: getNotificationSiteUrl(c.env),
         context: {
           client: {
             name: '',
@@ -421,29 +446,7 @@ export const updateUserRoles = createHandlers(
 
     const existingRoleSlugs = new Set(userFound.userRoles.map((userRole) => userRole.roleSlug));
 
-    await prisma.userRole.deleteMany({
-      where: {
-        userId: id,
-        ...(uniqueRoleSlugs.length > 0
-          ? {
-            roleSlug: {
-              notIn: uniqueRoleSlugs,
-            },
-          }
-          : {}),
-      },
-    });
-
-    for (const roleSlug of uniqueRoleSlugs) {
-      if (!existingRoleSlugs.has(roleSlug)) {
-        await prisma.userRole.create({
-          data: {
-            userId: id,
-            roleSlug,
-          },
-        });
-      }
-    }
+    await syncUserRoles(prisma, id, existingRoleSlugs, uniqueRoleSlugs);
 
     const updatedUser = await prisma.user.findUnique({
       where: { id },
@@ -522,38 +525,14 @@ export const updateUser = createHandlers(
 
     const existingRoleSlugs = new Set(userFound.userRoles.map((userRole) => userRole.roleSlug));
 
-    await prisma.$transaction(async (transaction) => {
-      await transaction.user.update({
-        where: { id },
-        data: {
-          name: name.trim(),
-        },
-      });
-
-      await transaction.userRole.deleteMany({
-        where: {
-          userId: id,
-          ...(uniqueRoleSlugs.length > 0
-            ? {
-              roleSlug: {
-                notIn: uniqueRoleSlugs,
-              },
-            }
-            : {}),
-        },
-      });
-
-      for (const roleSlug of uniqueRoleSlugs) {
-        if (!existingRoleSlugs.has(roleSlug)) {
-          await transaction.userRole.create({
-            data: {
-              userId: id,
-              roleSlug,
-            },
-          });
-        }
-      }
+    await prisma.user.update({
+      where: { id },
+      data: {
+        name: name.trim(),
+      },
     });
+
+    await syncUserRoles(prisma, id, existingRoleSlugs, uniqueRoleSlugs);
 
     const updatedUser = await prisma.user.findUnique({
       where: { id },

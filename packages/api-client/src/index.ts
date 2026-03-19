@@ -1,4 +1,4 @@
-import { hc } from 'hono/client';
+import { DetailedError, hc } from 'hono/client';
 
 import type { AppType } from '@workspace/api/routes';
 
@@ -19,4 +19,31 @@ export function createClient(baseUrl: string): Client {
       credentials: 'include',
     },
   });
+}
+
+export function getDetailedErrorMessage(error: unknown) {
+  if (error instanceof DetailedError) {
+    const errorDetail = error.detail;
+
+    if (
+      typeof errorDetail === 'object' &&
+      errorDetail !== null &&
+      'data' in errorDetail &&
+      typeof errorDetail.data === 'object' &&
+      errorDetail.data !== null &&
+      'meta' in errorDetail.data &&
+      typeof errorDetail.data.meta === 'object' &&
+      errorDetail.data.meta !== null &&
+      'message' in errorDetail.data.meta &&
+      typeof errorDetail.data.meta.message === 'string'
+    ) {
+      return errorDetail.data.meta.message;
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return undefined;
 }

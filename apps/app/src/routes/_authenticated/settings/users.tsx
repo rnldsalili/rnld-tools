@@ -138,7 +138,7 @@ function UsersSettingsPage() {
       setIsCreateModalOpen(false);
       toast.success('User created. The temporary password has been emailed.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create user.');
+      toast.error((error as Error).message);
     }
   }
 
@@ -158,7 +158,7 @@ function UsersSettingsPage() {
       setUserEditing(null);
       toast.success('User updated.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update user.');
+      toast.error((error as Error).message);
     }
   }
 

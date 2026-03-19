@@ -115,6 +115,12 @@ export const NOTIFICATION_CONTENT_FORMAT_LABELS: Record<NotificationContentForma
 
 export const NOTIFICATION_PLACEHOLDER_GROUPS = [
   {
+    label: 'Site',
+    items: [
+      { key: '{{siteUrl}}', description: 'Application site URL' },
+    ],
+  },
+  {
     label: 'Client',
     items: [
       { key: '{{client.name}}', description: 'Client full name' },

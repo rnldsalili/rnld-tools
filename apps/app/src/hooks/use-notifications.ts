@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDetailedErrorMessage } from '@workspace/api-client';
 import type { NotificationChannel,
   NotificationEmailProvider,
   NotificationEvent,
@@ -10,6 +11,7 @@ import apiClient, { parseResponse } from '@/app/lib/api';
 const NOTIFICATION_TEMPLATES_QUERY_KEY = 'notification-templates';
 const NOTIFICATION_EVENT_CONFIGS_QUERY_KEY = 'notification-event-configs';
 const NOTIFICATION_LOGS_QUERY_KEY = 'notification-logs';
+const NOTIFICATION_EMAIL_PREVIEW_QUERY_KEY = 'notification-email-preview';
 
 type NotificationTemplatesGetRoute = typeof apiClient.notifications.templates.$get;
 type NotificationTemplateGetRoute = (typeof apiClient.notifications.templates)[':id']['$get'];
@@ -17,6 +19,7 @@ type NotificationEventConfigsGetRoute = (typeof apiClient.notifications)['event-
 type NotificationLogsGetRoute = typeof apiClient.notifications.logs.$get;
 type NotificationLogGetRoute = (typeof apiClient.notifications.logs)[':id']['$get'];
 type NotificationTestSendPostRoute = (typeof apiClient.notifications)['test-send']['$post'];
+type NotificationEmailPreviewPostRoute = (typeof apiClient.notifications)['render-email-preview']['$post'];
 
 export type NotificationTemplateCreateInput =
   | {
@@ -116,6 +119,17 @@ export type NotificationTestSendInput =
 export type NotificationTestSendResponse = InferResponseType<
   NotificationTestSendPostRoute,
   202
+>;
+
+export interface NotificationEmailPreviewInput {
+  event: NotificationEvent;
+  subject?: string;
+  content: Record<string, unknown>;
+}
+
+export type NotificationEmailPreviewResponse = InferResponseType<
+  NotificationEmailPreviewPostRoute,
+  200
 >;
 
 export function notificationTemplatesQueryOptions(channel?: NotificationChannel) {
@@ -233,6 +247,29 @@ export function notificationLogQueryOptions(id: string) {
   });
 }
 
+export function notificationEmailPreviewQueryOptions(
+  input: NotificationEmailPreviewInput,
+  enabled = true,
+) {
+  return queryOptions({
+    queryKey: [NOTIFICATION_EMAIL_PREVIEW_QUERY_KEY, input],
+    enabled,
+    refetchOnWindowFocus: false,
+    queryFn: async () => {
+      const response = await apiClient.notifications['render-email-preview'].$post({
+        json: input,
+      });
+      const result = await parseResponse(response);
+
+      if (!response.ok) {
+        throw new Error(result.meta.message || 'Failed to render notification email preview.');
+      }
+
+      return result;
+    },
+  });
+}
+
 export function useNotificationTemplates(channel?: NotificationChannel) {
   return useQuery(notificationTemplatesQueryOptions(channel));
 }
@@ -261,19 +298,30 @@ export function useNotificationLog(id: string) {
   return useQuery(notificationLogQueryOptions(id));
 }
 
+export function useNotificationEmailPreview(
+  input: NotificationEmailPreviewInput,
+  enabled = true,
+) {
+  return useQuery(notificationEmailPreviewQueryOptions(input, enabled));
+}
+
 export function useCreateNotificationTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (body: NotificationTemplateCreateInput) => {
-      const response = await apiClient.notifications.templates.$post({ json: body });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.notifications.templates.$post({ json: body });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to create notification template.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to create notification template.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to create notification template.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [NOTIFICATION_TEMPLATES_QUERY_KEY] });
@@ -286,18 +334,22 @@ export function useUpdateNotificationTemplate() {
 
   return useMutation({
     mutationFn: async (body: NotificationTemplateUpdateInput) => {
-      const { id, ...json } = body;
-      const response = await apiClient.notifications.templates[':id'].$put({
-        param: { id },
-        json,
-      });
-      const result = await parseResponse(response);
+      try {
+        const { id, ...json } = body;
+        const response = await apiClient.notifications.templates[':id'].$put({
+          param: { id },
+          json,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update notification template.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update notification template.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update notification template.');
       }
-
-      return result;
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [NOTIFICATION_TEMPLATES_QUERY_KEY] });
@@ -312,16 +364,20 @@ export function useDeleteNotificationTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.notifications.templates[':id'].$delete({
-        param: { id },
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.notifications.templates[':id'].$delete({
+          param: { id },
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to delete notification template.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to delete notification template.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to delete notification template.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [NOTIFICATION_TEMPLATES_QUERY_KEY] });
@@ -335,18 +391,22 @@ export function useUpdateNotificationEventConfig() {
 
   return useMutation({
     mutationFn: async (body: NotificationEventConfigUpdateInput) => {
-      const { event, channel, ...json } = body;
-      const response = await apiClient.notifications['event-configs'][':event'][':channel'].$put({
-        param: { event, channel },
-        json,
-      });
-      const result = await parseResponse(response);
+      try {
+        const { event, channel, ...json } = body;
+        const response = await apiClient.notifications['event-configs'][':event'][':channel'].$put({
+          param: { event, channel },
+          json,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update notification event config.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update notification event config.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update notification event config.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [NOTIFICATION_EVENT_CONFIGS_QUERY_KEY] });
@@ -359,16 +419,20 @@ export function useTestNotification() {
 
   return useMutation({
     mutationFn: async (body: NotificationTestSendInput) => {
-      const response = await apiClient.notifications['test-send'].$post({
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.notifications['test-send'].$post({
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to queue notification test send.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to queue notification test send.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to queue notification test send.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [NOTIFICATION_LOGS_QUERY_KEY] });

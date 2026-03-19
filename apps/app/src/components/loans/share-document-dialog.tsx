@@ -65,8 +65,8 @@ export function ShareDocumentDialog({ loanId, open, onOpenChange }: ShareDocumen
     try {
       const createdDocumentLink = await createLink({ loanId, templateId });
       await shareDocumentUrl(getDocumentUrl(createdDocumentLink.data.token.token), templateName);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to share document link.');
+    } catch (error) {
+      toast.error((error as Error).message);
     }
   }
 

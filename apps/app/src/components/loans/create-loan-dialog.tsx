@@ -92,8 +92,8 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         toast.success('Loan created successfully.');
         form.reset(createDefaultValues());
         onOpenChange(false);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to create loan.');
+      } catch (error) {
+        toast.error((error as Error).message);
       }
     },
   });

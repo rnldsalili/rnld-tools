@@ -1,5 +1,6 @@
 import { DocumentType } from '@workspace/constants';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDetailedErrorMessage } from '@workspace/api-client';
 import type { InferResponseType } from '@workspace/api-client';
 import apiClient, { parseResponse } from '@/app/lib/api';
 
@@ -74,16 +75,20 @@ export function useCreateDocumentTemplate() {
       linkExpiryDays?: number;
       requiresSignature?: boolean;
     }) => {
-      const response = await apiClient.documents.$post({
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.documents.$post({
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to create template.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to create template.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to create template.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DOC_TEMPLATES_QUERY_KEY] });
@@ -112,17 +117,21 @@ export function useUpdateDocumentTemplate() {
       linkExpiryDays: number;
       requiresSignature: boolean;
     }) => {
-      const response = await apiClient.documents[':id'].$put({
-        param: { id },
-        json: { type, name, description, content, linkExpiryDays, requiresSignature },
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.documents[':id'].$put({
+          param: { id },
+          json: { type, name, description, content, linkExpiryDays, requiresSignature },
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update template.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update template.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update template.');
       }
-
-      return result;
     },
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: [DOC_TEMPLATES_QUERY_KEY] });
@@ -136,14 +145,18 @@ export function useDeleteDocumentTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.documents[':id'].$delete({ param: { id } });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.documents[':id'].$delete({ param: { id } });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to delete template.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to delete template.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to delete template.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DOC_TEMPLATES_QUERY_KEY] });

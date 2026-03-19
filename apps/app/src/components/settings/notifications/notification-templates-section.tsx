@@ -55,7 +55,7 @@ export function NotificationTemplatesSection() {
       });
       toast.success('Notification template saved.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save notification template.');
+      toast.error((error as Error).message);
     }
   }
 
@@ -72,7 +72,7 @@ export function NotificationTemplatesSection() {
       }
       toast.success('Notification template deleted.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete notification template.');
+      toast.error((error as Error).message);
     }
   }
 

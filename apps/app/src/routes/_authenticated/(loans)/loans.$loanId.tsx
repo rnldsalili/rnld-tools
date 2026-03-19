@@ -100,7 +100,7 @@ function LoanDetailPage() {
       toast.success('Loan deleted successfully.');
       await router.navigate({ to: '/loans' });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete loan.');
+      toast.error((error as Error).message);
     }
   }
 
@@ -298,11 +298,7 @@ function LoanDetailPage() {
                                     templateId: template.id,
                                   });
                                 } catch (error) {
-                                  toast.error(
-                                    error instanceof Error
-                                      ? error.message
-                                      : 'Failed to download document PDF.',
-                                  );
+                                  toast.error((error as Error).message);
                                 }
                               }}
                           >

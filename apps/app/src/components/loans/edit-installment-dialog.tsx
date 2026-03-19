@@ -42,8 +42,8 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
         });
         toast.success('Installment updated successfully.');
         onClose();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to update installment.');
+      } catch (error) {
+        toast.error((error as Error).message);
       }
     },
   });

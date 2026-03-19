@@ -7,6 +7,7 @@ import {
   getNotificationLogs,
   getNotificationTemplateById,
   getNotificationTemplates,
+  renderNotificationEmailPreview,
   testSendNotification,
   updateNotificationEventConfig,
   updateNotificationTemplate,
@@ -25,6 +26,7 @@ const notificationsRoute = createRouter()
   .get('/event-configs', authorize(PermissionModule.NOTIFICATIONS, PermissionAction.VIEW), ...getNotificationEventConfigs)
   .get('/logs', authorize(PermissionModule.NOTIFICATIONS, PermissionAction.VIEW), ...getNotificationLogs)
   .get('/logs/:id', authorize(PermissionModule.NOTIFICATIONS, PermissionAction.VIEW), ...getNotificationLogById)
+  .post('/render-email-preview', authorize(PermissionModule.NOTIFICATIONS, PermissionAction.VIEW), ...renderNotificationEmailPreview)
   .put('/event-configs/:event/:channel', authorize(PermissionModule.NOTIFICATIONS, PermissionAction.MANAGE), ...updateNotificationEventConfig)
   .post('/test-send', authorize(PermissionModule.NOTIFICATIONS, PermissionAction.MANAGE), ...testSendNotification);
 

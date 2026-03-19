@@ -4,6 +4,8 @@
     "compilerOptions": {
         "noEmit": false,
         "strict": true,
+        "jsx": "react-jsx",
+        "jsxImportSource": "hono/jsx",
         "paths": {
           "@/api/*": ["../../apps/api/src/*"],
           "@/prisma/*": ["../../apps/api/generated/prisma/*"]

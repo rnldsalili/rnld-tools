@@ -15,6 +15,10 @@ import { createHandlers } from '@/api/app';
 import { validate } from '@/api/lib/validator';
 import { initializePrisma } from '@/api/lib/db';
 
+function toRolePermissionKey(permission: { module: string; action: string }) {
+  return `${permission.module}:${permission.action}`;
+}
+
 export const getRoles = createHandlers(
   async (c) => {
     const prisma = initializePrisma(c.env);
@@ -92,16 +96,40 @@ export const updateRolePermissions = createHandlers(
 
     const prisma = initializePrisma(c.env);
     const normalizedPermissions = flattenPermissions(permissions);
+    const existingRolePermissions = await prisma.rolePermission.findMany({
+      where: {
+        roleSlug: slug,
+      },
+      select: {
+        id: true,
+        module: true,
+        action: true,
+      },
+    });
 
-    await prisma.$transaction(async (transaction) => {
-      await transaction.rolePermission.deleteMany({
+    const nextPermissionKeys = new Set(
+      normalizedPermissions.map((permission) => toRolePermissionKey(permission)),
+    );
+    const staleRolePermissionIds = existingRolePermissions
+      .filter((existingRolePermission) => !nextPermissionKeys.has(toRolePermissionKey(existingRolePermission)))
+      .map((existingRolePermission) => existingRolePermission.id);
+    const existingPermissionKeys = new Set(
+      existingRolePermissions.map((existingRolePermission) => toRolePermissionKey(existingRolePermission)),
+    );
+
+    if (staleRolePermissionIds.length > 0) {
+      await prisma.rolePermission.deleteMany({
         where: {
-          roleSlug: slug,
+          id: {
+            in: staleRolePermissionIds,
+          },
         },
       });
+    }
 
-      for (const permission of normalizedPermissions) {
-        await transaction.rolePermission.create({
+    for (const permission of normalizedPermissions) {
+      if (!existingPermissionKeys.has(toRolePermissionKey(permission))) {
+        await prisma.rolePermission.create({
           data: {
             roleSlug: slug,
             module: permission.module,
@@ -109,7 +137,7 @@ export const updateRolePermissions = createHandlers(
           },
         });
       }
-    });
+    }
 
     return c.json({
       meta: { code: 200, message: 'Role permissions updated successfully' },

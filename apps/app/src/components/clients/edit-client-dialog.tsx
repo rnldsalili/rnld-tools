@@ -55,7 +55,7 @@ export function EditClientDialog({ client, onClose }: EditClientDialogProps) {
         toast.success('Client updated successfully.');
         onClose();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'Failed to update client.');
+        toast.error((error as Error).message);
       }
     },
   });

@@ -4,9 +4,15 @@ import {
   NotificationContentFormat,
 } from '@workspace/constants';
 import { buildNotificationSampleContext, getNotificationPlaceholderValues } from './placeholders';
+import { renderNotificationEmail } from './email-shell/render';
 import type { NotificationEvent } from '@workspace/constants';
 import type { NotificationTemplateSampleContext } from './placeholders';
 import type { TipTapNode } from '@workspace/document-renderer';
+
+export interface ResolvedNotificationEmailContent {
+  bodyHtml: string;
+  subject: string;
+}
 
 const defaultEmailContent: Record<string, unknown> = {
   type: 'doc',
@@ -64,16 +70,33 @@ export function renderEmailTemplate(params: {
   subject: string;
   content: unknown;
   context?: NotificationTemplateSampleContext;
+  siteUrl?: string;
 }) {
+  const resolvedEmailContent = resolveEmailTemplateContent(params);
+
+  return renderNotificationEmail({
+    bodyHtml: resolvedEmailContent.bodyHtml,
+    subject: resolvedEmailContent.subject,
+  });
+}
+
+export function resolveEmailTemplateContent(params: {
+  event: NotificationEvent;
+  subject: string;
+  content: unknown;
+  context?: NotificationTemplateSampleContext;
+  siteUrl?: string;
+}): ResolvedNotificationEmailContent {
   const placeholderValues = getNotificationPlaceholderValues(
     params.context ?? buildNotificationSampleContext(params.event),
+    params.siteUrl,
   );
   const normalizedContent = normalizeTipTapLineBreaks(assertRichTextContent(params.content));
   const collapsedContent = collapseFragmentedPlaceholders(normalizedContent, NOTIFICATION_PLACEHOLDER_KEYS);
 
-  let html = collapsedContent ? serializeTipTapNode(collapsedContent) : '';
+  let bodyHtml = collapsedContent ? serializeTipTapNode(collapsedContent) : '';
   for (const [placeholder, value] of Object.entries(placeholderValues)) {
-    html = html.replaceAll(placeholder, escapeHtml(value));
+    bodyHtml = bodyHtml.replaceAll(placeholder, escapeHtml(value));
   }
 
   let subject = params.subject;
@@ -81,7 +104,7 @@ export function renderEmailTemplate(params: {
     subject = subject.replaceAll(placeholder, value);
   }
 
-  return { subject, html };
+  return { subject, bodyHtml };
 }
 
 export function getNotificationContentFormat(value: string): NotificationContentFormat {
@@ -94,9 +117,11 @@ export function renderSmsTemplate(params: {
   event: NotificationEvent;
   content: string;
   context?: NotificationTemplateSampleContext;
+  siteUrl?: string;
 }) {
   const placeholderValues = getNotificationPlaceholderValues(
     params.context ?? buildNotificationSampleContext(params.event),
+    params.siteUrl,
   );
 
   let text = params.content;
@@ -250,17 +275,23 @@ function serializeTipTapNode(node: TipTapNode): string {
     case 'doc':
       return (node.content ?? []).map(serializeTipTapNode).join('');
     case 'paragraph':
-      return `<p${serializeTextAlign(node.attrs)}>${serializeInlineChildren(node.content) || ''}</p>`;
+      return `<p${serializeStyleAttribute(
+        'margin: 0; font-size: 15px; line-height: 24px;',
+        node.attrs,
+      )}>${serializeInlineChildren(node.content) || '&nbsp;'}</p>`;
     case 'heading': {
       const headingLevel = clampHeadingLevel(node.attrs?.level);
-      return `<h${headingLevel}${serializeTextAlign(node.attrs)}>${serializeInlineChildren(node.content)}</h${headingLevel}>`;
+      return `<h${headingLevel}${serializeStyleAttribute(
+        getHeadingStyles(headingLevel),
+        node.attrs,
+      )}>${serializeInlineChildren(node.content)}</h${headingLevel}>`;
     }
     case 'bulletList':
-      return `<ul>${(node.content ?? []).map(serializeTipTapNode).join('')}</ul>`;
+      return `<ul style="margin: 0; padding-left: 24px;">${(node.content ?? []).map(serializeTipTapNode).join('')}</ul>`;
     case 'orderedList':
-      return `<ol>${(node.content ?? []).map(serializeTipTapNode).join('')}</ol>`;
+      return `<ol style="margin: 0; padding-left: 24px;">${(node.content ?? []).map(serializeTipTapNode).join('')}</ol>`;
     case 'listItem':
-      return `<li>${(node.content ?? []).map(serializeTipTapNode).join('')}</li>`;
+      return `<li style="margin: 0;">${(node.content ?? []).map(serializeTipTapNode).join('')}</li>`;
     case 'text':
       return serializeTextNode(node);
     case 'hardBreak':
@@ -296,13 +327,16 @@ function serializeTextNode(node: TipTapNode) {
   return html;
 }
 
-function serializeTextAlign(attrs: Record<string, unknown> | undefined) {
+function serializeStyleAttribute(
+  baseStyles: string,
+  attrs: Record<string, unknown> | undefined,
+) {
   const textAlign = attrs?.textAlign;
   if (textAlign === 'center' || textAlign === 'right' || textAlign === 'left' || textAlign === 'justify') {
-    return ` style="text-align: ${textAlign}"`;
+    return ` style="${baseStyles} text-align: ${textAlign};"`;
   }
 
-  return '';
+  return ` style="${baseStyles}"`;
 }
 
 function clampHeadingLevel(level: unknown) {
@@ -311,6 +345,18 @@ function clampHeadingLevel(level: unknown) {
   }
 
   return 2;
+}
+
+function getHeadingStyles(level: number) {
+  if (level === 1) {
+    return 'margin: 0 0 20px; font-size: 28px; line-height: 34px; font-weight: 700;';
+  }
+
+  if (level === 2) {
+    return 'margin: 0 0 18px; font-size: 22px; line-height: 30px; font-weight: 700;';
+  }
+
+  return 'margin: 0 0 16px; font-size: 18px; line-height: 26px; font-weight: 700;';
 }
 
 function isTipTapNode(value: unknown): value is TipTapNode {

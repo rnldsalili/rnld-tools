@@ -52,7 +52,7 @@ function DocumentTemplateDetailPage() {
       });
       toast.success('Template saved.');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save template.');
+      toast.error((error as Error).message);
     }
   }
 

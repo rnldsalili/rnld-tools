@@ -10,6 +10,7 @@ import {
 } from '@workspace/constants';
 import {
   createNotificationTemplateSchema,
+  notificationEmailPreviewSchema,
   notificationEventConfigParamSchema,
   notificationLogIdParamSchema,
   notificationLogsQuerySchema,
@@ -40,6 +41,7 @@ import {
   renderSmsTemplate,
   serializeNotificationTemplateContent,
 } from '@/api/lib/notifications/renderer';
+import { getNotificationSiteUrl } from '@/api/lib/notifications/placeholders';
 import { initializePrisma } from '@/api/lib/db';
 import { validate } from '@/api/lib/validator';
 
@@ -497,6 +499,24 @@ export const updateNotificationEventConfig = createHandlers(
   },
 );
 
+export const renderNotificationEmailPreview = createHandlers(
+  validate('json', notificationEmailPreviewSchema),
+  (c) => {
+    const notificationEmailPreviewPayload = c.req.valid('json');
+    const renderedEmail = renderEmailTemplate({
+      event: notificationEmailPreviewPayload.event,
+      subject: notificationEmailPreviewPayload.subject?.trim() || 'Notification',
+      content: notificationEmailPreviewPayload.content,
+      siteUrl: getNotificationSiteUrl(c.env),
+    });
+
+    return c.json({
+      meta: { code: 200, message: 'Notification email preview rendered successfully' },
+      data: { preview: renderedEmail },
+    }, 200);
+  },
+);
+
 export const testSendNotification = createHandlers(
   validate('json', notificationTestSendSchema),
   async (c) => {
@@ -508,6 +528,7 @@ export const testSendNotification = createHandlers(
         event: notificationTestSendPayload.event,
         subject: notificationTestSendPayload.subject,
         content: notificationTestSendPayload.content,
+        siteUrl: getNotificationSiteUrl(c.env),
       });
       const notificationLog = await createNotificationLog(c.env, {
         channel: NotificationChannel.EMAIL,
@@ -557,6 +578,7 @@ export const testSendNotification = createHandlers(
     const renderedSms = renderSmsTemplate({
       event: notificationTestSendPayload.event,
       content: notificationTestSendPayload.content,
+      siteUrl: getNotificationSiteUrl(c.env),
     });
     const notificationLog = await createNotificationLog(c.env, {
       channel: NotificationChannel.SMS,

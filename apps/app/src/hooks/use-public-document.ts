@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { DetailedError, getDetailedErrorMessage } from '@workspace/api-client';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
 import apiClient, { parseResponse } from '@/app/lib/api';
 
@@ -66,17 +67,28 @@ export function useSignPublicDocument() {
       token: string;
       body: SignPublicDocumentBody;
     }) => {
-      const response = await apiClient.documents.public[':token'].sign.$post({
-        param: { token },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.documents.public[':token'].sign.$post({
+          param: { token },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw toPublicDocumentRequestError(result, response.status, 'Failed to sign document.');
+        if (!response.ok) {
+          throw toPublicDocumentRequestError(result, response.status, 'Failed to sign document.');
+        }
+
+        return result;
+      } catch (error) {
+        if (error instanceof PublicDocumentRequestError) {
+          throw error;
+        }
+
+        throw new PublicDocumentRequestError(
+          getDetailedErrorMessage(error) || 'Failed to sign document.',
+          error instanceof DetailedError && typeof error.statusCode === 'number' ? error.statusCode : 500,
+        );
       }
-
-      return result;
     },
     onSuccess: (_data, { token }) => {
       queryClient.invalidateQueries({ queryKey: [PUBLIC_DOCUMENT_QUERY_KEY, token] });

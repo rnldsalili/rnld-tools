@@ -77,8 +77,8 @@ function NewTemplateModal({
         toast.success('Template created.');
         form.reset();
         onOpenChange(false);
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to create template.');
+      } catch (error) {
+        toast.error((error as Error).message);
       }
     },
   });
@@ -232,8 +232,8 @@ function DocumentSettingsPage() {
       await deleteTemplate(templatePendingDelete.id);
       setTemplatePendingDelete(null);
       toast.success('Template deleted.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete template.');
+    } catch (error) {
+      toast.error((error as Error).message);
     }
   }
 

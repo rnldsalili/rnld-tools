@@ -157,7 +157,7 @@
   }
 
   .document-rich-text p {
-    @apply my-2 whitespace-pre-wrap;
+    @apply my-0 whitespace-pre-wrap;
   }
 
   .document-rich-text p:empty {
@@ -169,15 +169,15 @@
   }
 
   .document-rich-text ul {
-    @apply my-2 list-outside list-disc pl-6;
+    @apply my-0 list-outside list-disc pl-6;
   }
 
   .document-rich-text ol {
-    @apply my-2 list-outside list-decimal pl-6;
+    @apply my-0 list-outside list-decimal pl-6;
   }
 
   .document-rich-text li {
-    @apply my-1 whitespace-pre-wrap;
+    @apply my-0 whitespace-pre-wrap;
   }
 
   .document-rich-text li > p {
@@ -186,6 +186,6 @@
 
   .document-rich-text li > ul,
   .document-rich-text li > ol {
-    @apply my-1;
+    @apply my-0;
   }
 }

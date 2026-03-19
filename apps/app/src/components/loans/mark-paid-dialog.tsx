@@ -37,8 +37,8 @@ export function MarkPaidDialog({ loanId, installment, currency, onClose }: MarkP
         });
         toast.success('Installment marked as paid.');
         onClose();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Failed to mark installment as paid.');
+      } catch (error) {
+        toast.error((error as Error).message);
       }
     },
   });

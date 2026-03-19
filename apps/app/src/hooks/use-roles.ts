@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getDetailedErrorMessage } from '@workspace/api-client';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
 import apiClient, { parseResponse } from '@/app/lib/api';
 
@@ -40,17 +41,21 @@ export function useUpdateRolePermissions() {
       roleSlug: string;
       body: UpdateRolePermissionsBody;
     }) => {
-      const response = await apiClient.roles[':slug'].permissions.$put({
-        param: { slug: roleSlug },
-        json: body,
-      });
-      const result = await parseResponse(response);
+      try {
+        const response = await apiClient.roles[':slug'].permissions.$put({
+          param: { slug: roleSlug },
+          json: body,
+        });
+        const result = await parseResponse(response);
 
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update role permissions.');
+        if (!response.ok) {
+          throw new Error(result.meta.message || 'Failed to update role permissions.');
+        }
+
+        return result;
+      } catch (error) {
+        throw new Error(getDetailedErrorMessage(error) || 'Failed to update role permissions.');
       }
-
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [ROLES_QUERY_KEY] });
