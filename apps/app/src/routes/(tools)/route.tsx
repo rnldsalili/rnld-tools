@@ -1,10 +1,10 @@
 import { Outlet, createFileRoute } from '@tanstack/react-router';
-import { NavigationLayout } from '@/app/layouts/navigation-layout';
+import { BasicLayout } from '@/app/layouts/basic-layout';
 
 export const Route = createFileRoute('/(tools)')({
   component: () => (
-    <NavigationLayout>
+    <BasicLayout>
       <Outlet />
-    </NavigationLayout>
+    </BasicLayout>
   ),
 });

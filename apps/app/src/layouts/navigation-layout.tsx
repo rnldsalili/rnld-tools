@@ -5,8 +5,6 @@ import {
   BellRingIcon,
   ChevronRightIcon,
   HandCoinsIcon,
-  HashIcon,
-  KeyRoundIcon,
   LayoutDashboardIcon,
   LogOutIcon,
   MenuIcon,
@@ -15,7 +13,6 @@ import {
   PanelLeftOpenIcon,
   ScrollTextIcon,
   ShieldCheckIcon,
-  ShuffleIcon,
   SunIcon,
   UsersIcon,
   WrenchIcon,
@@ -64,12 +61,6 @@ const NAV_ITEMS: Array<NavItem> = [
     label: 'Loans',
     isVisible: (hasPermission) => hasPermission(PermissionModule.LOANS, PermissionAction.VIEW),
   },
-];
-
-const TOOL_NAV_ITEMS: Array<NavItem> = [
-  { to: '/password-generator', icon: KeyRoundIcon, label: 'Password Generator' },
-  { to: '/uuid-generator', icon: HashIcon, label: 'UUID Generator' },
-  { to: '/secret-generator', icon: ShuffleIcon, label: 'Secret Generator' },
 ];
 
 const SETTINGS_NAV_ITEMS: Array<NavItem> = [
@@ -284,25 +275,6 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
           {/* Nav items */}
           <nav className="flex flex-col gap-0.5 p-2 flex-1 overflow-y-auto">
             {visibleNavItems.map((item) => (
-              <SidebarNavItem
-                  key={item.to}
-                  item={item}
-                  isCollapsed={isCollapsed}
-                  currentPath={currentPath}
-              />
-            ))}
-
-            {/* Tools section */}
-            <div className={cn('mt-4', !isCollapsed && 'px-2.5')}>
-              {!isCollapsed && (
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-                  Tools
-                </p>
-              )}
-              {isCollapsed && <div className="h-px bg-border mb-2" />}
-            </div>
-
-            {TOOL_NAV_ITEMS.map((item) => (
               <SidebarNavItem
                   key={item.to}
                   item={item}
