@@ -105,11 +105,11 @@
 				"producers": [
 					{
 						"queue": "notifications-email",
-						"binding": "NOTIFICATIONS_EMAIL_QUEUE"
+						"binding": "b79b65cc4c2d43dfbf5c9f4bb14faf48"
 					},
 					{
 						"queue": "notifications-sms",
-						"binding": "NOTIFICATIONS_SMS_QUEUE"
+						"binding": "01c85d412a044ba3872969ac27b2a4f2"
 					}
 				],
 				"consumers": [
