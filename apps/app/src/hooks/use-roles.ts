@@ -6,10 +6,7 @@ const ROLES_QUERY_KEY = 'roles';
 
 export type RolesListResponse = InferResponseType<typeof apiClient.roles.$get, 200>;
 export type RoleItem = RolesListResponse['data']['roles'][number];
-export type RoleDetailResponse = InferResponseType<(typeof apiClient.roles)[':id']['$get'], 200>;
-
-type CreateRoleBody = InferRequestType<typeof apiClient.roles.$post>['json'];
-type UpdateRoleBody = InferRequestType<(typeof apiClient.roles)[':id']['$put']>['json'];
+type UpdateRolePermissionsBody = InferRequestType<(typeof apiClient.roles)[':slug']['permissions']['$put']>['json'];
 
 export function rolesQueryOptions() {
   return queryOptions({
@@ -32,72 +29,31 @@ export function useRoles() {
   return useQuery(rolesQueryOptions());
 }
 
-export function useCreateRole() {
+export function useUpdateRolePermissions() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: CreateRoleBody) => {
-      const response = await apiClient.roles.$post({ json: body });
-      const result = await parseResponse(response);
-
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to create role.');
-      }
-
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [ROLES_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['authorization'] });
-    },
-  });
-}
-
-export function useUpdateRole() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, body }: { id: string; body: UpdateRoleBody }) => {
-      const response = await apiClient.roles[':id'].$put({
-        param: { id },
+    mutationFn: async ({
+      roleSlug,
+      body,
+    }: {
+      roleSlug: string;
+      body: UpdateRolePermissionsBody;
+    }) => {
+      const response = await apiClient.roles[':slug'].permissions.$put({
+        param: { slug: roleSlug },
         json: body,
       });
       const result = await parseResponse(response);
 
       if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to update role.');
+        throw new Error(result.meta.message || 'Failed to update role permissions.');
       }
 
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [ROLES_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['authorization'] });
-    },
-  });
-}
-
-export function useDeleteRole() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (roleId: string) => {
-      const response = await apiClient.roles[':id'].$delete({
-        param: { id: roleId },
-      });
-      const result = await parseResponse(response);
-
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to delete role.');
-      }
-
-      return result;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [ROLES_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['authorization'] });
     },
   });

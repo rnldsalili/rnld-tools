@@ -16,16 +16,21 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as toolsRouteRouteImport } from './routes/(tools)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedChangePasswordRouteImport } from './routes/_authenticated/change-password'
 import { Route as toolsUuidGeneratorRouteImport } from './routes/(tools)/uuid-generator'
 import { Route as toolsSecretGeneratorRouteImport } from './routes/(tools)/secret-generator'
 import { Route as toolsPasswordGeneratorRouteImport } from './routes/(tools)/password-generator'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as PublicDocumentsTokenRouteImport } from './routes/_public/documents/$token'
+import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings/users'
+import { Route as AuthenticatedSettingsRolesRouteImport } from './routes/_authenticated/settings/roles'
 import { Route as AuthenticatedSettingsAccessRouteImport } from './routes/_authenticated/settings/access'
 import { Route as AuthenticatedloansLoansRouteImport } from './routes/_authenticated/(loans)/loans'
 import { Route as AuthenticatedclientsClientsRouteImport } from './routes/_authenticated/(clients)/clients'
+import { Route as AuthenticatedSettingsRolesIndexRouteImport } from './routes/_authenticated/settings/roles.index'
 import { Route as AuthenticatedloansLoansIndexRouteImport } from './routes/_authenticated/(loans)/loans.index'
 import { Route as AuthenticatedclientsClientsIndexRouteImport } from './routes/_authenticated/(clients)/clients.index'
+import { Route as AuthenticatedSettingsRolesRoleSlugRouteImport } from './routes/_authenticated/settings/roles.$roleSlug'
 import { Route as AuthenticatedSettingsnotificationsNotificationsRouteImport } from './routes/_authenticated/settings/(notifications)/notifications'
 import { Route as AuthenticatedSettingsdocumentsDocumentsRouteImport } from './routes/_authenticated/settings/(documents)/documents'
 import { Route as AuthenticatedloansLoansLoanIdRouteImport } from './routes/_authenticated/(loans)/loans.$loanId'
@@ -65,6 +70,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedChangePasswordRoute =
+  AuthenticatedChangePasswordRouteImport.update({
+    id: '/change-password',
+    path: '/change-password',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const toolsUuidGeneratorRoute = toolsUuidGeneratorRouteImport.update({
   id: '/uuid-generator',
   path: '/uuid-generator',
@@ -91,6 +102,18 @@ const PublicDocumentsTokenRoute = PublicDocumentsTokenRouteImport.update({
   path: '/documents/$token',
   getParentRoute: () => PublicRouteRoute,
 } as any)
+const AuthenticatedSettingsUsersRoute =
+  AuthenticatedSettingsUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsRolesRoute =
+  AuthenticatedSettingsRolesRouteImport.update({
+    id: '/roles',
+    path: '/roles',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsAccessRoute =
   AuthenticatedSettingsAccessRouteImport.update({
     id: '/access',
@@ -108,6 +131,12 @@ const AuthenticatedclientsClientsRoute =
     path: '/clients',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsRolesIndexRoute =
+  AuthenticatedSettingsRolesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsRolesRoute,
+  } as any)
 const AuthenticatedloansLoansIndexRoute =
   AuthenticatedloansLoansIndexRouteImport.update({
     id: '/',
@@ -119,6 +148,12 @@ const AuthenticatedclientsClientsIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedclientsClientsRoute,
+  } as any)
+const AuthenticatedSettingsRolesRoleSlugRoute =
+  AuthenticatedSettingsRolesRoleSlugRouteImport.update({
+    id: '/$roleSlug',
+    path: '/$roleSlug',
+    getParentRoute: () => AuthenticatedSettingsRolesRoute,
   } as any)
 const AuthenticatedSettingsnotificationsNotificationsRoute =
   AuthenticatedSettingsnotificationsNotificationsRouteImport.update({
@@ -165,17 +200,22 @@ export interface FileRoutesByFullPath {
   '/password-generator': typeof toolsPasswordGeneratorRoute
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
+  '/change-password': typeof AuthenticatedChangePasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/loans': typeof AuthenticatedloansLoansRouteWithChildren
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/settings/roles': typeof AuthenticatedSettingsRolesRouteWithChildren
+  '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/settings/documents': typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
   '/settings/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
+  '/settings/roles/$roleSlug': typeof AuthenticatedSettingsRolesRoleSlugRoute
   '/clients/': typeof AuthenticatedclientsClientsIndexRoute
   '/loans/': typeof AuthenticatedloansLoansIndexRoute
+  '/settings/roles/': typeof AuthenticatedSettingsRolesIndexRoute
   '/settings/documents/$documentId': typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
   '/settings/documents/': typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
 }
@@ -187,14 +227,18 @@ export interface FileRoutesByTo {
   '/password-generator': typeof toolsPasswordGeneratorRoute
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
+  '/change-password': typeof AuthenticatedChangePasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/settings/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
+  '/settings/roles/$roleSlug': typeof AuthenticatedSettingsRolesRoleSlugRoute
   '/clients': typeof AuthenticatedclientsClientsIndexRoute
   '/loans': typeof AuthenticatedloansLoansIndexRoute
+  '/settings/roles': typeof AuthenticatedSettingsRolesIndexRoute
   '/settings/documents/$documentId': typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
   '/settings/documents': typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
 }
@@ -210,17 +254,22 @@ export interface FileRoutesById {
   '/(tools)/password-generator': typeof toolsPasswordGeneratorRoute
   '/(tools)/secret-generator': typeof toolsSecretGeneratorRoute
   '/(tools)/uuid-generator': typeof toolsUuidGeneratorRoute
+  '/_authenticated/change-password': typeof AuthenticatedChangePasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/(clients)/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/_authenticated/(loans)/loans': typeof AuthenticatedloansLoansRouteWithChildren
   '/_authenticated/settings/access': typeof AuthenticatedSettingsAccessRoute
+  '/_authenticated/settings/roles': typeof AuthenticatedSettingsRolesRouteWithChildren
+  '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_public/documents/$token': typeof PublicDocumentsTokenRoute
   '/_authenticated/(clients)/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/_authenticated/(loans)/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/_authenticated/settings/(documents)/documents': typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
   '/_authenticated/settings/(notifications)/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
+  '/_authenticated/settings/roles/$roleSlug': typeof AuthenticatedSettingsRolesRoleSlugRoute
   '/_authenticated/(clients)/clients/': typeof AuthenticatedclientsClientsIndexRoute
   '/_authenticated/(loans)/loans/': typeof AuthenticatedloansLoansIndexRoute
+  '/_authenticated/settings/roles/': typeof AuthenticatedSettingsRolesIndexRoute
   '/_authenticated/settings/(documents)/documents/$documentId': typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
   '/_authenticated/settings/(documents)/documents/': typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
 }
@@ -234,17 +283,22 @@ export interface FileRouteTypes {
     | '/password-generator'
     | '/secret-generator'
     | '/uuid-generator'
+    | '/change-password'
     | '/dashboard'
     | '/clients'
     | '/loans'
     | '/settings/access'
+    | '/settings/roles'
+    | '/settings/users'
     | '/documents/$token'
     | '/clients/$clientId'
     | '/loans/$loanId'
     | '/settings/documents'
     | '/settings/notifications'
+    | '/settings/roles/$roleSlug'
     | '/clients/'
     | '/loans/'
+    | '/settings/roles/'
     | '/settings/documents/$documentId'
     | '/settings/documents/'
   fileRoutesByTo: FileRoutesByTo
@@ -256,14 +310,18 @@ export interface FileRouteTypes {
     | '/password-generator'
     | '/secret-generator'
     | '/uuid-generator'
+    | '/change-password'
     | '/dashboard'
     | '/settings/access'
+    | '/settings/users'
     | '/documents/$token'
     | '/clients/$clientId'
     | '/loans/$loanId'
     | '/settings/notifications'
+    | '/settings/roles/$roleSlug'
     | '/clients'
     | '/loans'
+    | '/settings/roles'
     | '/settings/documents/$documentId'
     | '/settings/documents'
   id:
@@ -278,17 +336,22 @@ export interface FileRouteTypes {
     | '/(tools)/password-generator'
     | '/(tools)/secret-generator'
     | '/(tools)/uuid-generator'
+    | '/_authenticated/change-password'
     | '/_authenticated/dashboard'
     | '/_authenticated/(clients)/clients'
     | '/_authenticated/(loans)/loans'
     | '/_authenticated/settings/access'
+    | '/_authenticated/settings/roles'
+    | '/_authenticated/settings/users'
     | '/_public/documents/$token'
     | '/_authenticated/(clients)/clients/$clientId'
     | '/_authenticated/(loans)/loans/$loanId'
     | '/_authenticated/settings/(documents)/documents'
     | '/_authenticated/settings/(notifications)/notifications'
+    | '/_authenticated/settings/roles/$roleSlug'
     | '/_authenticated/(clients)/clients/'
     | '/_authenticated/(loans)/loans/'
+    | '/_authenticated/settings/roles/'
     | '/_authenticated/settings/(documents)/documents/$documentId'
     | '/_authenticated/settings/(documents)/documents/'
   fileRoutesById: FileRoutesById
@@ -353,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/change-password': {
+      id: '/_authenticated/change-password'
+      path: '/change-password'
+      fullPath: '/change-password'
+      preLoaderRoute: typeof AuthenticatedChangePasswordRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/(tools)/uuid-generator': {
       id: '/(tools)/uuid-generator'
       path: '/uuid-generator'
@@ -388,6 +458,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicDocumentsTokenRouteImport
       parentRoute: typeof PublicRouteRoute
     }
+    '/_authenticated/settings/users': {
+      id: '/_authenticated/settings/users'
+      path: '/users'
+      fullPath: '/settings/users'
+      preLoaderRoute: typeof AuthenticatedSettingsUsersRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/roles': {
+      id: '/_authenticated/settings/roles'
+      path: '/roles'
+      fullPath: '/settings/roles'
+      preLoaderRoute: typeof AuthenticatedSettingsRolesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/access': {
       id: '/_authenticated/settings/access'
       path: '/access'
@@ -409,6 +493,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedclientsClientsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/roles/': {
+      id: '/_authenticated/settings/roles/'
+      path: '/'
+      fullPath: '/settings/roles/'
+      preLoaderRoute: typeof AuthenticatedSettingsRolesIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsRolesRoute
+    }
     '/_authenticated/(loans)/loans/': {
       id: '/_authenticated/(loans)/loans/'
       path: '/'
@@ -422,6 +513,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/clients/'
       preLoaderRoute: typeof AuthenticatedclientsClientsIndexRouteImport
       parentRoute: typeof AuthenticatedclientsClientsRoute
+    }
+    '/_authenticated/settings/roles/$roleSlug': {
+      id: '/_authenticated/settings/roles/$roleSlug'
+      path: '/$roleSlug'
+      fullPath: '/settings/roles/$roleSlug'
+      preLoaderRoute: typeof AuthenticatedSettingsRolesRoleSlugRouteImport
+      parentRoute: typeof AuthenticatedSettingsRolesRoute
     }
     '/_authenticated/settings/(notifications)/notifications': {
       id: '/_authenticated/settings/(notifications)/notifications'
@@ -484,6 +582,23 @@ const toolsRouteRouteWithChildren = toolsRouteRoute._addFileChildren(
   toolsRouteRouteChildren,
 )
 
+interface AuthenticatedSettingsRolesRouteChildren {
+  AuthenticatedSettingsRolesRoleSlugRoute: typeof AuthenticatedSettingsRolesRoleSlugRoute
+  AuthenticatedSettingsRolesIndexRoute: typeof AuthenticatedSettingsRolesIndexRoute
+}
+
+const AuthenticatedSettingsRolesRouteChildren: AuthenticatedSettingsRolesRouteChildren =
+  {
+    AuthenticatedSettingsRolesRoleSlugRoute:
+      AuthenticatedSettingsRolesRoleSlugRoute,
+    AuthenticatedSettingsRolesIndexRoute: AuthenticatedSettingsRolesIndexRoute,
+  }
+
+const AuthenticatedSettingsRolesRouteWithChildren =
+  AuthenticatedSettingsRolesRoute._addFileChildren(
+    AuthenticatedSettingsRolesRouteChildren,
+  )
+
 interface AuthenticatedSettingsdocumentsDocumentsRouteChildren {
   AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute: typeof AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute
   AuthenticatedSettingsdocumentsDocumentsIndexRoute: typeof AuthenticatedSettingsdocumentsDocumentsIndexRoute
@@ -504,6 +619,8 @@ const AuthenticatedSettingsdocumentsDocumentsRouteWithChildren =
 
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccessRoute: typeof AuthenticatedSettingsAccessRoute
+  AuthenticatedSettingsRolesRoute: typeof AuthenticatedSettingsRolesRouteWithChildren
+  AuthenticatedSettingsUsersRoute: typeof AuthenticatedSettingsUsersRoute
   AuthenticatedSettingsdocumentsDocumentsRoute: typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
   AuthenticatedSettingsnotificationsNotificationsRoute: typeof AuthenticatedSettingsnotificationsNotificationsRoute
 }
@@ -511,6 +628,9 @@ interface AuthenticatedSettingsRouteRouteChildren {
 const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteChildren =
   {
     AuthenticatedSettingsAccessRoute: AuthenticatedSettingsAccessRoute,
+    AuthenticatedSettingsRolesRoute:
+      AuthenticatedSettingsRolesRouteWithChildren,
+    AuthenticatedSettingsUsersRoute: AuthenticatedSettingsUsersRoute,
     AuthenticatedSettingsdocumentsDocumentsRoute:
       AuthenticatedSettingsdocumentsDocumentsRouteWithChildren,
     AuthenticatedSettingsnotificationsNotificationsRoute:
@@ -558,6 +678,7 @@ const AuthenticatedloansLoansRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
+  AuthenticatedChangePasswordRoute: typeof AuthenticatedChangePasswordRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedclientsClientsRoute: typeof AuthenticatedclientsClientsRouteWithChildren
   AuthenticatedloansLoansRoute: typeof AuthenticatedloansLoansRouteWithChildren
@@ -565,6 +686,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
+  AuthenticatedChangePasswordRoute: AuthenticatedChangePasswordRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedclientsClientsRoute:
     AuthenticatedclientsClientsRouteWithChildren,

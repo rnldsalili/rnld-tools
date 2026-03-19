@@ -2,13 +2,12 @@ import {
   buildAppAbility,
   canAccess,
   createAuthorizationSnapshot,
-  flattenPermissions,
-  isPermissionAction,
-  isPermissionModule,
   isProtectedSystemRoleSlug,
+  toPermissionGrants,
+  toRoleSummaries,
 } from '@workspace/permissions';
 
-import type { AppAbility, PermissionAction, PermissionModule, RoleSummary } from '@workspace/permissions';
+import type { AppAbility, PermissionAction, PermissionModule } from '@workspace/permissions';
 import type { PrismaClient } from '@/prisma/client';
 import type { AuthSessionUser, AuthenticatedUser } from '@/api/app';
 
@@ -21,15 +20,7 @@ export async function getAuthenticatedUser(
       id: sessionUser.id,
     },
     include: {
-      userRoles: {
-        include: {
-          role: {
-            include: {
-              permissions: true,
-            },
-          },
-        },
-      },
+      userRoles: true,
     },
   });
 
@@ -37,14 +28,30 @@ export async function getAuthenticatedUser(
     return null;
   }
 
+  const assignedRoleSlugs = user.userRoles.map((userRole) => userRole.roleSlug);
+  const rolePermissions = assignedRoleSlugs.length > 0
+    ? await prisma.rolePermission.findMany({
+      where: {
+        roleSlug: {
+          in: assignedRoleSlugs,
+        },
+      },
+      select: {
+        module: true,
+        action: true,
+      },
+    })
+    : [];
+
   const authorizationSnapshot = createAuthorizationSnapshot({
-    roles: user.userRoles.map(({ role }) => toRoleSummary(role)),
-    permissions: flattenPermissions(getGroupedRolePermissions(user.userRoles)),
+    roles: toRoleSummaries(assignedRoleSlugs),
+    permissions: toPermissionGrants(rolePermissions),
   });
 
   return {
     ...sessionUser,
     ...authorizationSnapshot,
+    mustChangePassword: user.mustChangePassword,
   };
 }
 
@@ -70,50 +77,4 @@ export function abilityCanAccess(
 
 export function isProtectedSystemRole(slug: string) {
   return isProtectedSystemRoleSlug(slug);
-}
-
-function getGroupedRolePermissions(
-  userRoles: Array<{
-    role: {
-      permissions: Array<{
-        module: string;
-        action: string;
-      }>;
-    };
-  }>,
-) {
-  const permissionsByModule = new Map<PermissionModule, Set<PermissionAction>>();
-
-  for (const { role } of userRoles) {
-    for (const permission of role.permissions) {
-      if (!isPermissionModule(permission.module) || !isPermissionAction(permission.module, permission.action)) {
-        continue;
-      }
-
-      const actionSet = permissionsByModule.get(permission.module) ?? new Set<PermissionAction>();
-      actionSet.add(permission.action);
-      permissionsByModule.set(permission.module, actionSet);
-    }
-  }
-
-  return Array.from(permissionsByModule.entries()).map(([module, actions]) => ({
-    module,
-    actions: Array.from(actions),
-  }));
-}
-
-export function toRoleSummary(role: {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  isSystem: boolean;
-}): RoleSummary {
-  return {
-    id: role.id,
-    slug: role.slug,
-    name: role.name,
-    description: role.description,
-    isSystem: role.isSystem,
-  };
 }

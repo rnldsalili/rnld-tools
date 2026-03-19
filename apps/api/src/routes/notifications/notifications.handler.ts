@@ -1,7 +1,7 @@
 import {
-  NOTIFICATION_CHANNELS,
   NOTIFICATION_EMAIL_PROVIDER_LABELS,
   NOTIFICATION_EVENTS,
+  NOTIFICATION_EVENT_CHANNELS,
   NOTIFICATION_EVENT_LABELS,
   NOTIFICATION_LOG_STATUS_LABELS,
   NOTIFICATION_SMS_PROVIDER_LABELS,
@@ -257,7 +257,7 @@ export const getNotificationEventConfigs = createHandlers(
     );
 
     const eventConfigs = NOTIFICATION_EVENTS.flatMap((event) =>
-      NOTIFICATION_CHANNELS.map((channel) => {
+      NOTIFICATION_EVENT_CHANNELS[event].map((channel) => {
         const config = notificationConfigMap.get(`${event}:${channel}`);
 
         return {

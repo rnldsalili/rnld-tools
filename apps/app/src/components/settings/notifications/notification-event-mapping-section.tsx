@@ -254,7 +254,7 @@ function NotificationEventMappingGroup({
           <div>
             <p className="text-base font-semibold text-foreground">{eventLabel}</p>
             <p className="text-sm text-muted-foreground">
-              Configure both delivery channels for this lifecycle event in one place.
+              Configure the available delivery channels for this lifecycle event.
             </p>
           </div>
         </div>

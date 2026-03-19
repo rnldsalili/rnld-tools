@@ -18,6 +18,7 @@ model User {
   name          String
   email         String
   emailVerified Boolean   @default(false)
+  mustChangePassword Boolean @default(false)
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -38,45 +39,28 @@ model User {
   @@map("user")
 }
 
-model Role {
-  id          String           @id @default(cuid())
-  slug        String           @unique
-  name        String
-  description String?
-  isSystem    Boolean          @default(false)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  permissions RolePermission[]
-  userRoles   UserRole[]
+model UserRole {
+  id       String @id @default(cuid())
+  userId   String
+  roleSlug String
 
-  @@map("role")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleSlug])
+  @@index([userId])
+  @@index([roleSlug])
+  @@map("user_role")
 }
 
 model RolePermission {
-  id     String @id @default(cuid())
-  roleId String
-  module String
-  action String
+  id       String @id @default(cuid())
+  roleSlug String
+  module   String
+  action   String
 
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, module, action])
-  @@index([roleId])
+  @@unique([roleSlug, module, action])
+  @@index([roleSlug])
   @@map("role_permission")
-}
-
-model UserRole {
-  id     String @id @default(cuid())
-  userId String
-  roleId String
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roleId])
-  @@index([userId])
-  @@index([roleId])
-  @@map("user_role")
 }
 
 model Session {
@@ -156,6 +140,7 @@ enum NotificationEvent {
   INSTALLMENT_DUE_REMINDER
   INSTALLMENT_OVERDUE_REMINDER
   INSTALLMENT_PAID
+  USER_ACCOUNT_CREATED
 }
 
 enum NotificationContentFormat {

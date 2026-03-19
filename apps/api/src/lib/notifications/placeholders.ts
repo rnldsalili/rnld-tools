@@ -17,6 +17,11 @@ export interface NotificationTemplateSampleContext {
     dueDate: string;
     paidAt: string;
   };
+  user: {
+    name: string;
+    email: string;
+    temporaryPassword: string;
+  };
 }
 
 const DISPLAY_LOCALE = 'en-US';
@@ -84,6 +89,11 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
       dueDate: dueDate.toISOString(),
       paidAt: paidAt.toISOString(),
     },
+    user: {
+      name: 'Maria Santos',
+      email: 'maria.santos@example.com',
+      temporaryPassword: 'TempPass123!',
+    },
   };
 }
 
@@ -101,6 +111,9 @@ export function getNotificationPlaceholderValues(
     '{{installment.amount}}': `${currencyFormatter.format(context.installment.amount)} ${context.loan.currency}`,
     '{{installment.dueDate}}': formatDate(context.installment.dueDate),
     '{{installment.paidAt}}': formatDateTime(context.installment.paidAt),
+    '{{user.name}}': context.user.name || missingValue,
+    '{{user.email}}': context.user.email || missingValue,
+    '{{user.temporaryPassword}}': context.user.temporaryPassword || missingValue,
   };
 }
 

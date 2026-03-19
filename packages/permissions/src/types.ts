@@ -16,9 +16,14 @@ export enum PermissionAction {
   ASSIGN_ROLES = 'assign-roles',
 }
 
-export enum SystemRoleSlug {
+export enum RoleSlug {
   SUPER_ADMIN = 'super-admin',
   ADMIN = 'admin',
+}
+
+export enum SystemRoleSlug {
+  SUPER_ADMIN = RoleSlug.SUPER_ADMIN,
+  ADMIN = RoleSlug.ADMIN,
 }
 
 export type PermissionGrant = {
@@ -31,12 +36,20 @@ export type GroupedPermissionGrant = {
   actions: Array<PermissionAction>;
 };
 
-export type RoleSummary = {
-  id: string;
-  slug: string;
+export type RoleDefinition = {
+  slug: RoleSlug;
   name: string;
   description: string | null;
   isSystem: boolean;
+  hasFullAccess: boolean;
+};
+
+export type RoleSummary = {
+  slug: RoleSlug;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  hasFullAccess: boolean;
   userCount?: number;
 };
 

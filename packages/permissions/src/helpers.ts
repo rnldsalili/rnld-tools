@@ -1,18 +1,29 @@
-import { permissionCatalog, protectedSystemRoleSlugs } from './catalog';
-import { PermissionModule, SystemRoleSlug } from './types';
+import { permissionCatalog, protectedRoleSlugs, roleCatalog } from './catalog';
+import { PermissionModule, RoleSlug, SystemRoleSlug } from './types';
 
 import type {
   AuthorizationSnapshot,
   GroupedPermissionGrant,
   PermissionAction,
   PermissionGrant,
+  RoleDefinition,
   RoleSummary,
 } from './types';
 
 export const permissionModules = Object.values(PermissionModule) as Array<PermissionModule>;
+export const roleSlugs = Object.values(RoleSlug) as Array<RoleSlug>;
 
 export function getPermissionActions(module: PermissionModule): Array<PermissionAction> {
   return Object.keys(permissionCatalog[module].actions) as Array<PermissionAction>;
+}
+
+export function getPermissionModuleLabel(module: PermissionModule) {
+  return permissionCatalog[module].label;
+}
+
+export function getPermissionActionLabel(module: PermissionModule, action: PermissionAction) {
+  const moduleActions = permissionCatalog[module].actions as Partial<Record<PermissionAction, string>>;
+  return moduleActions[action] ?? action;
 }
 
 export function isPermissionModule(value: unknown): value is PermissionModule {
@@ -25,6 +36,68 @@ export function isPermissionAction(
   value: unknown,
 ): value is PermissionAction {
   return typeof value === 'string' && value in permissionCatalog[module].actions;
+}
+
+export function isRoleSlug(value: unknown): value is RoleSlug {
+  return typeof value === 'string'
+    && (Object.values(RoleSlug) as Array<string>).includes(value);
+}
+
+export function getRoleDefinition(roleSlug: RoleSlug): RoleDefinition {
+  return roleCatalog[roleSlug];
+}
+
+export function getAllPermissionGrants(): Array<PermissionGrant> {
+  return permissionModules.flatMap((module) => (
+    getPermissionActions(module).map((action) => ({
+      module,
+      action,
+    }))
+  )).sort(comparePermissionGrants);
+}
+
+export function toPermissionGrants(input: Array<{
+  module: string;
+  action: string;
+}>): Array<PermissionGrant> {
+  const uniquePermissions = new Map<string, PermissionGrant>();
+
+  for (const permissionRow of input) {
+    if (!isPermissionModule(permissionRow.module)) {
+      continue;
+    }
+
+    if (!isPermissionAction(permissionRow.module, permissionRow.action)) {
+      continue;
+    }
+
+    const permissionKey = `${permissionRow.module}:${permissionRow.action}`;
+    uniquePermissions.set(permissionKey, {
+      module: permissionRow.module,
+      action: permissionRow.action,
+    });
+  }
+
+  return Array.from(uniquePermissions.values()).sort(comparePermissionGrants);
+}
+
+export function toRoleSummary(roleSlug: RoleSlug, userCount?: number): RoleSummary {
+  const roleDefinition = getRoleDefinition(roleSlug);
+
+  return {
+    slug: roleDefinition.slug,
+    name: roleDefinition.name,
+    description: roleDefinition.description,
+    isSystem: roleDefinition.isSystem,
+    hasFullAccess: roleDefinition.hasFullAccess,
+    ...(userCount === undefined ? {} : { userCount }),
+  };
+}
+
+export function toRoleSummaries(assignedRoleSlugs: Array<string>): Array<RoleSummary> {
+  return assignedRoleSlugs
+    .filter((assignedRoleSlug): assignedRoleSlug is RoleSlug => isRoleSlug(assignedRoleSlug))
+    .map((assignedRoleSlug) => toRoleSummary(assignedRoleSlug));
 }
 
 export function flattenPermissions(
@@ -76,8 +149,12 @@ export function hasSuperAdminRole(roles: Array<Pick<RoleSummary, 'slug'>>) {
   return hasRole(roles, SystemRoleSlug.SUPER_ADMIN);
 }
 
+export function isProtectedRoleSlug(slug: string): slug is RoleSlug {
+  return protectedRoleSlugs.includes(slug as RoleSlug);
+}
+
 export function isProtectedSystemRoleSlug(slug: string): slug is SystemRoleSlug {
-  return protectedSystemRoleSlugs.includes(slug as SystemRoleSlug);
+  return isProtectedRoleSlug(slug);
 }
 
 export function createAuthorizationSnapshot(input: {

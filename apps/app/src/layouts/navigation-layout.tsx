@@ -1,5 +1,6 @@
 import { Link, useLocation, useMatches, useRouter } from '@tanstack/react-router';
 import { useAtom } from 'jotai';
+import { useEffect } from 'react';
 import {
   BellRingIcon,
   ChevronRightIcon,
@@ -85,13 +86,16 @@ const SETTINGS_NAV_ITEMS: Array<NavItem> = [
     isVisible: (hasPermission) => hasPermission(PermissionModule.NOTIFICATIONS, PermissionAction.VIEW),
   },
   {
-    to: '/settings/access',
+    to: '/settings/roles',
     icon: ShieldCheckIcon,
-    label: 'Access',
-    isVisible: (hasPermission) => (
-      hasPermission(PermissionModule.ROLES, PermissionAction.VIEW)
-      || hasPermission(PermissionModule.USERS, PermissionAction.VIEW)
-    ),
+    label: 'Roles',
+    isVisible: (hasPermission) => hasPermission(PermissionModule.ROLES, PermissionAction.VIEW),
+  },
+  {
+    to: '/settings/users',
+    icon: UsersIcon,
+    label: 'Users',
+    isVisible: (hasPermission) => hasPermission(PermissionModule.USERS, PermissionAction.VIEW),
   },
 ];
 
@@ -193,9 +197,22 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
   const { pathname: currentPath } = useLocation();
   const { isDark, mounted, toggle } = useTheme();
   const [isCollapsed, setIsCollapsed] = useAtom(sidebarCollapsedAtom);
+  const requiresPasswordChange = authorization?.user.mustChangePassword ?? false;
+
+  useEffect(() => {
+    if (session?.user && requiresPasswordChange && currentPath !== '/change-password') {
+      void router.navigate({ to: '/change-password', replace: true });
+    }
+  }, [currentPath, requiresPasswordChange, router, session?.user]);
 
   if (!session?.user) {
     return <>{children}</>;
+  }
+
+  if (requiresPasswordChange) {
+    return currentPath === '/change-password'
+      ? <>{children}</>
+      : null;
   }
 
   function hasPermission(module: PermissionModule, action: PermissionAction) {

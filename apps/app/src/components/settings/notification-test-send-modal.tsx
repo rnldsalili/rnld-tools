@@ -2,7 +2,6 @@ import { useForm } from '@tanstack/react-form';
 import {
   NOTIFICATION_EMAIL_PROVIDERS,
   NOTIFICATION_EMAIL_PROVIDER_LABELS,
-  NOTIFICATION_EVENTS,
   NOTIFICATION_EVENT_LABELS,
   NOTIFICATION_SMS_PROVIDERS,
   NOTIFICATION_SMS_PROVIDER_LABELS,
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from '@workspace/ui';
 import {
+  getNotificationEventChannels,
   isNotificationEmailProvider,
   isNotificationEvent,
   isNotificationSmsProvider,
@@ -55,9 +55,12 @@ export function NotificationTestSendModal({
   content,
 }: NotificationTestSendModalProps) {
   const { mutateAsync: testNotification, isPending } = useTestNotification();
+  const supportedEvents = Object.values(NotificationEvent).filter((event) => (
+    getNotificationEventChannels(event).includes(channel)
+  ));
   const form = useForm({
     defaultValues: {
-      event: NotificationEvent.LOAN_CREATED,
+      event: supportedEvents[0] ?? NotificationEvent.LOAN_CREATED,
       emailProvider: NotificationEmailProvider.BREVO,
       smsProvider: DEFAULT_SMS_NOTIFICATION_PROVIDER,
       recipientEmail: '',
@@ -151,7 +154,7 @@ export function NotificationTestSendModal({
                   <SelectValue placeholder="Select event" />
                 </SelectTrigger>
                 <SelectContent>
-                  {NOTIFICATION_EVENTS.map((event) => (
+                  {supportedEvents.map((event) => (
                     <SelectItem key={event} value={event}>
                       {NOTIFICATION_EVENT_LABELS[event]}
                     </SelectItem>

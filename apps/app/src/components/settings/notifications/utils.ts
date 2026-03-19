@@ -5,6 +5,7 @@ import {
   NOTIFICATION_EMAIL_PROVIDERS,
   NOTIFICATION_EMAIL_PROVIDER_LABELS,
   NOTIFICATION_EVENTS,
+  NOTIFICATION_EVENT_CHANNELS,
   NOTIFICATION_EVENT_LABELS,
   NOTIFICATION_LOG_STATUSES,
   NOTIFICATION_LOG_STATUS_LABELS,
@@ -54,6 +55,10 @@ export function isNotificationSmsProvider(value: unknown): value is Notification
 
 export function isNotificationEvent(value: unknown): value is NotificationEvent {
   return isOneOf(NOTIFICATION_EVENTS, value);
+}
+
+export function getNotificationEventChannels(event: NotificationEvent) {
+  return NOTIFICATION_EVENT_CHANNELS[event];
 }
 
 export function isNotificationLogStatus(value: unknown): value is NotificationLogStatus {

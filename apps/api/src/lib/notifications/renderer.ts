@@ -5,6 +5,7 @@ import {
 } from '@workspace/constants';
 import { buildNotificationSampleContext, getNotificationPlaceholderValues } from './placeholders';
 import type { NotificationEvent } from '@workspace/constants';
+import type { NotificationTemplateSampleContext } from './placeholders';
 import type { TipTapNode } from '@workspace/document-renderer';
 
 const defaultEmailContent: Record<string, unknown> = {
@@ -62,9 +63,10 @@ export function renderEmailTemplate(params: {
   event: NotificationEvent;
   subject: string;
   content: unknown;
+  context?: NotificationTemplateSampleContext;
 }) {
   const placeholderValues = getNotificationPlaceholderValues(
-    buildNotificationSampleContext(params.event),
+    params.context ?? buildNotificationSampleContext(params.event),
   );
   const normalizedContent = normalizeTipTapLineBreaks(assertRichTextContent(params.content));
   const collapsedContent = collapseFragmentedPlaceholders(normalizedContent, NOTIFICATION_PLACEHOLDER_KEYS);
@@ -82,12 +84,19 @@ export function renderEmailTemplate(params: {
   return { subject, html };
 }
 
+export function getNotificationContentFormat(value: string): NotificationContentFormat {
+  return value === NotificationContentFormat.PLAIN_TEXT
+    ? NotificationContentFormat.PLAIN_TEXT
+    : NotificationContentFormat.RICH_TEXT_JSON;
+}
+
 export function renderSmsTemplate(params: {
   event: NotificationEvent;
   content: string;
+  context?: NotificationTemplateSampleContext;
 }) {
   const placeholderValues = getNotificationPlaceholderValues(
-    buildNotificationSampleContext(params.event),
+    params.context ?? buildNotificationSampleContext(params.event),
   );
 
   let text = params.content;

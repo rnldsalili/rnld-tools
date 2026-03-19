@@ -2,6 +2,7 @@ import {
   NOTIFICATION_CHANNELS,
   NOTIFICATION_EMAIL_PROVIDERS,
   NOTIFICATION_EVENTS,
+  NOTIFICATION_EVENT_CHANNELS,
   NOTIFICATION_LOG_STATUSES,
   NOTIFICATION_SMS_CONTENT_MAX_LENGTH,
   NOTIFICATION_SMS_PROVIDERS,
@@ -73,7 +74,13 @@ export const updateNotificationTemplateSchema = z.discriminatedUnion('channel', 
 export const notificationEventConfigParamSchema = z.object({
   event: z.enum(NOTIFICATION_EVENTS),
   channel: z.enum(NOTIFICATION_CHANNELS),
-});
+}).refine(
+  ({ event, channel }) => NOTIFICATION_EVENT_CHANNELS[event].includes(channel),
+  {
+    message: 'Unsupported notification channel for the selected event.',
+    path: ['channel'],
+  },
+);
 
 export const updateNotificationEventConfigSchema = z.object({
   templateId: z.string().trim().length(25),
@@ -103,4 +110,10 @@ export const notificationTestSendSchema = z.discriminatedUnion('channel', [
     smsProvider: z.enum(NOTIFICATION_SMS_PROVIDERS),
     content: z.string().trim().min(1),
   }),
-]);
+]).refine(
+  (value) => NOTIFICATION_EVENT_CHANNELS[value.event].includes(value.channel),
+  {
+    message: 'Unsupported notification channel for the selected event.',
+    path: ['channel'],
+  },
+);

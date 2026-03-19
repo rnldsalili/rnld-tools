@@ -1,4 +1,4 @@
-import { SystemRoleSlug } from '@workspace/permissions';
+import { SystemRoleSlug, isRoleSlug } from '@workspace/permissions';
 import { users } from '../../../scripts/seed/users';
 import { seedRequestSchema } from './seed.schema';
 import { createHandlers } from '@/api/app';
@@ -32,15 +32,6 @@ export const seedDatabase = createHandlers(
 
     const prisma = initializePrisma(c.env);
     const authContext = await auth(c.env).$context;
-    const rolesBySlug = new Map(
-      (await prisma.role.findMany({
-        where: {
-          slug: {
-            in: Array.from(new Set(users.flatMap((user) => user.roles))),
-          },
-        },
-      })).map((role) => [role.slug, role]),
-    );
 
     let created = 0;
     let skipped = 0;
@@ -56,7 +47,6 @@ export const seedDatabase = createHandlers(
         await syncUserRoles({
           prisma,
           roleSlugs: userData.roles,
-          rolesBySlug,
           userId: existingUser.id,
         });
         skipped += 1;
@@ -98,7 +88,6 @@ export const seedDatabase = createHandlers(
       await syncUserRoles({
         prisma,
         roleSlugs: userData.roles,
-        rolesBySlug,
         userId: createdUser.id,
       });
 
@@ -122,35 +111,31 @@ async function syncUserRoles({
   prisma,
   userId,
   roleSlugs,
-  rolesBySlug,
 }: {
   prisma: ReturnType<typeof initializePrisma>;
   userId: string;
   roleSlugs: Array<string>;
-  rolesBySlug: Map<string, { id: string; slug: string }>;
 }) {
-  const roleIds = roleSlugs.map((roleSlug) => {
-    const role = rolesBySlug.get(roleSlug);
-
-    if (!role) {
+  const normalizedRoleSlugs = roleSlugs.map((roleSlug) => {
+    if (!isRoleSlug(roleSlug)) {
       throw new Error(`Seed role not found: ${roleSlug}`);
     }
 
-    return role.id;
+    return roleSlug;
   });
 
   const existingUserRoles = await prisma.userRole.findMany({
     where: { userId },
   });
 
-  const existingRoleIds = new Set(existingUserRoles.map((userRole) => userRole.roleId));
+  const existingRoleSlugs = new Set(existingUserRoles.map((userRole) => userRole.roleSlug));
 
-  for (const roleId of roleIds) {
-    if (!existingRoleIds.has(roleId)) {
+  for (const roleSlug of normalizedRoleSlugs) {
+    if (!existingRoleSlugs.has(roleSlug)) {
       await prisma.userRole.create({
         data: {
           userId,
-          roleId,
+          roleSlug,
         },
       });
     }

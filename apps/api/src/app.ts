@@ -10,7 +10,9 @@ import type { NotificationBindings } from '@/api/lib/notifications/types';
 
 export type AuthSession = Awaited<ReturnType<ReturnType<typeof auth>['api']['getSession']>>;
 export type AuthSessionUser = NonNullable<AuthSession>['user'];
-export type AuthenticatedUser = AuthSessionUser & AuthorizationSnapshot;
+export type AuthenticatedUser = AuthSessionUser & AuthorizationSnapshot & {
+  mustChangePassword: boolean;
+};
 
 export type AppVariables = {
   user: AuthenticatedUser;

@@ -47,6 +47,7 @@ export enum NotificationEvent {
   INSTALLMENT_DUE_REMINDER = 'INSTALLMENT_DUE_REMINDER',
   INSTALLMENT_OVERDUE_REMINDER = 'INSTALLMENT_OVERDUE_REMINDER',
   INSTALLMENT_PAID = 'INSTALLMENT_PAID',
+  USER_ACCOUNT_CREATED = 'USER_ACCOUNT_CREATED',
 }
 
 export const NOTIFICATION_EVENTS = [
@@ -54,6 +55,7 @@ export const NOTIFICATION_EVENTS = [
   NotificationEvent.INSTALLMENT_DUE_REMINDER,
   NotificationEvent.INSTALLMENT_OVERDUE_REMINDER,
   NotificationEvent.INSTALLMENT_PAID,
+  NotificationEvent.USER_ACCOUNT_CREATED,
 ] as const;
 
 export const NOTIFICATION_EVENT_LABELS: Record<NotificationEvent, string> = {
@@ -61,6 +63,15 @@ export const NOTIFICATION_EVENT_LABELS: Record<NotificationEvent, string> = {
   [NotificationEvent.INSTALLMENT_DUE_REMINDER]: 'Installment Due Reminder',
   [NotificationEvent.INSTALLMENT_OVERDUE_REMINDER]: 'Installment Overdue Reminder',
   [NotificationEvent.INSTALLMENT_PAID]: 'Installment Paid',
+  [NotificationEvent.USER_ACCOUNT_CREATED]: 'User Account Created',
+};
+
+export const NOTIFICATION_EVENT_CHANNELS: Record<NotificationEvent, ReadonlyArray<NotificationChannel>> = {
+  [NotificationEvent.LOAN_CREATED]: NOTIFICATION_CHANNELS,
+  [NotificationEvent.INSTALLMENT_DUE_REMINDER]: NOTIFICATION_CHANNELS,
+  [NotificationEvent.INSTALLMENT_OVERDUE_REMINDER]: NOTIFICATION_CHANNELS,
+  [NotificationEvent.INSTALLMENT_PAID]: NOTIFICATION_CHANNELS,
+  [NotificationEvent.USER_ACCOUNT_CREATED]: [NotificationChannel.EMAIL],
 };
 
 export enum NotificationContentFormat {
@@ -126,6 +137,14 @@ export const NOTIFICATION_PLACEHOLDER_GROUPS = [
       { key: '{{installment.amount}}', description: 'Installment amount' },
       { key: '{{installment.dueDate}}', description: 'Installment due date' },
       { key: '{{installment.paidAt}}', description: 'Installment paid date' },
+    ],
+  },
+  {
+    label: 'User',
+    items: [
+      { key: '{{user.name}}', description: 'User full name' },
+      { key: '{{user.email}}', description: 'User email address' },
+      { key: '{{user.temporaryPassword}}', description: 'Temporary password for first login' },
     ],
   },
 ] as const;

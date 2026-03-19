@@ -1,4 +1,6 @@
-import { PermissionAction, PermissionModule, SystemRoleSlug } from './types';
+import { PermissionAction, PermissionModule, RoleSlug } from './types';
+
+import type { RoleDefinition } from './types';
 
 export const permissionCatalog = {
   [PermissionModule.CLIENTS]: {
@@ -38,15 +40,13 @@ export const permissionCatalog = {
     label: 'Roles',
     actions: {
       [PermissionAction.VIEW]: 'View',
-      [PermissionAction.CREATE]: 'Create',
-      [PermissionAction.UPDATE]: 'Update',
-      [PermissionAction.DELETE]: 'Delete',
     },
   },
   [PermissionModule.USERS]: {
     label: 'Users',
     actions: {
       [PermissionAction.VIEW]: 'View',
+      [PermissionAction.CREATE]: 'Create',
       [PermissionAction.ASSIGN_ROLES]: 'Assign Roles',
     },
   },
@@ -55,4 +55,22 @@ export const permissionCatalog = {
   actions: Partial<Record<PermissionAction, string>>;
 }>;
 
-export const protectedSystemRoleSlugs: Array<SystemRoleSlug> = [SystemRoleSlug.SUPER_ADMIN];
+export const roleCatalog = {
+  [RoleSlug.SUPER_ADMIN]: {
+    slug: RoleSlug.SUPER_ADMIN,
+    name: 'Super Admin',
+    description: 'Protected role with full access.',
+    isSystem: true,
+    hasFullAccess: true,
+  },
+  [RoleSlug.ADMIN]: {
+    slug: RoleSlug.ADMIN,
+    name: 'Admin',
+    description: 'Default administrator role.',
+    isSystem: true,
+    hasFullAccess: false,
+  },
+} as const satisfies Record<RoleSlug, RoleDefinition>;
+
+export const protectedRoleSlugs: Array<RoleSlug> = [RoleSlug.SUPER_ADMIN];
+export const protectedSystemRoleSlugs = protectedRoleSlugs;

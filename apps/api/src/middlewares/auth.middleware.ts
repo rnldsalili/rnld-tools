@@ -3,6 +3,11 @@ import { getAuthenticatedUser } from '@/api/lib/authorization';
 import { initializePrisma } from '@/api/lib/db';
 import { createMiddleware } from '@/api/app';
 
+const PASSWORD_CHANGE_ALLOWED_PATHS = new Set([
+  '/api/users/me',
+  '/api/users/me/change-password',
+]);
+
 export const requireAuth = createMiddleware(async (c, next) => {
   const session = await auth(c.env).api.getSession({
     headers: c.req.raw.headers,
@@ -30,5 +35,18 @@ export const requireAuth = createMiddleware(async (c, next) => {
   }
 
   c.set('user', authenticatedUser);
+
+  if (
+    authenticatedUser.mustChangePassword
+    && !PASSWORD_CHANGE_ALLOWED_PATHS.has(c.req.path)
+  ) {
+    return c.json({
+      meta: {
+        code: 403,
+        message: 'Password change required',
+      },
+    }, 403);
+  }
+
   await next();
 });
