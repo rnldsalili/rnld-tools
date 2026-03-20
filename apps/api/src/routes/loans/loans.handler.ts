@@ -1,4 +1,4 @@
-import { ClientStatus, InstallmentInterval, InstallmentType } from '@workspace/constants';
+import { ClientStatus, InstallmentInterval, InstallmentType, LoanLogEventType } from '@workspace/constants';
 import {
   loanCreateSchema,
   loanGetQuerySchema,
@@ -9,6 +9,8 @@ import {
 import { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
+import { createLoanLog } from '@/api/lib/loans/logs';
+import { getInstallmentRemainingAmount, roundCurrencyAmount } from '@/api/lib/loans/payments';
 import { deleteImage } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
 
@@ -41,6 +43,21 @@ async function getLoanClientOrNull(prisma: ReturnType<typeof initializePrisma>, 
       status: true,
     },
   });
+}
+
+function formatLoanInstallment<T extends {
+  amount: number;
+  paidAmount: number;
+  _count?: { payments: number };
+}>(input: T) {
+  const remainingAmount = getInstallmentRemainingAmount(input.amount, input.paidAmount);
+
+  return {
+    ...input,
+    paidAmount: roundCurrencyAmount(input.paidAmount),
+    remainingAmount,
+    paymentCount: input._count?.payments ?? 0,
+  };
 }
 
 export const getLoans = createHandlers(
@@ -109,6 +126,15 @@ export const getLoan = createHandlers(
         orderBy: { dueDate: 'asc' },
         skip: skipCount,
         take: limit,
+        include: {
+          _count: {
+            select: {
+              payments: {
+                where: { voidedAt: null },
+              },
+            },
+          },
+        },
       }),
       prisma.loanInstallment.count({ where: { loanId: loanId } }),
     ]);
@@ -118,7 +144,7 @@ export const getLoan = createHandlers(
       data: {
         loan: {
           ...loanFound,
-          installments: loanInstallments,
+          installments: loanInstallments.map(formatLoanInstallment),
           installmentsPagination: {
             page,
             limit,
@@ -152,6 +178,7 @@ export const createLoan = createHandlers(
         client: { connect: { id: loanPayload.clientId } },
         amount: loanPayload.amount,
         currency: loanPayload.currency,
+        excessBalance: 0,
         installmentInterval: loanPayload.installmentInterval,
         loanDate: new Date(loanPayload.loanDate),
         interestRate: loanPayload.interestRate ?? null,
@@ -199,9 +226,47 @@ export const createLoan = createHandlers(
       }
     }
 
+    await createLoanLog(prisma, {
+      loanId: createdLoan.id,
+      actorUserId: authenticatedUser.id,
+      eventType: LoanLogEventType.LOAN_CREATED,
+      eventData: {
+        amount: createdLoan.amount,
+        clientId: createdLoan.clientId,
+        currency: createdLoan.currency,
+        installmentInterval: createdLoan.installmentInterval,
+        interestRate: createdLoan.interestRate,
+        loanDate: createdLoan.loanDate.toISOString(),
+      },
+    });
+
+    if (createdInstallments) {
+      for (const installment of createdInstallments) {
+        await createLoanLog(prisma, {
+          loanId: createdLoan.id,
+          installmentId: installment.id,
+          actorUserId: authenticatedUser.id,
+          eventType: LoanLogEventType.INSTALLMENT_ADDED,
+          eventData: {
+            amount: installment.amount,
+            dueDate: installment.dueDate.toISOString(),
+            remarks: installment.remarks,
+          },
+        });
+      }
+    }
+
     return c.json({
       meta: { code: 201, message: 'Loan created successfully' },
-      data: { loan: { ...createdLoan, installments: createdInstallments } },
+      data: {
+        loan: {
+          ...createdLoan,
+          installments: createdInstallments?.map((installment) => formatLoanInstallment({
+            ...installment,
+            _count: { payments: 0 },
+          })) ?? null,
+        },
+      },
     }, 201);
   },
 );
@@ -220,6 +285,11 @@ export const updateLoan = createHandlers(
         where: { id: loanId },
         select: {
           clientId: true,
+          amount: true,
+          installmentInterval: true,
+          interestRate: true,
+          description: true,
+          loanDate: true,
         },
       });
 
@@ -258,6 +328,69 @@ export const updateLoan = createHandlers(
           client: true,
         },
       });
+
+      const updatedLoanChanges: Record<string, unknown> = {};
+
+      if (loanUpdatePayload.clientId !== undefined && loanUpdatePayload.clientId !== existingLoan.clientId) {
+        updatedLoanChanges.clientId = {
+          from: existingLoan.clientId,
+          to: loanUpdatePayload.clientId,
+        };
+      }
+
+      if (loanUpdatePayload.amount !== undefined && roundCurrencyAmount(loanUpdatePayload.amount) !== roundCurrencyAmount(existingLoan.amount)) {
+        updatedLoanChanges.amount = {
+          from: existingLoan.amount,
+          to: loanUpdatePayload.amount,
+        };
+      }
+
+      if (
+        loanUpdatePayload.installmentInterval !== undefined
+        && loanUpdatePayload.installmentInterval !== existingLoan.installmentInterval
+      ) {
+        updatedLoanChanges.installmentInterval = {
+          from: existingLoan.installmentInterval,
+          to: loanUpdatePayload.installmentInterval,
+        };
+      }
+
+      if (
+        loanUpdatePayload.interestRate !== undefined
+        && loanUpdatePayload.interestRate !== existingLoan.interestRate
+      ) {
+        updatedLoanChanges.interestRate = {
+          from: existingLoan.interestRate,
+          to: loanUpdatePayload.interestRate,
+        };
+      }
+
+      if (
+        loanUpdatePayload.description !== undefined
+        && (loanUpdatePayload.description?.trim() || null) !== existingLoan.description
+      ) {
+        updatedLoanChanges.description = {
+          from: existingLoan.description,
+          to: loanUpdatePayload.description?.trim() || null,
+        };
+      }
+
+      const nextLoanDate = new Date(loanUpdatePayload.loanDate).toISOString();
+      if (existingLoan.loanDate.toISOString() !== nextLoanDate) {
+        updatedLoanChanges.loanDate = {
+          from: existingLoan.loanDate.toISOString(),
+          to: nextLoanDate,
+        };
+      }
+
+      if (Object.keys(updatedLoanChanges).length > 0) {
+        await createLoanLog(prisma, {
+          loanId,
+          actorUserId: authenticatedUser.id,
+          eventType: LoanLogEventType.LOAN_UPDATED,
+          eventData: { changes: updatedLoanChanges },
+        });
+      }
 
       return c.json({
         meta: { code: 200, message: 'Loan updated successfully' },

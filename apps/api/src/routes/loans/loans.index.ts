@@ -1,6 +1,7 @@
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import documentLogsRoute from './document-logs/document-logs.index';
 import loanDocumentsRoute from './documents/documents.index';
+import loanLogsRoute from './logs/logs.index';
 import { createLoan, deleteLoan, getLoan, getLoans, updateLoan } from './loans.handler';
 import documentLinksRoute from './document-links/document-links.index';
 import installmentsRoute from './installments/installments.index';
@@ -16,6 +17,7 @@ const loansRoute = createRouter()
   .put('/:id', authorize(PermissionModule.LOANS, PermissionAction.UPDATE), ...updateLoan)
   .delete('/:id', authorize(PermissionModule.LOANS, PermissionAction.DELETE), ...deleteLoan)
   .route('/:loanId/installments', installmentsRoute)
+  .route('/:loanId/logs', loanLogsRoute)
   .route('/:loanId/document-logs', documentLogsRoute)
   .route('/:loanId/documents', loanDocumentsRoute)
   .route('/:loanId/document-links', documentLinksRoute);

@@ -32,6 +32,9 @@ model User {
   clientsUpdated          Client[]           @relation("ClientUpdatedBy")
   loanInstallmentsCreated LoanInstallment[]  @relation("LoanInstallmentCreatedBy")
   loanInstallmentsUpdated LoanInstallment[]  @relation("LoanInstallmentUpdatedBy")
+  loanInstallmentPaymentsCreated LoanInstallmentPayment[] @relation("LoanInstallmentPaymentCreatedBy")
+  loanInstallmentPaymentsVoided LoanInstallmentPayment[]  @relation("LoanInstallmentPaymentVoidedBy")
+  loanLogs            LoanLog[]           @relation("LoanLogActorUser")
   loanDocumentLogs        LoanDocumentLog[]  @relation("LoanDocumentLogActorUser")
   notificationLogsQueued  NotificationLog[]  @relation("NotificationLogQueuedByUser")
 
@@ -117,6 +120,16 @@ enum LoanInstallmentStatus {
   OVERDUE
 }
 
+enum LoanLogEventType {
+  LOAN_CREATED
+  LOAN_UPDATED
+  INSTALLMENT_ADDED
+  INSTALLMENT_UPDATED
+  INSTALLMENT_DELETED
+  PAYMENT_RECORDED
+  PAYMENT_VOIDED
+}
+
 enum DocumentType {
   LOAN
 }
@@ -177,6 +190,7 @@ model Loan {
   clientId            String
   amount              Float
   currency            String   @default("PHP")
+  excessBalance       Float    @default(0)
   interestRate        Float?
   description         String?
   installmentInterval String
@@ -190,6 +204,8 @@ model Loan {
   createdBy        User               @relation("LoanCreatedBy", fields: [createdByUserId], references: [id])
   updatedBy        User               @relation("LoanUpdatedBy", fields: [updatedByUserId], references: [id])
   installments     LoanInstallment[]
+  payments         LoanInstallmentPayment[]
+  logs             LoanLog[]
   documents        LoanDocument[]
   loanDocumentLogs LoanDocumentLog[]
 
@@ -226,6 +242,7 @@ model LoanInstallment {
   loanId          String
   dueDate         DateTime
   amount          Float
+  paidAmount      Float                 @default(0)
   status          LoanInstallmentStatus @default(PENDING)
   paidAt          DateTime?
   remarks         String?
@@ -235,6 +252,8 @@ model LoanInstallment {
   updatedByUserId String
 
   loan      Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  payments  LoanInstallmentPayment[]
+  logs      LoanLog[]
   createdBy User @relation("LoanInstallmentCreatedBy", fields: [createdByUserId], references: [id])
   updatedBy User @relation("LoanInstallmentUpdatedBy", fields: [updatedByUserId], references: [id])
 
@@ -242,6 +261,58 @@ model LoanInstallment {
   @@index([createdByUserId])
   @@index([updatedByUserId])
   @@map("loan_installment")
+}
+
+model LoanInstallmentPayment {
+  id                  String    @id @default(cuid())
+  loanId              String
+  installmentId       String
+  paymentDate         DateTime
+  cashAmount          Float
+  excessAppliedAmount Float     @default(0)
+  excessCreatedAmount Float     @default(0)
+  appliedAmount       Float
+  remarks             String?
+  voidedAt            DateTime?
+  voidReason          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  createdByUserId     String
+  voidedByUserId      String?
+
+  loan         Loan            @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  installment  LoanInstallment @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+  createdBy    User            @relation("LoanInstallmentPaymentCreatedBy", fields: [createdByUserId], references: [id])
+  voidedBy     User?           @relation("LoanInstallmentPaymentVoidedBy", fields: [voidedByUserId], references: [id], onDelete: SetNull)
+  logs         LoanLog[]
+
+  @@index([loanId, createdAt])
+  @@index([installmentId, createdAt])
+  @@index([createdByUserId])
+  @@index([voidedByUserId])
+  @@map("loan_installment_payment")
+}
+
+model LoanLog {
+  id             String           @id @default(cuid())
+  loanId         String
+  installmentId  String?
+  paymentId      String?
+  eventType      LoanLogEventType
+  actorUserId    String?
+  eventData      String?
+  createdAt      DateTime         @default(now())
+
+  loan         Loan                   @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  installment  LoanInstallment?       @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+  payment      LoanInstallmentPayment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  actorUser    User?                  @relation("LoanLogActorUser", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([loanId, createdAt])
+  @@index([installmentId, createdAt])
+  @@index([paymentId])
+  @@index([actorUserId])
+  @@map("loan_log")
 }
 
 model Document {

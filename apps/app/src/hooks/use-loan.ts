@@ -5,18 +5,43 @@ import type { InferRequestType, InferResponseType } from '@workspace/api-client'
 import apiClient, { parseResponse } from '@/app/lib/api';
 import { isPlainRecord } from '@/app/lib/value-guards';
 
-// --- Query keys ---
-
 const LOANS_QUERY_KEY = 'loans';
 const LOAN_QUERY_KEY = 'loan';
-
-// --- Types ---
+const LOAN_LOGS_QUERY_KEY = 'loan-logs';
+const INSTALLMENT_PAYMENTS_QUERY_KEY = 'installment-payments';
 
 export type LoansListResponse = InferResponseType<typeof apiClient.loans.$get, 200>;
 type LoanListItemBase = LoansListResponse['data']['loans'][number];
 
 export type LoanDetailResponse = InferResponseType<typeof apiClient.loans[':id']['$get'], 200>;
 type LoanDetailBase = LoanDetailResponse['data']['loan'];
+
+type LoanLogsGetRoute = (typeof apiClient.loans)[':loanId']['logs']['$get'];
+type InstallmentPaymentsGetRoute =
+  (typeof apiClient.loans)[':loanId']['installments'][':installmentId']['payments']['$get'];
+type UpdateLoanRoute = (typeof apiClient.loans)[':id']['$put'];
+type DeleteLoanRoute = (typeof apiClient.loans)[':id']['$delete'];
+type UpdateInstallmentRoute =
+  (typeof apiClient.loans)[':loanId']['installments'][':installmentId']['$put'];
+type AddInstallmentRoute = (typeof apiClient.loans)[':loanId']['installments']['$post'];
+type RecordInstallmentPaymentRoute =
+  (typeof apiClient.loans)[':loanId']['installments'][':installmentId']['payments']['$post'];
+type VoidInstallmentPaymentRoute =
+  (typeof apiClient.loans)[':loanId']['installments'][':installmentId']['payments'][':paymentId']['void']['$post'];
+
+export type LoanActivityLogsResponse = InferResponseType<LoanLogsGetRoute, 200>;
+export type LoanActivityLog = LoanActivityLogsResponse['data']['logs'][number];
+
+export type InstallmentPaymentsResponse = InferResponseType<InstallmentPaymentsGetRoute, 200>;
+export type InstallmentPayment = InstallmentPaymentsResponse['data']['payments'][number];
+
+type CreateLoanResponse = InferResponseType<typeof apiClient.loans.$post, 201>;
+type UpdateLoanResponse = InferResponseType<UpdateLoanRoute, 200>;
+type DeleteLoanResponse = InferResponseType<DeleteLoanRoute, 200>;
+type UpdateInstallmentResponse = InferResponseType<UpdateInstallmentRoute, 200>;
+type AddInstallmentResponse = InferResponseType<AddInstallmentRoute, 201>;
+type RecordInstallmentPaymentResponse = InferResponseType<RecordInstallmentPaymentRoute, 201>;
+type VoidInstallmentPaymentResponse = InferResponseType<VoidInstallmentPaymentRoute, 200>;
 
 type LoanClient = {
   address: string | null;
@@ -31,11 +56,28 @@ type LoanClient = {
   updatedByUserId: string;
 };
 
-type LoanInstallmentsPagination = {
+type PaginationState = {
   limit: number;
   page: number;
   total: number;
   totalPages: number;
+};
+
+export type LoanInstallment = {
+  amount: number;
+  createdAt: string;
+  createdByUserId: string;
+  dueDate: string;
+  id: string;
+  loanId: string;
+  paidAmount: number;
+  paidAt: string | null;
+  paymentCount: number;
+  remainingAmount: number;
+  remarks: string | null;
+  status: string;
+  updatedAt: string;
+  updatedByUserId: string;
 };
 
 export type LoanListItem = Omit<LoanListItemBase, '_count' | 'client'> & {
@@ -45,26 +87,19 @@ export type LoanListItem = Omit<LoanListItemBase, '_count' | 'client'> & {
   client: LoanClient;
 };
 
-export type LoanDetail = Omit<LoanDetailBase, 'client' | 'installmentsPagination'> & {
+export type LoanDetail = Omit<LoanDetailBase, 'client' | 'excessBalance' | 'installments' | 'installmentsPagination'> & {
   client: LoanClient;
-  installmentsPagination: LoanInstallmentsPagination;
+  excessBalance: number;
+  installments: Array<LoanInstallment>;
+  installmentsPagination: PaginationState;
 };
 
-export type LoanInstallment = LoanDetail['installments'][number];
-
 type CreateLoanBody = InferRequestType<typeof apiClient.loans.$post>['json'];
-type UpdateLoanBody = InferRequestType<typeof apiClient.loans[':id']['$put']>['json'];
-type UpdateInstallmentBody = InferRequestType<
-  typeof apiClient.loans[':loanId']['installments'][':installmentId']['$put']
->['json'];
-type AddInstallmentBody = InferRequestType<
-  typeof apiClient.loans[':loanId']['installments']['$post']
->['json'];
-type MarkInstallmentPaidBody = InferRequestType<
-  typeof apiClient.loans[':loanId']['installments'][':installmentId']['mark-paid']['$post']
->['json'];
-
-// --- Query params ---
+type UpdateLoanBody = InferRequestType<UpdateLoanRoute>['json'];
+type UpdateInstallmentBody = InferRequestType<UpdateInstallmentRoute>['json'];
+type AddInstallmentBody = InferRequestType<AddInstallmentRoute>['json'];
+type RecordInstallmentPaymentBody = InferRequestType<RecordInstallmentPaymentRoute>['json'];
+type VoidInstallmentPaymentBody = InferRequestType<VoidInstallmentPaymentRoute>['json'];
 
 interface LoansQueryParams {
   search: string;
@@ -73,6 +108,19 @@ interface LoansQueryParams {
 }
 
 interface LoanQueryParams {
+  loanId: string;
+  page: number;
+  limit: number;
+}
+
+interface LoanLogsQueryParams {
+  loanId: string;
+  page: number;
+  limit: number;
+}
+
+interface InstallmentPaymentsQueryParams {
+  installmentId: string;
   loanId: string;
   page: number;
   limit: number;
@@ -90,7 +138,9 @@ function normalizeLoanDetail(loan: LoanDetailBase): LoanDetail {
   return {
     ...loan,
     client: getLoanClient(loan),
-    installmentsPagination: getLoanInstallmentsPagination(loan),
+    excessBalance: getOptionalNumber(loan, 'excessBalance') ?? 0,
+    installments: getLoanInstallments(loan),
+    installmentsPagination: getPagination(loan, 'installmentsPagination'),
   };
 }
 
@@ -123,8 +173,8 @@ function getLoanClient(loan: object): LoanClient {
   };
 }
 
-function getLoanInstallmentsPagination(loan: object): LoanInstallmentsPagination {
-  const paginationValue = Reflect.get(loan, 'installmentsPagination');
+function getPagination(source: object, key: string): PaginationState {
+  const paginationValue = Reflect.get(source, key);
   if (
     isPlainRecord(paginationValue)
     && typeof paginationValue.limit === 'number'
@@ -146,6 +196,32 @@ function getLoanInstallmentsPagination(loan: object): LoanInstallmentsPagination
     total: 0,
     totalPages: 0,
   };
+}
+
+function getLoanInstallments(loan: object): Array<LoanInstallment> {
+  const installmentsValue = Reflect.get(loan, 'installments');
+  if (!Array.isArray(installmentsValue)) {
+    return [];
+  }
+
+  return installmentsValue
+    .filter(isPlainRecord)
+    .map((installment): LoanInstallment => ({
+      amount: getOptionalNumber(installment, 'amount') ?? 0,
+      createdAt: getOptionalString(installment, 'createdAt') ?? '',
+      createdByUserId: getOptionalString(installment, 'createdByUserId') ?? '',
+      dueDate: getOptionalString(installment, 'dueDate') ?? '',
+      id: getOptionalString(installment, 'id') ?? '',
+      loanId: getOptionalString(installment, 'loanId') ?? '',
+      paidAmount: getOptionalNumber(installment, 'paidAmount') ?? 0,
+      paidAt: getNullableString(installment, 'paidAt'),
+      paymentCount: getOptionalNumber(installment, 'paymentCount') ?? 0,
+      remainingAmount: getOptionalNumber(installment, 'remainingAmount') ?? 0,
+      remarks: getNullableString(installment, 'remarks'),
+      status: getOptionalString(installment, 'status') ?? '',
+      updatedAt: getOptionalString(installment, 'updatedAt') ?? '',
+      updatedByUserId: getOptionalString(installment, 'updatedByUserId') ?? '',
+    }));
 }
 
 function isLoanClient(value: unknown): value is LoanClient {
@@ -172,12 +248,50 @@ function getNullableString(source: object, key: string) {
   return value === null || typeof value === 'string' ? value : null;
 }
 
+function getOptionalNumber(source: object, key: string) {
+  const value = Reflect.get(source, key);
+  return typeof value === 'number' ? value : undefined;
+}
+
 function getLoanClientStatus(source: object) {
   const value = Reflect.get(source, 'status');
   return Object.values(ClientStatus).find((status) => status === value) ?? ClientStatus.ENABLED;
 }
 
-// --- Query options ---
+async function parseOkResponseOrThrow<T>(response: Response, fallbackMessage: string): Promise<T> {
+  try {
+    const parsedResponse = await parseResponse(response as never) as unknown;
+    const result = parsedResponse as T;
+    const metaMessage = isPlainRecord(parsedResponse)
+      && isPlainRecord(parsedResponse.meta)
+      && typeof parsedResponse.meta.message === 'string'
+      ? parsedResponse.meta.message
+      : undefined;
+
+    if (!response.ok) {
+      throw new Error(metaMessage || fallbackMessage);
+    }
+
+    return result;
+  } catch (error) {
+    throw new Error(getDetailedErrorMessage(error) || fallbackMessage);
+  }
+}
+
+function invalidateLoanQueries(queryClient: ReturnType<typeof useQueryClient>, params: {
+  installmentId?: string;
+  loanId: string;
+}) {
+  queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
+  queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, params.loanId] });
+  queryClient.invalidateQueries({ queryKey: [LOAN_LOGS_QUERY_KEY, params.loanId] });
+
+  if (params.installmentId) {
+    queryClient.invalidateQueries({
+      queryKey: [INSTALLMENT_PAYMENTS_QUERY_KEY, params.loanId, params.installmentId],
+    });
+  }
+}
 
 export function loansQueryOptions(params: LoansQueryParams) {
   return queryOptions({
@@ -190,11 +304,7 @@ export function loansQueryOptions(params: LoansQueryParams) {
           limit: String(params.limit),
         },
       });
-      const result = await parseResponse(response);
-
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to load loans.');
-      }
+      const result = await parseOkResponseOrThrow<LoansListResponse>(response, 'Failed to load loans.');
 
       return {
         ...result,
@@ -215,11 +325,7 @@ export function loanQueryOptions(params: LoanQueryParams) {
         param: { id: params.loanId },
         query: { page: String(params.page), limit: String(params.limit) },
       });
-      const result = await parseResponse(response);
-
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to load loan.');
-      }
+      const result = await parseOkResponseOrThrow<LoanDetailResponse>(response, 'Failed to load loan.');
 
       return {
         ...result,
@@ -232,7 +338,41 @@ export function loanQueryOptions(params: LoanQueryParams) {
   });
 }
 
-// --- Hooks ---
+export function loanLogsQueryOptions(params: LoanLogsQueryParams) {
+  return queryOptions({
+    queryKey: [LOAN_LOGS_QUERY_KEY, params.loanId, { page: params.page, limit: params.limit }],
+    queryFn: async () => {
+      const response = await apiClient.loans[':loanId'].logs.$get({
+        param: { loanId: params.loanId },
+        query: { page: String(params.page), limit: String(params.limit) },
+      });
+
+      return parseOkResponseOrThrow<LoanActivityLogsResponse>(response, 'Failed to load loan activity logs.');
+    },
+    enabled: !!params.loanId,
+  });
+}
+
+export function installmentPaymentsQueryOptions(params: InstallmentPaymentsQueryParams) {
+  return queryOptions({
+    queryKey: [INSTALLMENT_PAYMENTS_QUERY_KEY, params.loanId, params.installmentId, { page: params.page, limit: params.limit }],
+    queryFn: async () => {
+      const response = await apiClient.loans[':loanId'].installments[':installmentId'].payments.$get({
+        param: {
+          loanId: params.loanId,
+          installmentId: params.installmentId,
+        },
+        query: {
+          page: String(params.page),
+          limit: String(params.limit),
+        },
+      });
+
+      return parseOkResponseOrThrow<InstallmentPaymentsResponse>(response, 'Failed to load installment payments.');
+    },
+    enabled: Boolean(params.loanId && params.installmentId),
+  });
+}
 
 export function useLoans(params: LoansQueryParams) {
   return useQuery(loansQueryOptions(params));
@@ -242,23 +382,21 @@ export function useLoan(params: LoanQueryParams) {
   return useQuery(loanQueryOptions(params));
 }
 
+export function useLoanLogs(params: LoanLogsQueryParams) {
+  return useQuery(loanLogsQueryOptions(params));
+}
+
+export function useInstallmentPayments(params: InstallmentPaymentsQueryParams) {
+  return useQuery(installmentPaymentsQueryOptions(params));
+}
+
 export function useCreateLoan() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ body }: { body: CreateLoanBody }) => {
-      try {
-        const response = await apiClient.loans.$post({ json: body });
-        const result = await parseResponse(response);
-
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to create loan.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to create loan.');
-      }
+      const response = await apiClient.loans.$post({ json: body });
+      return parseOkResponseOrThrow<CreateLoanResponse>(response, 'Failed to create loan.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
@@ -277,25 +415,15 @@ export function useUpdateLoan() {
       loanId: string;
       body: UpdateLoanBody;
     }) => {
-      try {
-        const response = await apiClient.loans[':id'].$put({
-          param: { id: loanId },
-          json: body,
-        });
-        const result = await parseResponse(response);
+      const response = await apiClient.loans[':id'].$put({
+        param: { id: loanId },
+        json: body,
+      });
 
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to update loan.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to update loan.');
-      }
+      return parseOkResponseOrThrow<UpdateLoanResponse>(response, 'Failed to update loan.');
     },
     onSuccess: (_data, { loanId }) => {
-      queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
-      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+      invalidateLoanQueries(queryClient, { loanId });
     },
   });
 }
@@ -305,24 +433,16 @@ export function useDeleteLoan() {
 
   return useMutation({
     mutationFn: async (loanId: string) => {
-      try {
-        const response = await apiClient.loans[':id'].$delete({
-          param: { id: loanId },
-        });
-        const result = await parseResponse(response);
+      const response = await apiClient.loans[':id'].$delete({
+        param: { id: loanId },
+      });
 
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to delete loan.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to delete loan.');
-      }
+      return parseOkResponseOrThrow<DeleteLoanResponse>(response, 'Failed to delete loan.');
     },
     onSuccess: (_data, loanId) => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
       queryClient.removeQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+      queryClient.removeQueries({ queryKey: [LOAN_LOGS_QUERY_KEY, loanId] });
     },
   });
 }
@@ -340,24 +460,15 @@ export function useUpdateInstallment() {
       installmentId: string;
       body: UpdateInstallmentBody;
     }) => {
-      try {
-        const response = await apiClient.loans[':loanId'].installments[':installmentId'].$put({
-          param: { loanId, installmentId },
-          json: body,
-        });
-        const result = await parseResponse(response);
+      const response = await apiClient.loans[':loanId'].installments[':installmentId'].$put({
+        param: { loanId, installmentId },
+        json: body,
+      });
 
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to update installment.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to update installment.');
-      }
+      return parseOkResponseOrThrow<UpdateInstallmentResponse>(response, 'Failed to update installment.');
     },
-    onSuccess: (_data, { loanId }) => {
-      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+    onSuccess: (_data, { loanId, installmentId }) => {
+      invalidateLoanQueries(queryClient, { loanId, installmentId });
     },
   });
 }
@@ -373,29 +484,20 @@ export function useAddInstallment() {
       loanId: string;
       body: AddInstallmentBody;
     }) => {
-      try {
-        const response = await apiClient.loans[':loanId'].installments.$post({
-          param: { loanId },
-          json: body,
-        });
-        const result = await parseResponse(response);
+      const response = await apiClient.loans[':loanId'].installments.$post({
+        param: { loanId },
+        json: body,
+      });
 
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to add installment.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to add installment.');
-      }
+      return parseOkResponseOrThrow<AddInstallmentResponse>(response, 'Failed to add installment.');
     },
     onSuccess: (_data, { loanId }) => {
-      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+      invalidateLoanQueries(queryClient, { loanId });
     },
   });
 }
 
-export function useMarkInstallmentPaid() {
+export function useRecordInstallmentPayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -406,26 +508,45 @@ export function useMarkInstallmentPaid() {
     }: {
       loanId: string;
       installmentId: string;
-      body: MarkInstallmentPaidBody;
+      body: RecordInstallmentPaymentBody;
     }) => {
-      try {
-        const response = await apiClient.loans[':loanId'].installments[':installmentId']['mark-paid'].$post({
-          param: { loanId, installmentId },
-          json: body,
-        });
-        const result = await parseResponse(response);
+      const response = await apiClient.loans[':loanId'].installments[':installmentId'].payments.$post({
+        param: { loanId, installmentId },
+        json: body,
+      });
 
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to mark installment as paid.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to mark installment as paid.');
-      }
+      return parseOkResponseOrThrow<RecordInstallmentPaymentResponse>(response, 'Failed to record installment payment.');
     },
-    onSuccess: (_data, { loanId }) => {
-      queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
+    onSuccess: (_data, { loanId, installmentId }) => {
+      invalidateLoanQueries(queryClient, { loanId, installmentId });
+    },
+  });
+}
+
+export function useVoidInstallmentPayment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      loanId,
+      installmentId,
+      paymentId,
+      body,
+    }: {
+      loanId: string;
+      installmentId: string;
+      paymentId: string;
+      body: VoidInstallmentPaymentBody;
+    }) => {
+      const response = await apiClient.loans[':loanId'].installments[':installmentId'].payments[':paymentId'].void.$post({
+        param: { loanId, installmentId, paymentId },
+        json: body,
+      });
+
+      return parseOkResponseOrThrow<VoidInstallmentPaymentResponse>(response, 'Failed to void installment payment.');
+    },
+    onSuccess: (_data, { loanId, installmentId }) => {
+      invalidateLoanQueries(queryClient, { loanId, installmentId });
     },
   });
 }

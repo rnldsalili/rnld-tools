@@ -70,6 +70,7 @@ validate('json' | 'query' | 'param', schema)
 ### Database and Seed Flow
 
 - Prisma 7 runs against Cloudflare D1.
+- Do not use Prisma transactions (`prisma.$transaction`) in this project because Cloudflare D1 does not support them.
 - Initialize Prisma per request in Workers code:
 
 ```ts

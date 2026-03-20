@@ -22,6 +22,7 @@ interface EditInstallmentDialogProps {
 
 export function EditInstallmentDialog({ loanId, installment, onClose }: EditInstallmentDialogProps) {
   const { mutateAsync, isPending } = useUpdateInstallment();
+  const isAmountLocked = installment.paidAmount > 0 || installment.paymentCount > 0;
 
   const form = useForm({
     defaultValues: {
@@ -94,34 +95,44 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
           )}
         </form.Field>
 
-        <form.Field
-            name="amount"
-            validators={{
-            onChange: ({ value }) => {
-              if (!value) return 'Amount is required';
-              const parsed = parseFloat(value);
-              if (isNaN(parsed) || parsed <= 0) return 'Must be a positive number';
-              return undefined;
-            },
-          }}
-        >
-          {(field) => (
-            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
-              <FieldLabel htmlFor={field.name}>Amount <span className="text-destructive">*</span></FieldLabel>
-              <Input
-                  id={field.name}
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-              />
-              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
-            </Field>
-          )}
-        </form.Field>
+        {isAmountLocked ? (
+          <Field>
+            <FieldLabel>Amount</FieldLabel>
+            <Input value={fieldlessAmount(installment.amount)} disabled />
+            <p className="text-xs text-muted-foreground">
+              Amount changes are locked once payment activity has been recorded for this installment.
+            </p>
+          </Field>
+        ) : (
+          <form.Field
+              name="amount"
+              validators={{
+                onChange: ({ value }) => {
+                  if (!value) return 'Amount is required';
+                  const parsed = parseFloat(value);
+                  if (isNaN(parsed) || parsed <= 0) return 'Must be a positive number';
+                  return undefined;
+                },
+              }}
+          >
+            {(field) => (
+              <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+                <FieldLabel htmlFor={field.name}>Amount <span className="text-destructive">*</span></FieldLabel>
+                <Input
+                    id={field.name}
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                />
+                <FieldError errors={toFieldErrors(field.state.meta.errors)} />
+              </Field>
+            )}
+          </form.Field>
+        )}
 
         <form.Field name="remarks">
           {(field) => (
@@ -140,4 +151,8 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
       </form>
     </Modal>
   );
+}
+
+function fieldlessAmount(amount: number) {
+  return String(amount);
 }
