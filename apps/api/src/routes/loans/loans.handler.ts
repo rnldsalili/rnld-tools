@@ -55,15 +55,22 @@ async function getLoanClientOrNull(prisma: ReturnType<typeof initializePrisma>, 
 function formatLoanInstallment<T extends {
   amount: number;
   paidAmount: number;
+  dueReminderSentAt?: Date | null;
+  overdueReminderSentAt?: Date | null;
   _count?: { payments: number };
 }>(input: T) {
-  const remainingAmount = getInstallmentRemainingAmount(input.amount, input.paidAmount);
+  const {
+    dueReminderSentAt: _dueReminderSentAt,
+    overdueReminderSentAt: _overdueReminderSentAt,
+    ...installmentData
+  } = input;
+  const remainingAmount = getInstallmentRemainingAmount(installmentData.amount, installmentData.paidAmount);
 
   return {
-    ...input,
-    paidAmount: roundCurrencyAmount(input.paidAmount),
+    ...installmentData,
+    paidAmount: roundCurrencyAmount(installmentData.paidAmount),
     remainingAmount,
-    paymentCount: input._count?.payments ?? 0,
+    paymentCount: installmentData._count?.payments ?? 0,
   };
 }
 

@@ -23,6 +23,7 @@ import {
 import type { ClientStatus } from '@workspace/constants';
 import { ClientSelector } from '@/app/components/loans/client-selector';
 import { useUpdateLoan } from '@/app/hooks/use-loan';
+import { toStartOfDayIso } from '@/app/lib/date';
 import { toFieldErrors } from '@/app/lib/form';
 import { isOneOf } from '@/app/lib/value-guards';
 
@@ -74,7 +75,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
             clientId: value.clientId,
             amount: parseFloat(value.amount),
             installmentInterval: value.installmentInterval,
-            loanDate: value.loanDate,
+            loanDate: toStartOfDayIso(value.loanDate),
             notificationsEnabled: value.notificationsEnabled,
             interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
             description: value.description || null,

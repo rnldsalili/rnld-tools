@@ -40,13 +40,21 @@ class InstallmentPaymentRequestError extends Error {
 function formatInstallment<T extends {
   amount: number;
   paidAmount: number;
+  dueReminderSentAt?: Date | null;
+  overdueReminderSentAt?: Date | null;
   _count?: { payments: number };
 }>(input: T) {
+  const {
+    dueReminderSentAt: _dueReminderSentAt,
+    overdueReminderSentAt: _overdueReminderSentAt,
+    ...installmentData
+  } = input;
+
   return {
-    ...input,
-    paidAmount: roundCurrencyAmount(input.paidAmount),
-    remainingAmount: getInstallmentRemainingAmount(input.amount, input.paidAmount),
-    paymentCount: input._count?.payments ?? 0,
+    ...installmentData,
+    paidAmount: roundCurrencyAmount(installmentData.paidAmount),
+    remainingAmount: getInstallmentRemainingAmount(installmentData.amount, installmentData.paidAmount),
+    paymentCount: installmentData._count?.payments ?? 0,
   };
 }
 
@@ -159,11 +167,30 @@ export const updateInstallment = createHandlers(
       };
     }
 
+    const nextDueDate = installmentUpdatePayload.dueDate
+      ? new Date(installmentUpdatePayload.dueDate)
+      : installmentFound.dueDate;
+    const nextAmount = installmentUpdatePayload.amount ?? installmentFound.amount;
+    const nextStatus = getInstallmentStatus({
+      amount: nextAmount,
+      paidAmount: installmentFound.paidAmount,
+      dueDate: nextDueDate,
+      currentStatus: installmentFound.status,
+    });
+
+    if (nextStatus !== installmentFound.status) {
+      changes.status = {
+        from: installmentFound.status,
+        to: nextStatus,
+      };
+    }
+
     const updatedInstallment = await prisma.loanInstallment.update({
       where: { id: installmentId },
       data: {
-        ...(installmentUpdatePayload.dueDate !== undefined && { dueDate: new Date(installmentUpdatePayload.dueDate) }),
+        ...(installmentUpdatePayload.dueDate !== undefined && { dueDate: nextDueDate }),
         ...(installmentUpdatePayload.amount !== undefined && { amount: installmentUpdatePayload.amount }),
+        status: nextStatus,
         ...(installmentUpdatePayload.remarks !== undefined && { remarks: normalizedRemarks }),
         updatedBy: { connect: { id: authenticatedUser.id } },
       },
@@ -253,11 +280,20 @@ export const addInstallment = createHandlers(
       return c.json({ meta: { code: 404, message: 'Loan not found' } }, 404);
     }
 
+    const installmentDueDate = new Date(dueDate);
+    const initialInstallmentStatus = getInstallmentStatus({
+      amount,
+      paidAmount: 0,
+      dueDate: installmentDueDate,
+      currentStatus: InstallmentStatus.PENDING,
+    });
+
     const installment = await prisma.loanInstallment.create({
       data: {
         loan: { connect: { id: loanId } },
-        dueDate: new Date(dueDate),
+        dueDate: installmentDueDate,
         amount,
+        status: initialInstallmentStatus,
         paidAmount: 0,
         remarks: normalizeRemarks(remarks),
         createdBy: { connect: { id: authenticatedUser.id } },
@@ -414,7 +450,12 @@ export const recordInstallmentPayment = createHandlers(
       }
 
       const paymentDate = new Date(paymentPayload.paymentDate);
-      const nextStatus = getInstallmentStatus(installmentFound.amount, paymentBreakdown.paidAmountAfter);
+      const nextStatus = getInstallmentStatus({
+        amount: installmentFound.amount,
+        paidAmount: paymentBreakdown.paidAmountAfter,
+        dueDate: installmentFound.dueDate,
+        currentStatus: installmentFound.status,
+      });
       const installmentPaidAt = nextStatus === InstallmentStatus.PAID ? new Date() : null;
       const shouldSendInstallmentPaidNotification = (
         installmentFound.status !== InstallmentStatus.PAID
@@ -613,7 +654,12 @@ export const voidInstallmentPayment = createHandlers(
       const nextExcessBalance = roundCurrencyAmount(
         Math.max(0, loanFound.excessBalance - paymentFound.excessCreatedAmount + paymentFound.excessAppliedAmount),
       );
-      const nextStatus = getInstallmentStatus(installmentFound.amount, nextPaidAmount);
+      const nextStatus = getInstallmentStatus({
+        amount: installmentFound.amount,
+        paidAmount: nextPaidAmount,
+        dueDate: installmentFound.dueDate,
+        currentStatus: installmentFound.status,
+      });
       const voidedAt = new Date();
       const trimmedVoidReason = voidReason.trim();
 

@@ -35,6 +35,11 @@ interface DispatchEventNotificationsParams {
   notificationsEnabled?: boolean;
 }
 
+export interface DispatchEventNotificationsResult {
+  matchedConfigCount: number;
+  queuedChannelCount: number;
+}
+
 type NotificationEventConfigWithTemplate = Prisma.NotificationEventConfigGetPayload<{
   include: { template: true };
 }>;
@@ -46,12 +51,15 @@ export async function dispatchEventNotifications({
   queuedByUserId,
   context,
   notificationsEnabled = true,
-}: DispatchEventNotificationsParams) {
+}: DispatchEventNotificationsParams): Promise<DispatchEventNotificationsResult> {
   if (!notificationsEnabled) {
     console.info('Skipping event notification because notifications are disabled for this loan', {
       event,
     });
-    return;
+    return {
+      matchedConfigCount: 0,
+      queuedChannelCount: 0,
+    };
   }
 
   try {
@@ -69,29 +77,40 @@ export async function dispatchEventNotifications({
     });
 
     if (notificationEventConfigs.length === 0) {
-      return;
+      return {
+        matchedConfigCount: 0,
+        queuedChannelCount: 0,
+      };
     }
+
+    let queuedChannelCount = 0;
 
     for (const notificationEventConfig of notificationEventConfigs) {
       try {
         if (notificationEventConfig.channel === NotificationChannel.EMAIL) {
-          await dispatchEmailEventNotification({
+          const emailQueued = await dispatchEmailEventNotification({
             env,
             event,
             queuedByUserId,
             context,
             notificationEventConfig,
           });
+          if (emailQueued) {
+            queuedChannelCount += 1;
+          }
           continue;
         }
 
-        await dispatchSmsEventNotification({
+        const smsQueued = await dispatchSmsEventNotification({
           env,
           event,
           queuedByUserId,
           context,
           notificationEventConfig,
         });
+        if (smsQueued) {
+          queuedChannelCount += 1;
+        }
       } catch (error) {
         console.error('Failed to dispatch event notification', {
           event,
@@ -100,11 +119,20 @@ export async function dispatchEventNotifications({
         });
       }
     }
+
+    return {
+      matchedConfigCount: notificationEventConfigs.length,
+      queuedChannelCount,
+    };
   } catch (error) {
     console.error('Failed to load notification event configs', {
       event,
       error: getErrorMessage(error),
     });
+    return {
+      matchedConfigCount: 0,
+      queuedChannelCount: 0,
+    };
   }
 }
 
@@ -114,7 +142,7 @@ async function dispatchEmailEventNotification(params: {
   queuedByUserId: string | null;
   context: NotificationTemplateSampleContext;
   notificationEventConfig: NotificationEventConfigWithTemplate;
-}) {
+}): Promise<boolean> {
   const { env, event, queuedByUserId, context, notificationEventConfig } = params;
 
   if (!notificationEventConfig.emailProvider) {
@@ -122,7 +150,7 @@ async function dispatchEmailEventNotification(params: {
       event,
       channel: notificationEventConfig.channel,
     });
-    return;
+    return false;
   }
 
   const notificationEmailProvider = notificationEventConfig.emailProvider as NotificationEmailProvider;
@@ -133,7 +161,7 @@ async function dispatchEmailEventNotification(params: {
       event,
       channel: notificationEventConfig.channel,
     });
-    return;
+    return false;
   }
 
   const providerStatus = getEmailProviderStatus(env)[notificationEmailProvider];
@@ -144,7 +172,7 @@ async function dispatchEmailEventNotification(params: {
       provider: notificationEmailProvider,
       missing: providerStatus.missing,
     });
-    return;
+    return false;
   }
 
   const renderedEmail = renderEmailTemplate({
@@ -188,6 +216,7 @@ async function dispatchEmailEventNotification(params: {
         testSend: false,
       },
     });
+    return true;
   } catch (error) {
     await markNotificationLogQueueFailed(env, {
       notificationLogId: notificationLog.id,
@@ -203,7 +232,7 @@ async function dispatchSmsEventNotification(params: {
   queuedByUserId: string | null;
   context: NotificationTemplateSampleContext;
   notificationEventConfig: NotificationEventConfigWithTemplate;
-}) {
+}): Promise<boolean> {
   const { env, event, queuedByUserId, context, notificationEventConfig } = params;
 
   if (!notificationEventConfig.smsProvider) {
@@ -211,7 +240,7 @@ async function dispatchSmsEventNotification(params: {
       event,
       channel: notificationEventConfig.channel,
     });
-    return;
+    return false;
   }
 
   const notificationSmsProvider = notificationEventConfig.smsProvider as NotificationSmsProvider;
@@ -222,7 +251,7 @@ async function dispatchSmsEventNotification(params: {
       event,
       channel: notificationEventConfig.channel,
     });
-    return;
+    return false;
   }
 
   const providerStatus = getSmsProviderStatus(env)[notificationSmsProvider];
@@ -233,7 +262,7 @@ async function dispatchSmsEventNotification(params: {
       provider: notificationSmsProvider,
       missing: providerStatus.missing,
     });
-    return;
+    return false;
   }
 
   const renderedSms = renderSmsTemplate({
@@ -272,6 +301,7 @@ async function dispatchSmsEventNotification(params: {
         testSend: false,
       },
     });
+    return true;
   } catch (error) {
     await markNotificationLogQueueFailed(env, {
       notificationLogId: notificationLog.id,

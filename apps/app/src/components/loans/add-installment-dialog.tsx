@@ -10,6 +10,7 @@ import {
   Textarea,
 } from '@workspace/ui';
 import { useAddInstallment } from '@/app/hooks/use-loan';
+import { toStartOfDayIso } from '@/app/lib/date';
 import { toFieldErrors } from '@/app/lib/form';
 
 interface AddInstallmentDialogProps {
@@ -32,7 +33,7 @@ export function AddInstallmentDialog({ loanId, open, onOpenChange }: AddInstallm
         await mutateAsync({
           loanId,
           body: {
-            dueDate: value.dueDate,
+            dueDate: toStartOfDayIso(value.dueDate),
             amount: parseFloat(value.amount),
             remarks: value.remarks || null,
           },

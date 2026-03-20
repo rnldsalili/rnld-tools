@@ -12,6 +12,7 @@ import {
 } from '@workspace/ui';
 import type { LoanInstallment } from '@/app/hooks/use-loan';
 import {  useUpdateInstallment } from '@/app/hooks/use-loan';
+import { toStartOfDayIso } from '@/app/lib/date';
 import { toFieldErrors } from '@/app/lib/form';
 
 interface EditInstallmentDialogProps {
@@ -36,7 +37,7 @@ export function EditInstallmentDialog({ loanId, installment, onClose }: EditInst
           loanId,
           installmentId: installment.id,
           body: {
-            dueDate: value.dueDate,
+            dueDate: toStartOfDayIso(value.dueDate),
             amount: parseFloat(value.amount),
             remarks: value.remarks || null,
           },

@@ -30,6 +30,7 @@ import {
 } from '@workspace/constants';
 import { ClientSelector } from '@/app/components/loans/client-selector';
 import { useCreateLoan } from '@/app/hooks/use-loan';
+import { toStartOfDayIso } from '@/app/lib/date';
 import { toFieldErrors } from '@/app/lib/form';
 import { isOneOf } from '@/app/lib/value-guards';
 
@@ -85,7 +86,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         amount: parseFloat(value.amount),
         currency: value.currency,
         installmentInterval: value.installmentInterval,
-        loanDate: value.loanDate,
+        loanDate: toStartOfDayIso(value.loanDate),
         interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : undefined,
         description: value.description.trim() || undefined,
         notificationsEnabled: value.notificationsEnabled,
@@ -557,7 +558,7 @@ function buildInstallmentsPayload(value: DefaultValues) {
       type: InstallmentType.BULK as const,
       interval: value.installmentInterval,
       count: parseInt(value.bulkCount, 10),
-      startDate: value.bulkStartDate,
+      startDate: toStartOfDayIso(value.bulkStartDate),
       amount: parseFloat(value.bulkAmount),
       status: InstallmentStatus.PENDING,
     };
@@ -565,7 +566,7 @@ function buildInstallmentsPayload(value: DefaultValues) {
 
   return {
     type: InstallmentType.SINGLE as const,
-    dueDate: value.singleDueDate,
+    dueDate: toStartOfDayIso(value.singleDueDate),
     amount: parseFloat(value.singleAmount),
     status: InstallmentStatus.PENDING,
   };
