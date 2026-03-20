@@ -425,7 +425,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
           <aside
               className={cn(
               'shrink-0 border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-in-out',
-              isCollapsed ? 'w-[5.5rem]' : 'w-[18.5rem]',
+              isCollapsed ? 'w-22' : 'w-74',
             )}
           >
             <SidebarContent

@@ -264,7 +264,7 @@ function RolePermissionMatrixSection({
         ) : (
           <div className="space-y-4">
             {permissionModules.map((module) => (
-              <div key={module} className="rounded-lg border border-border/80 bg-muted/[0.08] p-4">
+              <div key={module} className="rounded-lg border border-border/80 bg-muted/8 p-4">
                 <div className="mb-3">
                   <h3 className="text-sm font-medium">{getPermissionModuleLabel(module)}</h3>
                   <p className="text-sm text-muted-foreground">
