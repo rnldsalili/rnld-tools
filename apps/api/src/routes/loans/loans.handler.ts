@@ -286,6 +286,7 @@ export const createLoan = createHandlers(
         loan: {
           id: createdLoan.id,
           amount: createdLoan.amount,
+          excessBalance: createdLoan.excessBalance,
           currency: createdLoan.currency,
           description: createdLoan.description,
           loanDate: createdLoan.loanDate.toISOString(),

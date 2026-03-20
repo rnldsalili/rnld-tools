@@ -94,6 +94,7 @@ async function processInstallmentReminderBatch(params: {
         select: {
           id: true,
           amount: true,
+          excessBalance: true,
           currency: true,
           description: true,
           loanDate: true,
@@ -136,6 +137,7 @@ async function processInstallmentReminderBatch(params: {
           loan: {
             id: installmentCandidate.loan.id,
             amount: installmentCandidate.loan.amount,
+            excessBalance: installmentCandidate.loan.excessBalance,
             currency: installmentCandidate.loan.currency,
             description: installmentCandidate.loan.description,
             loanDate: installmentCandidate.loan.loanDate.toISOString(),

@@ -543,6 +543,7 @@ export const recordInstallmentPayment = createHandlers(
             loan: {
               id: loanFound.id,
               amount: loanFound.amount,
+              excessBalance: updatedLoan.excessBalance,
               currency: loanFound.currency,
               description: loanFound.description,
               loanDate: loanFound.loanDate.toISOString(),
