@@ -11,6 +11,7 @@ import type { ClientListItem } from '@/app/hooks/use-client';
 import { CreateClientDialog } from '@/app/components/clients/create-client-dialog';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
+import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
 import { useDebounce } from '@/app/hooks/use-debounce';
 import { useClients } from '@/app/hooks/use-client';
 
@@ -98,53 +99,46 @@ function ClientsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <UsersIcon className="size-4" />
-            </span>
-            <div>
-              <h1 className="text-lg font-semibold">Clients</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage the client records used across loan creation and documents.
-              </p>
-            </div>
-          </div>
-          <Can I={PermissionAction.CREATE} a={PermissionModule.CLIENTS}>
-            <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
-              <PlusIcon className="size-3.5" />
-              New Client
-            </Button>
-          </Can>
+    <AuthenticatedListPageShell
+        icon={UsersIcon}
+        title="Clients"
+        description="Manage the client records used across loan creation and documents."
+        action={(
+        <Can I={PermissionAction.CREATE} a={PermissionModule.CLIENTS}>
+          <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
+            <PlusIcon className="size-3.5" />
+            New Client
+          </Button>
+        </Can>
+      )}
+        controls={(
+        <div className="flex items-center gap-3">
+          <Input
+              placeholder="Search clients..."
+              value={searchInput}
+              onChange={handleSearchChange}
+              className="max-w-sm bg-background"
+          />
         </div>
-
-        <Input
-            placeholder="Search clients..."
-            value={searchInput}
-            onChange={handleSearchChange}
-            className="max-w-xs"
-        />
-
-        <DataTable
-            columns={columns}
-            data={clients}
-            isLoading={isLoading}
-            footer={(
-            <Pagination
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                isLoading={isLoading}
-            />
-          )}
-        />
-      </div>
-
+      )}
+    >
+      <DataTable
+          columns={columns}
+          data={clients}
+          isLoading={isLoading}
+          variant="embedded"
+          footer={(
+          <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              isLoading={isLoading}
+          />
+        )}
+      />
       <Can I={PermissionAction.CREATE} a={PermissionModule.CLIENTS}>
         <CreateClientDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
       </Can>
-    </div>
+    </AuthenticatedListPageShell>
   );
 }

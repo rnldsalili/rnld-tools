@@ -72,6 +72,7 @@ export function CreateClientDialog({ onOpenChange, open }: CreateClientDialogPro
         open={open}
         onOpenChange={handleOpenChange}
         title="New Client"
+        description="Create a client profile that can be reused across loans, documents, and related workflows."
         className="sm:max-w-lg"
         footer={(
         <>

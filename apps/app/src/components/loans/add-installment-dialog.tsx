@@ -56,6 +56,7 @@ export function AddInstallmentDialog({ loanId, open, onOpenChange }: AddInstallm
         open={open}
         onOpenChange={handleOpenChange}
         title="Add Installment"
+        description="Add a new repayment entry to this loan with a due date and amount."
         className="sm:max-w-md"
         footer={(
         <>

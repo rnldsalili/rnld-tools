@@ -10,6 +10,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { LoanListItem } from '@/app/hooks/use-loan';
 import { CreateLoanDialog } from '@/app/components/loans/create-loan-dialog';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
+import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
 import { useDebounce } from '@/app/hooks/use-debounce';
 import { useLoans } from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
@@ -102,55 +103,44 @@ function LoansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <HandCoinsIcon className="size-4" />
-            </span>
-            <div>
-              <h1 className="text-lg font-semibold">Loans</h1>
-              <p className="text-sm text-muted-foreground">
-                Manage client loans and installments.
-              </p>
-            </div>
-          </div>
-          <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
-            <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
-              <PlusIcon className="size-3.5" />
-              New Loan
-            </Button>
-          </Can>
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <Input
-              placeholder="Search by client..."
-              value={searchInput}
-              onChange={handleSearchChange}
-              className="max-w-xs"
-          />
-        </div>
-
-        <DataTable
-            columns={columns}
-            data={loans}
-            isLoading={isLoading}
-            footer={(
-              <Pagination
-                  page={page}
-                  totalPages={totalPages}
-                  onPageChange={setPage}
-                  isLoading={isLoading}
-              />
-            )}
+    <AuthenticatedListPageShell
+        icon={HandCoinsIcon}
+        title="Loans"
+        description="Manage client loans and installments."
+        action={(
+        <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
+          <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
+            <PlusIcon className="size-3.5" />
+            New Loan
+          </Button>
+        </Can>
+      )}
+        controls={(
+        <Input
+            placeholder="Search by client..."
+            value={searchInput}
+            onChange={handleSearchChange}
+            className="max-w-sm bg-background"
         />
-      </div>
-
+      )}
+    >
+      <DataTable
+          columns={columns}
+          data={loans}
+          isLoading={isLoading}
+          variant="embedded"
+          footer={(
+            <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                isLoading={isLoading}
+            />
+          )}
+      />
       <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
         <CreateLoanDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
       </Can>
-    </div>
+    </AuthenticatedListPageShell>
   );
 }

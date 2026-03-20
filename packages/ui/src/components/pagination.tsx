@@ -21,7 +21,6 @@ export function Pagination({ page, totalPages, onPageChange, isLoading = false }
         <Button
             variant="outline"
             size="icon"
-            className="size-8"
             onClick={() => onPageChange(page - 1)}
             disabled={!hasPrev || isLoading}
             aria-label="Previous page"
@@ -31,7 +30,6 @@ export function Pagination({ page, totalPages, onPageChange, isLoading = false }
         <Button
             variant="outline"
             size="icon"
-            className="size-8"
             onClick={() => onPageChange(page + 1)}
             disabled={!hasNext || isLoading}
             aria-label="Next page"

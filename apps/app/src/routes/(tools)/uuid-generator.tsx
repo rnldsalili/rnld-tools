@@ -143,7 +143,6 @@ function UuidGeneratorPage() {
               <div className="flex gap-2">
                 <Button
                     variant="outline"
-                    size="sm"
                     onClick={copyAll}
                     className="flex items-center gap-2 flex-1"
                 >
@@ -156,7 +155,6 @@ function UuidGeneratorPage() {
                 </Button>
                 <Button
                     variant="outline"
-                    size="sm"
                     onClick={clear}
                     className="flex items-center gap-2"
                 >

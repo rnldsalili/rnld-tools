@@ -40,7 +40,7 @@ function ClientDetailPage() {
           <span className="text-sm font-semibold">Client Details</span>
           {client ? (
             <Can I={PermissionAction.UPDATE} a={PermissionModule.CLIENTS}>
-              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setIsEditOpen(true)}>
+              <Button variant="ghost" className="gap-1.5" onClick={() => setIsEditOpen(true)}>
                 <PencilIcon className="size-3.5" />
                 Edit
               </Button>

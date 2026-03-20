@@ -26,6 +26,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { DocumentTemplateItem } from '@/app/hooks/use-document-templates';
 import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
+import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
 import {
   DOCUMENT_TYPE_OPTIONS,
   validateTemplateName,
@@ -293,40 +294,28 @@ function DocumentSettingsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <FileTextIcon className="size-4" />
-            </span>
-            <div>
-              <h1 className="text-lg font-semibold">Document Templates</h1>
-              <p className="text-sm text-muted-foreground">
-                Configure document templates that can be shared with clients.
-              </p>
-            </div>
-          </div>
-          <Can I={PermissionAction.CREATE} a={PermissionModule.DOCUMENTS}>
-            <Button onClick={() => setIsNewOpen(true)} className="gap-2">
-              <PlusIcon className="size-3.5" />
-              New Template
-            </Button>
-          </Can>
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <Input
-              placeholder="Search templates..."
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              className="max-w-xs"
-          />
-        </div>
-
-        <DataTable columns={columns} data={filteredTemplates} isLoading={isLoading} />
-      </div>
-
+    <AuthenticatedListPageShell
+        icon={FileTextIcon}
+        title="Document Templates"
+        description="Configure document templates that can be shared with clients."
+        action={(
+        <Can I={PermissionAction.CREATE} a={PermissionModule.DOCUMENTS}>
+          <Button onClick={() => setIsNewOpen(true)} className="gap-2">
+            <PlusIcon className="size-3.5" />
+            New Template
+          </Button>
+        </Can>
+      )}
+        controls={(
+        <Input
+            placeholder="Search templates..."
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            className="max-w-sm bg-background"
+        />
+      )}
+    >
+      <DataTable columns={columns} data={filteredTemplates} isLoading={isLoading} variant="embedded" />
       <Can I={PermissionAction.CREATE} a={PermissionModule.DOCUMENTS}>
         <NewTemplateModal open={isNewOpen} onOpenChange={setIsNewOpen} />
       </Can>
@@ -349,6 +338,6 @@ function DocumentSettingsPage() {
             onConfirm={handleDelete}
         />
       </Can>
-    </div>
+    </AuthenticatedListPageShell>
   );
 }

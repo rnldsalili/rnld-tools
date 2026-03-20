@@ -5,6 +5,7 @@ import { PermissionAction, PermissionModule, getPermissionModuleLabel } from '@w
 import type { ColumnDef } from '@tanstack/react-table';
 import type { RoleItem } from '@/app/hooks/use-roles';
 import { PermissionGuard } from '@/app/components/authorization/permission-guard';
+import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
 import { useRoles } from '@/app/hooks/use-roles';
 
 export const Route = createFileRoute('/_authenticated/settings/roles/')({
@@ -76,23 +77,13 @@ function RolesListPage() {
 
   return (
     <PermissionGuard module={PermissionModule.ROLES} action={PermissionAction.VIEW}>
-      <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <ShieldCheckIcon className="size-4.5" />
-            </span>
-            <div>
-              <h1 className="text-lg font-semibold">Roles</h1>
-              <p className="text-sm text-muted-foreground">
-                Review the built-in roles and open a role to inspect or update its permission matrix.
-              </p>
-            </div>
-          </div>
-
-          <DataTable columns={columns} data={roles} isLoading={isLoading} />
-        </div>
-      </div>
+      <AuthenticatedListPageShell
+          icon={ShieldCheckIcon}
+          title="Roles"
+          description="Review the built-in roles and open a role to inspect or update its permission matrix."
+      >
+        <DataTable columns={columns} data={roles} isLoading={isLoading} variant="embedded" />
+      </AuthenticatedListPageShell>
     </PermissionGuard>
   );
 }

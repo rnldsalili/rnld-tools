@@ -146,7 +146,6 @@ export function NotificationHistorySection() {
           <Button
               type="button"
               variant="ghost"
-              size="sm"
               className="gap-2"
               onClick={() => setSelectedNotificationLogId(row.original.id)}
           >

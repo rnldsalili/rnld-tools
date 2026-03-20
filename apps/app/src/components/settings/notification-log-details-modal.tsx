@@ -56,6 +56,7 @@ export function NotificationLogDetailsModal({
         open={open}
         onOpenChange={onOpenChange}
         title="Notification Details"
+        description="Inspect the delivery route, timeline, and captured payload details for this notification log."
         className="sm:max-w-5xl"
         footer={(
         <div className="flex w-full justify-end">

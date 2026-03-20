@@ -26,6 +26,7 @@ import type { RoleItem } from '@/app/hooks/use-roles';
 import type { UserListItem } from '@/app/hooks/use-users';
 import { PermissionGuard } from '@/app/components/authorization/permission-guard';
 import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
+import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
 import { useRoles } from '@/app/hooks/use-roles';
 import { useCreateUser, useUpdateUser, useUsers } from '@/app/hooks/use-users';
 
@@ -165,58 +166,49 @@ function UsersSettingsPage() {
   return (
     <>
       <PermissionGuard module={PermissionModule.USERS} action={PermissionAction.VIEW}>
-        <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <UsersIcon className="size-4.5" />
-              </span>
-              <div>
-                <h1 className="text-lg font-semibold">Users</h1>
-                <p className="text-sm text-muted-foreground">
-                  Create users and manage the roles assigned to each account.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <Input
-                  placeholder="Search users..."
-                  value={searchInput}
-                  onChange={(event) => {
-                    setSearchInput(event.target.value);
-                    setPage(1);
-                  }}
-                  className="max-w-xs"
-              />
-
-              <Can I={PermissionAction.CREATE} a={PermissionModule.USERS}>
-                <Button
-                    type="button"
-                    className="gap-2"
-                    onClick={() => setIsCreateModalOpen(true)}
-                >
-                  <PlusIcon className="size-3.5" />
-                  New User
-                </Button>
-              </Can>
-            </div>
-
-            <DataTable
-                columns={columns}
-                data={users}
-                isLoading={isLoading}
-                footer={(
-                  <Pagination
-                      page={page}
-                      totalPages={totalPages}
-                      onPageChange={setPage}
-                      isLoading={isLoading}
-                  />
-                )}
+        <AuthenticatedListPageShell
+            icon={UsersIcon}
+            title="Users"
+            description="Create users and manage the roles assigned to each account."
+            action={(
+            <Can I={PermissionAction.CREATE} a={PermissionModule.USERS}>
+              <Button
+                  type="button"
+                  className="gap-2"
+                  onClick={() => setIsCreateModalOpen(true)}
+              >
+                <PlusIcon className="size-3.5" />
+                New User
+              </Button>
+            </Can>
+          )}
+            controls={(
+            <Input
+                placeholder="Search users..."
+                value={searchInput}
+                onChange={(event) => {
+                  setSearchInput(event.target.value);
+                  setPage(1);
+                }}
+                className="max-w-sm bg-background"
             />
-          </div>
-        </div>
+          )}
+        >
+          <DataTable
+              columns={columns}
+              data={users}
+              isLoading={isLoading}
+              variant="embedded"
+              footer={(
+                <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    isLoading={isLoading}
+                />
+              )}
+          />
+        </AuthenticatedListPageShell>
       </PermissionGuard>
 
       <CreateUserModal

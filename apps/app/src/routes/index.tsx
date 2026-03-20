@@ -94,14 +94,14 @@ function HomePage() {
             sign in to access your personalized dashboard.
           </p>
           <div className="flex items-center gap-3">
-            <Button asChild size="lg">
+            <Button asChild>
               <Link to="/dashboard">
                 Go to Dashboard
                 <ArrowRightIcon className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             {!isPending && !isAuthenticated && (
-              <Button asChild variant="outline" size="lg">
+              <Button asChild variant="outline">
                 <Link to="/login">Sign In</Link>
               </Button>
             )}

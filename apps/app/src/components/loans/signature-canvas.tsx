@@ -78,10 +78,10 @@ export function SignatureCanvas({
           className="w-full h-40 rounded-md border border-border bg-white cursor-crosshair touch-none"
       />
       <div className="flex items-center gap-2 justify-end">
-        <Button variant="ghost" size="sm" type="button" onClick={handleClear}>
+        <Button variant="ghost" type="button" onClick={handleClear}>
           Clear
         </Button>
-        <Button size="sm" type="button" onClick={handleSave} disabled={isPending}>
+        <Button type="button" onClick={handleSave} disabled={isPending}>
           {saveLabel}
         </Button>
       </div>

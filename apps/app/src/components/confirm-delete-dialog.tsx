@@ -28,6 +28,7 @@ export function ConfirmDeleteDialog({
         open={open}
         onOpenChange={onOpenChange}
         title={title}
+        description="This action cannot be undone."
         className="sm:max-w-md"
         footer={(
         <>
@@ -46,7 +47,7 @@ export function ConfirmDeleteDialog({
         </>
       )}
     >
-      <p className="text-xs/relaxed text-muted-foreground">{description}</p>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </Modal>
   );
 }

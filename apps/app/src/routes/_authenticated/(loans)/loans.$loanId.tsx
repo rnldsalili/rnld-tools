@@ -260,7 +260,6 @@ function LoanDetailPage() {
                     <>
                       <Button
                           variant="ghost"
-                          size="sm"
                           className="gap-1.5"
                           onClick={() => setIsShareDialogOpen(true)}
                       >
@@ -269,7 +268,6 @@ function LoanDetailPage() {
                       </Button>
                       <Button
                           variant="ghost"
-                          size="sm"
                           className="gap-1.5"
                           onClick={() => setIsEditLoanOpen(true)}
                       >
@@ -281,7 +279,6 @@ function LoanDetailPage() {
                   <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
                     <Button
                         variant="ghost"
-                        size="sm"
                         className="gap-1.5 text-destructive hover:text-destructive/80"
                         onClick={() => setIsDeleteDialogOpen(true)}
                         disabled={isDeletePending}
@@ -356,8 +353,7 @@ function LoanDetailPage() {
                         {loan ? (
                           <Button
                               variant="ghost"
-                              size="sm"
-                              className="h-6 shrink-0 gap-1.5 text-xs"
+                              className="shrink-0"
                               disabled={
                                 downloadLoanDocumentPdfMutation.isPending
                                 && activeDownloadTemplateId === template.id
@@ -421,7 +417,6 @@ function LoanDetailPage() {
               </div>
               <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
                 <Button
-                    size="sm"
                     className="gap-1.5"
                     onClick={() => setIsAddInstallmentOpen(true)}
                     disabled={isLoading || !loan}

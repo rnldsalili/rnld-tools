@@ -126,7 +126,6 @@ function NotificationEventMappingChannelCard({
           <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
             <Button
                 type="button"
-                size="sm"
                 className="gap-2"
                 disabled={isPending || !selectedTemplateId || !isProviderConfigured}
                 onClick={() => void handleSaveConfig()}

@@ -151,7 +151,6 @@ export function InstallmentPaymentHistoryDialog({
                           <Button
                               type="button"
                               variant="ghost"
-                              size="sm"
                               className="text-destructive hover:text-destructive/80"
                               onClick={() => {
                                 voidForm.reset();

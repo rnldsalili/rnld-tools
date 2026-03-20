@@ -13,7 +13,7 @@ interface DataTableProps<TData, TValue> {
   isLoading?: boolean;
   toolbar?: React.ReactNode;
   footer?: React.ReactNode;
-  variant?: 'default' | 'card';
+  variant?: 'default' | 'card' | 'embedded';
   getRowClassName?: (row: TData) => string | undefined;
 }
 
@@ -86,7 +86,7 @@ export function DataTable<TData, TValue>({
   if (variant === 'card') {
     return (
       <SectionCard>
-        {toolbar && <SectionCardHeader>{toolbar}</SectionCardHeader>}
+        {toolbar && <SectionCardHeader className="bg-muted/20">{toolbar}</SectionCardHeader>}
         <div className="overflow-x-auto">
           <Table>
             {tableHead}
@@ -98,10 +98,31 @@ export function DataTable<TData, TValue>({
     );
   }
 
+  if (variant === 'embedded') {
+    return (
+      <div>
+        {toolbar ? (
+          <div className="border-b border-border/70 bg-muted/10 px-4 py-3">
+            {toolbar}
+          </div>
+        ) : null}
+        <Table>
+          {tableHead}
+          {tableBody}
+        </Table>
+        {footer ? (
+          <div className="border-t border-border/70 bg-muted/10 px-4 py-3">
+            {footer}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {toolbar && <div>{toolbar}</div>}
-      <div className="rounded-md border border-border overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-border/80 bg-card/95 shadow-sm shadow-black/[0.03]">
         <Table>
           {tableHead}
           {tableBody}

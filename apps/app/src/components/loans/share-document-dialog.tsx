@@ -110,7 +110,6 @@ export function ShareDocumentDialog({ loanId, open, onOpenChange }: ShareDocumen
                     )}
                   </div>
                   <Button
-                      size="sm"
                       variant="outline"
                       onClick={() => handleGenerate(template.id, template.name)}
                       disabled={isThisGenerating}
