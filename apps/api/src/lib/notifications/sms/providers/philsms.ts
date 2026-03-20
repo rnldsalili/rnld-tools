@@ -46,8 +46,6 @@ export const philsmsSmsClient: SmsProviderClient = {
     if (!response.ok || responsePayload?.status === 'error') {
       throw new Error(`PhilSMS SMS send failed: ${getPhilSmsErrorMessage(responsePayload) ?? response.statusText}`);
     }
-
-    console.log('PhilSMS SMS Response:', responsePayload);
   },
 };
 
