@@ -97,6 +97,18 @@ export {
   DialogTrigger,
 } from '@workspace/ui/components/dialog';
 export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetOverlay,
+  SheetPortal,
+  SheetTitle,
+  SheetTrigger,
+} from '@workspace/ui/components/sheet';
+export {
   Tabs,
   TabsContent,
   TabsList,
