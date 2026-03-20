@@ -1,7 +1,7 @@
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import documentLogsRoute from './document-logs/document-logs.index';
 import loanDocumentsRoute from './documents/documents.index';
-import loanLogsRoute from './logs/logs.index';
+import loanLogsRoute from './loan-logs/logs.index';
 import { createLoan, deleteLoan, getLoan, getLoans, updateLoan } from './loans.handler';
 import documentLinksRoute from './document-links/document-links.index';
 import installmentsRoute from './installments/installments.index';
