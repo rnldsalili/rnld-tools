@@ -11,7 +11,12 @@ type AuthorizationContextValue = {
   isLoading: boolean;
 };
 
-const AuthorizationContext = createContext<AuthorizationContextValue | null>(null);
+const defaultAuthorizationContextValue: AuthorizationContextValue = {
+  authorization: null,
+  isLoading: false,
+};
+
+const AuthorizationContext = createContext<AuthorizationContextValue>(defaultAuthorizationContextValue);
 
 export function AppAuthorizationProvider({ children }: { children: React.ReactNode }) {
   const { data, isLoading } = useAuthorizationQuery();
@@ -43,11 +48,5 @@ export function AppAuthorizationProvider({ children }: { children: React.ReactNo
 }
 
 export function useAppAuthorization() {
-  const context = useContext(AuthorizationContext);
-
-  if (!context) {
-    throw new Error('Authorization context is not available.');
-  }
-
-  return context;
+  return useContext(AuthorizationContext);
 }

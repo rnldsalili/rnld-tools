@@ -5,12 +5,10 @@ import {
 import {
   Badge,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Modal,
+  SectionCard,
+  SectionCardContent,
+  SectionCardHeader,
   cn,
 } from '@workspace/ui';
 import {
@@ -83,40 +81,40 @@ export function NotificationLogDetailsModal({
               <NotificationRouteCard notificationLog={notificationLog} />
               <NotificationTimelineCard notificationLog={notificationLog} />
               {notificationLog.lastErrorMessage ? (
-                <Card className="bg-destructive/5 ring-destructive/15">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-destructive">
+                <SectionCard className="bg-destructive/5 ring-destructive/15">
+                  <SectionCardHeader className="flex flex-col items-start gap-1.5">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-destructive">
                       <TriangleAlertIcon className="size-4" />
                       Last Error
-                    </CardTitle>
-                    <CardDescription className="text-destructive/80">
+                    </div>
+                    <p className="text-sm text-destructive/80">
                       The latest provider response kept this notification from completing.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
+                    </p>
+                  </SectionCardHeader>
+                  <SectionCardContent>
                     <p className="text-sm leading-6 text-foreground">
                       {notificationLog.lastErrorMessage}
                     </p>
-                  </CardContent>
-                </Card>
+                  </SectionCardContent>
+                </SectionCard>
               ) : null}
             </div>
 
             <div className="flex flex-col gap-5">
               {notificationLog.subject ? (
-                <Card className="bg-muted/20">
-                  <CardHeader>
-                    <CardTitle>Subject</CardTitle>
-                    <CardDescription>
+                <SectionCard>
+                  <SectionCardHeader className="flex flex-col items-start gap-1.5">
+                    <div className="text-sm font-semibold text-foreground">Subject</div>
+                    <p className="text-sm text-muted-foreground">
                       The subject captured when this notification was queued.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground">
+                    </p>
+                  </SectionCardHeader>
+                  <SectionCardContent>
+                    <div className="rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium text-foreground">
                       {notificationLog.subject}
                     </div>
-                  </CardContent>
-                </Card>
+                  </SectionCardContent>
+                </SectionCard>
               ) : null}
 
               <NotificationMessageCard notificationLog={notificationLog} />
@@ -191,17 +189,17 @@ function NotificationRouteCard({ notificationLog }: { notificationLog: Notificat
   const recipientDetails = getRecipientDetails(notificationLog);
 
   return (
-    <Card className="bg-muted/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <SectionCard>
+      <SectionCardHeader className="flex flex-col items-start gap-1.5">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <WaypointsIcon className="size-4 text-muted-foreground" />
           Delivery Route
-        </CardTitle>
-        <CardDescription>
+        </div>
+        <p className="text-sm text-muted-foreground">
           Who queued it, how it was routed, and where it was sent.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-2">
+        </p>
+      </SectionCardHeader>
+      <SectionCardContent className="grid gap-3 md:grid-cols-2">
         <DetailPanel
             label="Recipient"
             value={recipientDetails.primary}
@@ -220,8 +218,8 @@ function NotificationRouteCard({ notificationLog }: { notificationLog: Notificat
             icon={UserRoundIcon}
             className="md:col-span-2"
         />
-      </CardContent>
-    </Card>
+      </SectionCardContent>
+    </SectionCard>
   );
 }
 
@@ -229,17 +227,17 @@ function NotificationTimelineCard({ notificationLog }: { notificationLog: Notifi
   const timelineSteps = getTimelineSteps(notificationLog);
 
   return (
-    <Card className="bg-muted/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <SectionCard>
+      <SectionCardHeader className="flex flex-col items-start gap-1.5">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Clock3Icon className="size-4 text-muted-foreground" />
           Delivery Timeline
-        </CardTitle>
-        <CardDescription>
+        </div>
+        <p className="text-sm text-muted-foreground">
           Progression from queue creation to final delivery outcome.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </SectionCardHeader>
+      <SectionCardContent>
         <ol className="flex flex-col gap-4">
           {timelineSteps.map((step, index) => (
             <TimelineStep
@@ -253,8 +251,8 @@ function NotificationTimelineCard({ notificationLog }: { notificationLog: Notifi
             />
           ))}
         </ol>
-      </CardContent>
-    </Card>
+      </SectionCardContent>
+    </SectionCard>
   );
 }
 
@@ -262,44 +260,48 @@ function NotificationMessageCard({ notificationLog }: { notificationLog: Notific
   const isEmail = notificationLog.channel === NotificationChannel.EMAIL;
 
   return (
-    <Card className="bg-muted/20">
-      <CardHeader>
-        <CardTitle>{isEmail ? 'Rendered Email' : 'Saved Message'}</CardTitle>
-        <CardDescription>
+    <SectionCard>
+      <SectionCardHeader className="flex flex-col items-start gap-1.5">
+        <div className="text-sm font-semibold text-foreground">
+          {isEmail ? 'Rendered Email' : 'Saved Message'}
+        </div>
+        <p className="text-sm text-muted-foreground">
           {isEmail
             ? 'Stored content snapshot for the email that was sent.'
             : 'Stored SMS body exactly as it was queued.'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+        </p>
+      </SectionCardHeader>
+      <SectionCardContent className="overflow-hidden px-0 py-0">
         {isEmail ? (
-          <div className="overflow-hidden rounded-[1.25rem] border border-border bg-background shadow-sm">
-            <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+          <div className="bg-background">
+            <div className="flex items-center justify-between border-b border-border/80 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
               <span>Email preview</span>
               <span>{formatNotificationDate(notificationLog.sentAt ?? notificationLog.queuedAt)}</span>
             </div>
-            <iframe
-                title="Notification email preview"
-                srcDoc={notificationLog.messageContent}
-                className="h-[32rem] w-full bg-white"
-                sandbox=""
-            />
+            <div className="bg-white">
+              <iframe
+                  title="Notification email preview"
+                  srcDoc={notificationLog.messageContent}
+                  className="h-[32rem] w-full bg-white"
+                  sandbox=""
+              />
+            </div>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[1.25rem] border border-border bg-background shadow-sm">
-            <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+          <div className="bg-background">
+            <div className="flex items-center justify-between border-b border-border/80 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
               <span>SMS preview</span>
               <span>{formatNotificationDate(notificationLog.sentAt ?? notificationLog.queuedAt)}</span>
             </div>
-            <div className="max-h-[32rem] overflow-auto bg-background p-4">
+            <div className="max-h-[32rem] overflow-auto px-4 py-4">
               <pre className="font-sans text-sm leading-6 whitespace-pre-wrap break-words text-foreground">
                 {notificationLog.messageContent}
               </pre>
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </SectionCardContent>
+    </SectionCard>
   );
 }
 
@@ -330,7 +332,12 @@ function DetailPanel({
   className?: string;
 }) {
   return (
-    <div className={cn('rounded-2xl border border-border bg-background/80 p-4', className)}>
+    <div
+        className={cn(
+        'rounded-xl border border-border/80 bg-background/80 p-4 shadow-sm shadow-black/[0.02]',
+        className,
+      )}
+    >
       <div className="flex items-start gap-3">
         <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
           <Icon className="size-4" />
@@ -389,7 +396,7 @@ function TimelineStep({
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-border bg-background/80 px-4 py-3">
+      <div className="rounded-xl border border-border/80 bg-background/80 px-4 py-3 shadow-sm shadow-black/[0.02]">
         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col gap-1">
             <p className="text-sm font-medium text-foreground">{label}</p>
