@@ -1,4 +1,8 @@
-import { InstallmentStatus, LoanLogEventType } from '@workspace/constants';
+import {
+  InstallmentStatus,
+  LoanLogEventType,
+  NotificationEvent,
+} from '@workspace/constants';
 import {
   installmentAddSchema,
   installmentPaymentRecordSchema,
@@ -12,6 +16,7 @@ import {
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { createLoanLog } from '@/api/lib/loans/logs';
+import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
 import {
   calculateRecordedPayment,
   getInstallmentRemainingAmount,
@@ -58,6 +63,36 @@ async function getLoanInstallmentOrNull(prisma: ReturnType<typeof initializePris
           payments: {
             where: { voidedAt: null },
           },
+        },
+      },
+    },
+  });
+}
+
+async function getLoanForInstallmentNotifications(
+  prisma: ReturnType<typeof initializePrisma>,
+  loanId: string,
+) {
+  return prisma.loan.findUnique({
+    where: { id: loanId },
+    select: {
+      id: true,
+      amount: true,
+      currency: true,
+      description: true,
+      loanDate: true,
+      excessBalance: true,
+      notificationsEnabled: true,
+      client: {
+        select: {
+          name: true,
+          email: true,
+          phone: true,
+        },
+      },
+      _count: {
+        select: {
+          installments: true,
         },
       },
     },
@@ -332,13 +367,7 @@ export const recordInstallmentPayment = createHandlers(
 
     try {
       const [loanFound, installmentFound] = await Promise.all([
-        prisma.loan.findUnique({
-          where: { id: loanId },
-          select: {
-            id: true,
-            excessBalance: true,
-          },
-        }),
+        getLoanForInstallmentNotifications(prisma, loanId),
         prisma.loanInstallment.findFirst({
           where: { id: installmentId, loanId },
           include: {
@@ -386,34 +415,14 @@ export const recordInstallmentPayment = createHandlers(
 
       const paymentDate = new Date(paymentPayload.paymentDate);
       const nextStatus = getInstallmentStatus(installmentFound.amount, paymentBreakdown.paidAmountAfter);
+      const installmentPaidAt = nextStatus === InstallmentStatus.PAID ? new Date() : null;
+      const shouldSendInstallmentPaidNotification = (
+        installmentFound.status !== InstallmentStatus.PAID
+        && nextStatus === InstallmentStatus.PAID
+      );
 
       const createdPaymentId = crypto.randomUUID();
-      const updatedLoanPromise = prisma.loan.update({
-        where: { id: loanId },
-        data: {
-          excessBalance: paymentBreakdown.excessBalanceAfter,
-          updatedBy: { connect: { id: authenticatedUser.id } },
-        },
-      });
-      const updatedInstallmentPromise = prisma.loanInstallment.update({
-        where: { id: installmentId },
-        data: {
-          paidAmount: paymentBreakdown.paidAmountAfter,
-          status: nextStatus,
-          paidAt: nextStatus === InstallmentStatus.PAID ? paymentDate : null,
-          updatedBy: { connect: { id: authenticatedUser.id } },
-        },
-        include: {
-          _count: {
-            select: {
-              payments: {
-                where: { voidedAt: null },
-              },
-            },
-          },
-        },
-      });
-      const createdPaymentPromise = prisma.loanInstallmentPayment.create({
+      const createdPayment = await prisma.loanInstallmentPayment.create({
         data: {
           id: createdPaymentId,
           loan: { connect: { id: loanId } },
@@ -432,7 +441,32 @@ export const recordInstallmentPayment = createHandlers(
           },
         },
       });
-      const createLoanLogPromise = createLoanLog(prisma, {
+      const updatedLoan = await prisma.loan.update({
+        where: { id: loanId },
+        data: {
+          excessBalance: paymentBreakdown.excessBalanceAfter,
+          updatedBy: { connect: { id: authenticatedUser.id } },
+        },
+      });
+      const updatedInstallment = await prisma.loanInstallment.update({
+        where: { id: installmentId },
+        data: {
+          paidAmount: paymentBreakdown.paidAmountAfter,
+          status: nextStatus,
+          paidAt: installmentPaidAt,
+          updatedBy: { connect: { id: authenticatedUser.id } },
+        },
+        include: {
+          _count: {
+            select: {
+              payments: {
+                where: { voidedAt: null },
+              },
+            },
+          },
+        },
+      });
+      await createLoanLog(prisma, {
         loanId,
         installmentId,
         paymentId: createdPaymentId,
@@ -452,12 +486,40 @@ export const recordInstallmentPayment = createHandlers(
         },
       });
 
-      const [updatedLoan, updatedInstallment, createdPayment] = await prisma.$transaction([
-        updatedLoanPromise,
-        updatedInstallmentPromise,
-        createdPaymentPromise,
-        createLoanLogPromise,
-      ]);
+      if (shouldSendInstallmentPaidNotification) {
+        await dispatchEventNotifications({
+          env: c.env,
+          prisma,
+          event: NotificationEvent.INSTALLMENT_PAID,
+          queuedByUserId: authenticatedUser.id,
+          notificationsEnabled: loanFound.notificationsEnabled,
+          context: {
+            client: {
+              name: loanFound.client.name,
+              email: loanFound.client.email ?? '',
+              phone: loanFound.client.phone ?? '',
+            },
+            loan: {
+              id: loanFound.id,
+              amount: loanFound.amount,
+              currency: loanFound.currency,
+              description: loanFound.description,
+              loanDate: loanFound.loanDate.toISOString(),
+              installmentCount: loanFound._count.installments,
+            },
+            installment: {
+              amount: updatedInstallment.amount,
+              dueDate: updatedInstallment.dueDate.toISOString(),
+              paidAt: updatedInstallment.paidAt?.toISOString() ?? null,
+            },
+            user: {
+              name: '',
+              email: '',
+              temporaryPassword: '',
+            },
+          },
+        });
+      }
 
       return c.json({
         meta: { code: 201, message: 'Payment recorded successfully' },
@@ -493,13 +555,7 @@ export const voidInstallmentPayment = createHandlers(
 
     try {
       const [loanFound, installmentFound, paymentFound, latestActivePayment] = await Promise.all([
-        prisma.loan.findUnique({
-          where: { id: loanId },
-          select: {
-            id: true,
-            excessBalance: true,
-          },
-        }),
+        getLoanForInstallmentNotifications(prisma, loanId),
         prisma.loanInstallment.findFirst({
           where: { id: installmentId, loanId },
           include: {
@@ -561,14 +617,30 @@ export const voidInstallmentPayment = createHandlers(
       const voidedAt = new Date();
       const trimmedVoidReason = voidReason.trim();
 
-      const updatedLoanPromise = prisma.loan.update({
+      const updatedPayment = await prisma.loanInstallmentPayment.update({
+        where: { id: paymentId },
+        data: {
+          voidedAt,
+          voidReason: trimmedVoidReason,
+          voidedBy: { connect: { id: authenticatedUser.id } },
+        },
+        include: {
+          createdBy: {
+            select: { id: true, name: true, email: true },
+          },
+          voidedBy: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+      const updatedLoan = await prisma.loan.update({
         where: { id: loanId },
         data: {
           excessBalance: nextExcessBalance,
           updatedBy: { connect: { id: authenticatedUser.id } },
         },
       });
-      const updatedInstallmentPromise = prisma.loanInstallment.update({
+      const updatedInstallment = await prisma.loanInstallment.update({
         where: { id: installmentId },
         data: {
           paidAmount: nextPaidAmount,
@@ -586,23 +658,7 @@ export const voidInstallmentPayment = createHandlers(
           },
         },
       });
-      const updatedPaymentPromise = prisma.loanInstallmentPayment.update({
-        where: { id: paymentId },
-        data: {
-          voidedAt,
-          voidReason: trimmedVoidReason,
-          voidedBy: { connect: { id: authenticatedUser.id } },
-        },
-        include: {
-          createdBy: {
-            select: { id: true, name: true, email: true },
-          },
-          voidedBy: {
-            select: { id: true, name: true, email: true },
-          },
-        },
-      });
-      const createLoanLogPromise = createLoanLog(prisma, {
+      await createLoanLog(prisma, {
         loanId,
         installmentId,
         paymentId,
@@ -621,13 +677,6 @@ export const voidInstallmentPayment = createHandlers(
           voidReason: trimmedVoidReason,
         },
       });
-
-      const [updatedLoan, updatedInstallment, updatedPayment] = await prisma.$transaction([
-        updatedLoanPromise,
-        updatedInstallmentPromise,
-        updatedPaymentPromise,
-        createLoanLogPromise,
-      ]);
 
       return c.json({
         meta: { code: 200, message: 'Payment voided successfully' },

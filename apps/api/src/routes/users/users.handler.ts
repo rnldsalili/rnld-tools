@@ -312,6 +312,7 @@ export const createUser = createHandlers(
             id: '',
             amount: 0,
             currency: 'PHP',
+            description: '',
             loanDate: new Date().toISOString(),
             installmentCount: 0,
           },

@@ -10,6 +10,7 @@ export interface NotificationTemplateSampleContext {
     id: string;
     amount: number;
     currency: string;
+    description: string | null;
     loanDate: string;
     installmentCount: number;
   };
@@ -84,6 +85,7 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
       id: 'loan_sample_001',
       amount: 25000,
       currency: 'PHP',
+      description: 'Short-term personal loan',
       loanDate: baseDate.toISOString(),
       installmentCount: 5,
     },
@@ -112,6 +114,7 @@ export function getNotificationPlaceholderValues(
     '{{loan.id}}': context.loan.id,
     '{{loan.amount}}': `${currencyFormatter.format(context.loan.amount)} ${context.loan.currency}`,
     '{{loan.currency}}': context.loan.currency,
+    '{{loan.description}}': context.loan.description || missingValue,
     '{{loan.loanDate}}': formatDate(context.loan.loanDate),
     '{{loan.installmentCount}}': String(context.loan.installmentCount),
     '{{installment.amount}}': formatCurrencyAmount(context.installment.amount, context.loan.currency),

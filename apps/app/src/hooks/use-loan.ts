@@ -92,6 +92,7 @@ export type LoanDetail = Omit<LoanDetailBase, 'client' | 'excessBalance' | 'inst
   excessBalance: number;
   installments: Array<LoanInstallment>;
   installmentsPagination: PaginationState;
+  notificationsEnabled: boolean;
 };
 
 type CreateLoanBody = InferRequestType<typeof apiClient.loans.$post>['json'];
@@ -141,6 +142,7 @@ function normalizeLoanDetail(loan: LoanDetailBase): LoanDetail {
     excessBalance: getOptionalNumber(loan, 'excessBalance') ?? 0,
     installments: getLoanInstallments(loan),
     installmentsPagination: getPagination(loan, 'installmentsPagination'),
+    notificationsEnabled: getOptionalBoolean(loan, 'notificationsEnabled') ?? true,
   };
 }
 
@@ -251,6 +253,11 @@ function getNullableString(source: object, key: string) {
 function getOptionalNumber(source: object, key: string) {
   const value = Reflect.get(source, key);
   return typeof value === 'number' ? value : undefined;
+}
+
+function getOptionalBoolean(source: object, key: string) {
+  const value = Reflect.get(source, key);
+  return typeof value === 'boolean' ? value : undefined;
 }
 
 function getLoanClientStatus(source: object) {

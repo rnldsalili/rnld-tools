@@ -280,6 +280,7 @@ export const createLoan = createHandlers(
           id: createdLoan.id,
           amount: createdLoan.amount,
           currency: createdLoan.currency,
+          description: createdLoan.description,
           loanDate: createdLoan.loanDate.toISOString(),
           installmentCount: createdInstallments?.length ?? 0,
         },
