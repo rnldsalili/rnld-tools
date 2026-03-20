@@ -5,12 +5,10 @@ import { toast } from 'sonner';
 import {
   Badge,
   Button,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
   Checkbox,
+  SectionCard,
+  SectionCardContent,
+  SectionCardHeader,
 } from '@workspace/ui';
 import {
   PermissionAction,
@@ -22,9 +20,11 @@ import {
   permissionModules,
 } from '@workspace/permissions';
 import { useCan } from '@workspace/permissions/react';
+import type { Dispatch, SetStateAction } from 'react';
 import type { RoleItem } from '@/app/hooks/use-roles';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
+import { AuthenticatedDetailPageShell } from '@/app/components/layout/authenticated-detail-page-shell';
 import { useRoles, useUpdateRolePermissions } from '@/app/hooks/use-roles';
 
 export const Route = createFileRoute('/_authenticated/settings/roles/$roleSlug')({
@@ -43,6 +43,7 @@ function RoleDetailPage() {
   const { data, isLoading, isError } = useRoles();
 
   const role = data?.data.roles.find((roleItem) => roleItem.slug === roleSlug) ?? null;
+  const canEdit = role ? currentUserHasSuperAdminRole && !role.hasFullAccess : false;
 
   useEffect(() => {
     if (role) {
@@ -59,70 +60,79 @@ function RoleDetailPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <ShieldCheckIcon className="size-4" />
-            </span>
+  if (isLoading) {
+    return (
+      <AuthenticatedDetailPageShell
+          icon={ShieldCheckIcon}
+          title="Role Detail"
+          description="Review and manage the permissions assigned to this built-in role."
+          backAction={(
+            <Button variant="ghost" asChild>
+              <Link to="/settings/roles">
+                <ArrowLeftIcon className="size-3.5" />
+                Back
+              </Link>
+            </Button>
+          )}
+      >
+        <SectionCard>
+          <SectionCardContent className="flex justify-center py-10">
+            <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+          </SectionCardContent>
+        </SectionCard>
+      </AuthenticatedDetailPageShell>
+    );
+  }
+
+  if (!role) {
+    return (
+      <AuthenticatedDetailPageShell
+          icon={ShieldCheckIcon}
+          title="Role Detail"
+          description="Review and manage the permissions assigned to this built-in role."
+          backAction={(
+            <Button variant="ghost" asChild>
+              <Link to="/settings/roles">
+                <ArrowLeftIcon className="size-3.5" />
+                Back
+              </Link>
+            </Button>
+          )}
+      >
+        <SectionCard>
+          <SectionCardHeader className="flex flex-col items-start gap-2">
             <div>
-              <h1 className="text-lg font-semibold">
-                {role ? role.name : 'Role Detail'}
-              </h1>
+              <h2 className="text-base font-semibold">Role Not Found</h2>
               <p className="text-sm text-muted-foreground">
-                Review and manage the permissions assigned to this built-in role.
-              </p>
-            </div>
-          </div>
-
-          <Button variant="ghost" asChild>
-            <Link to="/settings/roles">
-              <ArrowLeftIcon className="size-3.5" />
-              Back
-            </Link>
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <Card>
-            <CardContent className="flex justify-center py-10">
-              <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
-            </CardContent>
-          </Card>
-        ) : role ? (
-          <RoleDetailCard
-              key={`${role.slug}:${serializeRolePermissions(role.permissions)}`}
-              role={role}
-              canEdit={currentUserHasSuperAdminRole && !role.hasFullAccess}
-          />
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Role Not Found</CardTitle>
-              <CardDescription>
                 {isError
                   ? 'The role could not be loaded.'
                   : 'This role does not exist in the current role catalog.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="ghost" asChild>
-                <Link to="/settings/roles">
-                  <ArrowLeftIcon className="size-3.5" />
-                  Back to Roles
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
+              </p>
+            </div>
+          </SectionCardHeader>
+          <SectionCardContent>
+            <Button variant="ghost" asChild>
+              <Link to="/settings/roles">
+                <ArrowLeftIcon className="size-3.5" />
+                Back to Roles
+              </Link>
+            </Button>
+          </SectionCardContent>
+        </SectionCard>
+      </AuthenticatedDetailPageShell>
+    );
+  }
+
+  return (
+    <LoadedRoleDetailPage
+        key={`${role.slug}:${serializeRolePermissions(role.permissions)}`}
+        role={role}
+        canEdit={canEdit}
+    />
   );
 }
 
-function RoleDetailCard({
+function LoadedRoleDetailPage({
   role,
   canEdit,
 }: {
@@ -133,7 +143,6 @@ function RoleDetailCard({
   const [selectedPermissionKeys, setSelectedPermissionKeys] = useState<Set<string>>(
     createPermissionKeySet(role.permissions),
   );
-
   const initialPermissionKeys = createPermissionKeySet(role.permissions);
   const hasChanges = !arePermissionSetsEqual(initialPermissionKeys, selectedPermissionKeys);
 
@@ -157,47 +166,107 @@ function RoleDetailCard({
   }
 
   return (
-    <Card>
-      <CardHeader className="gap-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle className="text-base">{role.name}</CardTitle>
-            <CardDescription>{role.description || 'No description available.'}</CardDescription>
-            {role.userCount ? (
-              <p className="text-sm text-muted-foreground">
-                Assigned to {role.userCount} {role.userCount === 1 ? 'user' : 'users'}.
-              </p>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-              {role.hasFullAccess ? <Badge>Full Access</Badge> : null}
-              {!canEdit && !role.hasFullAccess ? <Badge variant="outline">Read Only</Badge> : null}
-            </div>
-          </div>
+    <AuthenticatedDetailPageShell
+        icon={ShieldCheckIcon}
+        title={role.name}
+        description="Review and manage the permissions assigned to this built-in role."
+        backAction={(
+          <Button variant="ghost" asChild>
+            <Link to="/settings/roles">
+              <ArrowLeftIcon className="size-3.5" />
+              Back
+            </Link>
+          </Button>
+        )}
+        action={canEdit ? (
+          <Button type="button" onClick={() => void handleSave()} disabled={isPending || !hasChanges} className="gap-2">
+            {isPending ? (
+              <Loader2Icon className="size-3.5 animate-spin" />
+            ) : (
+              <SaveIcon className="size-3.5" />
+            )}
+            Save
+          </Button>
+        ) : null}
+        meta={<RoleDetailMeta role={role} canEdit={canEdit} />}
+    >
+      <RolePermissionMatrixSection
+          role={role}
+          canEdit={canEdit}
+          selectedPermissionKeys={selectedPermissionKeys}
+          onSelectedPermissionKeysChange={setSelectedPermissionKeys}
+      />
+    </AuthenticatedDetailPageShell>
+  );
+}
 
-          {canEdit ? (
-            <Button type="button" onClick={() => void handleSave()} disabled={isPending || !hasChanges}>
-              {isPending ? (
-                <Loader2Icon className="size-3.5 animate-spin" />
-              ) : (
-                <SaveIcon className="size-3.5" />
-              )}
-              Save
-            </Button>
-          ) : null}
+function RoleDetailMeta({
+  role,
+  canEdit,
+}: {
+  role: RoleItem;
+  canEdit: boolean;
+}) {
+  const assignedUserCount = role.userCount ?? 0;
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+      <div className="min-w-0">
+        <p className="text-sm text-muted-foreground">
+          {role.description || 'No description available.'}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="secondary">
+          {assignedUserCount} assigned user{assignedUserCount === 1 ? '' : 's'}
+        </Badge>
+        {role.hasFullAccess ? <Badge>Full Access</Badge> : null}
+        {!canEdit && !role.hasFullAccess ? <Badge variant="outline">Read Only</Badge> : null}
+      </div>
+    </div>
+  );
+}
+
+function RolePermissionMatrixSection({
+  role,
+  canEdit,
+  selectedPermissionKeys,
+  onSelectedPermissionKeysChange,
+}: {
+  role: RoleItem;
+  canEdit: boolean;
+  selectedPermissionKeys: Set<string>;
+  onSelectedPermissionKeysChange: Dispatch<SetStateAction<Set<string>>>;
+}) {
+  return (
+    <SectionCard>
+      <SectionCardHeader className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold">Permission Matrix</h2>
+          <p className="text-sm text-muted-foreground">
+            {role.hasFullAccess
+              ? 'This protected role always has access to every module and action.'
+              : canEdit
+                ? 'Configure which actions this role can perform in each module.'
+                : 'Review which actions this role can perform in each module.'}
+          </p>
         </div>
-      </CardHeader>
+        {!role.hasFullAccess && !canEdit ? (
+          <Badge variant="outline">Read Only</Badge>
+        ) : null}
+      </SectionCardHeader>
 
-      <CardContent>
+      <SectionCardContent>
         {role.hasFullAccess ? (
-          <div className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             This protected role always has access to every module and action.
-          </div>
+          </p>
         ) : (
           <div className="space-y-4">
             {permissionModules.map((module) => (
-              <div key={module} className="rounded-lg border border-border p-4">
+              <div key={module} className="rounded-lg border border-border/80 bg-muted/[0.08] p-4">
                 <div className="mb-3">
-                  <h2 className="text-sm font-medium">{getPermissionModuleLabel(module)}</h2>
+                  <h3 className="text-sm font-medium">{getPermissionModuleLabel(module)}</h3>
                   <p className="text-sm text-muted-foreground">
                     {canEdit
                       ? 'Configure which actions this role can perform.'
@@ -212,7 +281,7 @@ function RoleDetailCard({
                         <Checkbox
                             checked={selectedPermissionKeys.has(createPermissionKey(module, action))}
                             onCheckedChange={(checked) => {
-                              setSelectedPermissionKeys((previousPermissionKeys) => {
+                              onSelectedPermissionKeysChange((previousPermissionKeys) => {
                                 const nextPermissionKeys = new Set(previousPermissionKeys);
                                 const permissionKey = createPermissionKey(module, action);
 
@@ -242,8 +311,8 @@ function RoleDetailCard({
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </SectionCardContent>
+    </SectionCard>
   );
 }
 
