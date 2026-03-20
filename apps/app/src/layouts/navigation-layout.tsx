@@ -493,7 +493,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button
                       variant="ghost"
-                      className="h-10 rounded-full border border-border/70 bg-background/80 px-1.5 pr-2.5 hover:bg-muted/80"
+                      className="size-10 rounded-full border border-border/70 bg-background/80 p-1.5 hover:bg-muted/80 sm:h-10 sm:w-auto sm:px-1.5 sm:pr-2.5"
                   >
                     <span className="flex size-7 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
                       {userInitial}
