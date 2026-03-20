@@ -11,11 +11,12 @@ export interface NotificationTemplateSampleContext {
     amount: number;
     currency: string;
     loanDate: string;
+    installmentCount: number;
   };
   installment: {
-    amount: number;
-    dueDate: string;
-    paidAt: string;
+    amount: number | null;
+    dueDate: string | null;
+    paidAt: string | null;
   };
   user: {
     name: string;
@@ -84,6 +85,7 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
       amount: 25000,
       currency: 'PHP',
       loanDate: baseDate.toISOString(),
+      installmentCount: 5,
     },
     installment: {
       amount: 5000,
@@ -111,7 +113,8 @@ export function getNotificationPlaceholderValues(
     '{{loan.amount}}': `${currencyFormatter.format(context.loan.amount)} ${context.loan.currency}`,
     '{{loan.currency}}': context.loan.currency,
     '{{loan.loanDate}}': formatDate(context.loan.loanDate),
-    '{{installment.amount}}': `${currencyFormatter.format(context.installment.amount)} ${context.loan.currency}`,
+    '{{loan.installmentCount}}': String(context.loan.installmentCount),
+    '{{installment.amount}}': formatCurrencyAmount(context.installment.amount, context.loan.currency),
     '{{installment.dueDate}}': formatDate(context.installment.dueDate),
     '{{installment.paidAt}}': formatDateTime(context.installment.paidAt),
     '{{user.name}}': context.user.name || missingValue,
@@ -124,10 +127,28 @@ export function getNotificationSiteUrl(env: Pick<CloudflareBindings, 'APP_URL'>)
   return env.APP_URL.trim() || defaultNotificationSiteUrl;
 }
 
-function formatDate(value: string) {
-  return dateFormatter.format(new Date(value));
+function formatDate(value: string | null) {
+  if (!value) {
+    return missingValue;
+  }
+
+  const dateValue = new Date(value);
+  return Number.isNaN(dateValue.getTime()) ? missingValue : dateFormatter.format(dateValue);
 }
 
-function formatDateTime(value: string) {
-  return dateTimeFormatter.format(new Date(value));
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return missingValue;
+  }
+
+  const dateValue = new Date(value);
+  return Number.isNaN(dateValue.getTime()) ? missingValue : dateTimeFormatter.format(dateValue);
+}
+
+function formatCurrencyAmount(value: number | null, currency: string) {
+  if (value === null || Number.isNaN(value)) {
+    return missingValue;
+  }
+
+  return `${currencyFormatter.format(value)} ${currency}`;
 }

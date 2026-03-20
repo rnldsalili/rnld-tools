@@ -313,6 +313,7 @@ export const createUser = createHandlers(
             amount: 0,
             currency: 'PHP',
             loanDate: new Date().toISOString(),
+            installmentCount: 0,
           },
           installment: {
             amount: 0,

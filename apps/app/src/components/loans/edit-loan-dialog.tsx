@@ -7,6 +7,7 @@ import {
 import {
   Button,
   Field,
+  FieldDescription,
   FieldError,
   FieldLabel,
   Input,
@@ -16,6 +17,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
   Textarea,
 } from '@workspace/ui';
 import type { ClientStatus } from '@workspace/constants';
@@ -37,6 +39,7 @@ interface LoanEditData {
   amount: number;
   installmentInterval: string;
   loanDate: string;
+  notificationsEnabled: boolean;
   interestRate: number | null;
   description: string | null;
 }
@@ -55,6 +58,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
       amount: String(loan.amount),
       installmentInterval: loan.installmentInterval,
       loanDate: loan.loanDate.slice(0, 10),
+      notificationsEnabled: loan.notificationsEnabled,
       interestRate: loan.interestRate != null ? String(loan.interestRate) : '',
       description: loan.description ?? '',
     },
@@ -71,6 +75,7 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
             amount: parseFloat(value.amount),
             installmentInterval: value.installmentInterval,
             loanDate: value.loanDate,
+            notificationsEnabled: value.notificationsEnabled,
             interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : null,
             description: value.description || null,
           },
@@ -243,6 +248,26 @@ export function EditLoanDialog({ loan, onClose }: EditLoanDialogProps) {
                   placeholder="Optional description..."
                   rows={3}
               />
+            </Field>
+          )}
+        </form.Field>
+
+        <form.Field name="notificationsEnabled">
+          {(field) => (
+            <Field>
+              <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
+                <div className="space-y-1">
+                  <FieldLabel htmlFor={field.name}>Send notifications</FieldLabel>
+                  <FieldDescription>
+                    When disabled, no future notifications related to this loan will be sent.
+                  </FieldDescription>
+                </div>
+                <Switch
+                    id={field.name}
+                    checked={field.state.value}
+                    onCheckedChange={field.handleChange}
+                />
+              </div>
             </Field>
           )}
         </form.Field>

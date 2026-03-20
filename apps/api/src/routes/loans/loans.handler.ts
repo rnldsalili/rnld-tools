@@ -1,4 +1,10 @@
-import { ClientStatus, InstallmentInterval, InstallmentType, LoanLogEventType } from '@workspace/constants';
+import {
+  ClientStatus,
+  InstallmentInterval,
+  InstallmentType,
+  LoanLogEventType,
+  NotificationEvent,
+} from '@workspace/constants';
 import {
   loanCreateSchema,
   loanGetQuerySchema,
@@ -10,6 +16,7 @@ import { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { createLoanLog } from '@/api/lib/loans/logs';
+import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
 import { getInstallmentRemainingAmount, roundCurrencyAmount } from '@/api/lib/loans/payments';
 import { deleteImage } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
@@ -179,6 +186,7 @@ export const createLoan = createHandlers(
         amount: loanPayload.amount,
         currency: loanPayload.currency,
         excessBalance: 0,
+        notificationsEnabled: loanPayload.notificationsEnabled ?? true,
         installmentInterval: loanPayload.installmentInterval,
         loanDate: new Date(loanPayload.loanDate),
         interestRate: loanPayload.interestRate ?? null,
@@ -256,6 +264,38 @@ export const createLoan = createHandlers(
       }
     }
 
+    await dispatchEventNotifications({
+      env: c.env,
+      prisma,
+      event: NotificationEvent.LOAN_CREATED,
+      queuedByUserId: authenticatedUser.id,
+      notificationsEnabled: createdLoan.notificationsEnabled,
+      context: {
+        client: {
+          name: createdLoan.client.name,
+          email: createdLoan.client.email ?? '',
+          phone: createdLoan.client.phone ?? '',
+        },
+        loan: {
+          id: createdLoan.id,
+          amount: createdLoan.amount,
+          currency: createdLoan.currency,
+          loanDate: createdLoan.loanDate.toISOString(),
+          installmentCount: createdInstallments?.length ?? 0,
+        },
+        installment: {
+          amount: createdInstallments?.[0]?.amount ?? null,
+          dueDate: createdInstallments?.[0]?.dueDate.toISOString() ?? null,
+          paidAt: createdInstallments?.[0]?.paidAt?.toISOString() ?? null,
+        },
+        user: {
+          name: '',
+          email: '',
+          temporaryPassword: '',
+        },
+      },
+    });
+
     return c.json({
       meta: { code: 201, message: 'Loan created successfully' },
       data: {
@@ -286,6 +326,7 @@ export const updateLoan = createHandlers(
         select: {
           clientId: true,
           amount: true,
+          notificationsEnabled: true,
           installmentInterval: true,
           interestRate: true,
           description: true,
@@ -316,6 +357,9 @@ export const updateLoan = createHandlers(
             client: { connect: { id: loanUpdatePayload.clientId } },
           }),
           ...(loanUpdatePayload.amount !== undefined && { amount: loanUpdatePayload.amount }),
+          ...(loanUpdatePayload.notificationsEnabled !== undefined && {
+            notificationsEnabled: loanUpdatePayload.notificationsEnabled,
+          }),
           ...(loanUpdatePayload.installmentInterval !== undefined && {
             installmentInterval: loanUpdatePayload.installmentInterval,
           }),
@@ -342,6 +386,16 @@ export const updateLoan = createHandlers(
         updatedLoanChanges.amount = {
           from: existingLoan.amount,
           to: loanUpdatePayload.amount,
+        };
+      }
+
+      if (
+        loanUpdatePayload.notificationsEnabled !== undefined
+        && loanUpdatePayload.notificationsEnabled !== existingLoan.notificationsEnabled
+      ) {
+        updatedLoanChanges.notificationsEnabled = {
+          from: existingLoan.notificationsEnabled,
+          to: loanUpdatePayload.notificationsEnabled,
         };
       }
 

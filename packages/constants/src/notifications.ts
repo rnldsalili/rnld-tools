@@ -135,6 +135,7 @@ export const NOTIFICATION_PLACEHOLDER_GROUPS = [
       { key: '{{loan.amount}}', description: 'Loan amount' },
       { key: '{{loan.currency}}', description: 'Loan currency code' },
       { key: '{{loan.loanDate}}', description: 'Loan date' },
+      { key: '{{loan.installmentCount}}', description: 'Total number of loan installments' },
     ],
   },
   {

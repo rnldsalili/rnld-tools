@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import {
   Button,
   Field,
+  FieldDescription,
   FieldError,
   FieldLabel,
   Input,
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
   Separator,
+  Switch,
   Textarea,
 } from '@workspace/ui';
 import {
@@ -39,6 +41,7 @@ interface DefaultValues {
   loanDate: string;
   interestRate: string;
   description: string;
+  notificationsEnabled: boolean;
   installmentMode: InstallmentType;
   singleDueDate: string;
   singleAmount: string;
@@ -56,6 +59,7 @@ function createDefaultValues(): DefaultValues {
     loanDate: format(new Date(), 'yyyy-MM-dd'),
     interestRate: '',
     description: '',
+    notificationsEnabled: true,
     installmentMode: InstallmentType.SINGLE,
     singleDueDate: '',
     singleAmount: '',
@@ -84,6 +88,7 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
         loanDate: value.loanDate,
         interestRate: value.interestRate !== '' ? parseFloat(value.interestRate) : undefined,
         description: value.description.trim() || undefined,
+        notificationsEnabled: value.notificationsEnabled,
         installments: buildInstallmentsPayload(value),
       };
 
@@ -446,6 +451,26 @@ export function CreateLoanDialog({ open, onOpenChange }: CreateLoanDialogProps) 
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                   />
+                </Field>
+              )}
+            </form.Field>
+
+            <form.Field name="notificationsEnabled">
+              {(field) => (
+                <Field>
+                  <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
+                    <div className="space-y-1">
+                      <FieldLabel htmlFor={field.name}>Send notifications</FieldLabel>
+                      <FieldDescription>
+                        When disabled, no loan-related notifications will be sent for this loan.
+                      </FieldDescription>
+                    </div>
+                    <Switch
+                        id={field.name}
+                        checked={field.state.value}
+                        onCheckedChange={field.handleChange}
+                    />
+                  </div>
                 </Field>
               )}
             </form.Field>

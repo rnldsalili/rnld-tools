@@ -191,6 +191,7 @@ model Loan {
   amount              Float
   currency            String   @default("PHP")
   excessBalance       Float    @default(0)
+  notificationsEnabled Boolean @default(true)
   interestRate        Float?
   description         String?
   installmentInterval String
