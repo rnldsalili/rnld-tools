@@ -80,11 +80,12 @@ export type LoanInstallment = {
   updatedByUserId: string;
 };
 
-export type LoanListItem = Omit<LoanListItemBase, '_count' | 'client'> & {
+export type LoanListItem = Omit<LoanListItemBase, '_count' | 'client' | 'paidInstallmentsCount'> & {
   _count: {
     installments: number;
   };
   client: LoanClient;
+  paidInstallmentsCount: number;
 };
 
 export type LoanDetail = Omit<LoanDetailBase, 'client' | 'excessBalance' | 'installments' | 'installmentsPagination'> & {
@@ -132,6 +133,7 @@ function normalizeLoanListItem(loan: LoanListItemBase): LoanListItem {
     ...loan,
     _count: getLoanInstallmentCount(loan),
     client: getLoanClient(loan),
+    paidInstallmentsCount: getOptionalNumber(loan, 'paidInstallmentsCount') ?? 0,
   };
 }
 

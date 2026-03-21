@@ -61,6 +61,11 @@ function LoansPage() {
       ),
     },
     {
+      accessorKey: 'description',
+      header: 'Description',
+      cell: ({ row }) => row.original.description?.trim() || '—',
+    },
+    {
       accessorKey: 'interestRate',
       header: 'Interest Rate',
       cell: ({ row }) =>
@@ -71,14 +76,14 @@ function LoansPage() {
       header: 'Installments',
       cell: ({ row }) => (
         <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-          {row.original._count.installments}
+          {row.original.paidInstallmentsCount}/{row.original._count.installments}
         </span>
       ),
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Created',
-      cell: ({ row }) => format(new Date(row.original.createdAt), 'MMM d, yyyy'),
+      accessorKey: 'loanDate',
+      header: 'Loan Date',
+      cell: ({ row }) => format(new Date(row.original.loanDate), 'MMM d, yyyy'),
     },
     {
       id: 'actions',

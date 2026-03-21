@@ -1,6 +1,7 @@
 import {
   ClientStatus,
   InstallmentInterval,
+  InstallmentStatus,
   InstallmentType,
   LoanLogEventType,
   NotificationEvent,
@@ -94,15 +95,25 @@ export const getLoans = createHandlers(
         include: {
           client: true,
           _count: { select: { installments: true } },
+          installments: {
+            select: {
+              status: true,
+            },
+          },
         },
       }),
       prisma.loan.count({ where: loanFilter }),
     ]);
 
+    const formattedLoans = loans.map(({ installments, ...loan }) => ({
+      ...loan,
+      paidInstallmentsCount: installments.filter((installment) => installment.status === InstallmentStatus.PAID).length,
+    }));
+
     return c.json({
       meta: { code: 200, message: 'Loans retrieved successfully' },
       data: {
-        loans,
+        loans: formattedLoans,
         pagination: {
           page,
           limit,
