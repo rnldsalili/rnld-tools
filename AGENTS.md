@@ -82,6 +82,7 @@ const prisma = initializePrisma(c.env); // src/lib/db.ts
 - Seed users are defined in `apps/api/scripts/seed/users.ts`.
 - `POST /api/seed` validates `seedToken`, creates missing users, and stores hashed credential accounts for Better Auth.
 - If you add database migrations, keep them in `apps/api/migrations/` and apply them with Wrangler. Refer to `apps/api/docs/database-migrations.md` for the full migration workflow.
+- **Do not run or apply database migrations** — the user handles all migration steps manually.
 
 ### Auth and Roles
 

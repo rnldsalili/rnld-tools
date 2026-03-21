@@ -23,7 +23,7 @@ The project uses two D1 databases:
 
 ### Development Database
 
-- **Name**: `cms_dev`
+- **Name**: `rnld-tools-dev`
 - **Database ID**: `c3f51c59-6593-4307-8635-fec84ef50dee`
 - **Binding**: `DB`
 
@@ -56,13 +56,13 @@ model Member {
 Create a migration entry in D1:
 
 ```bash
-bunx --bun wrangler d1 migrations create cms_dev <describe-change>
+bunx --bun wrangler d1 migrations create rnld-tools-dev <describe-change>
 ```
 
 Example:
 
 ```bash
-bunx --bun wrangler d1 migrations create cms_dev added-image-fields
+bunx --bun wrangler d1 migrations create rnld-tools-dev added-image-fields
 ```
 
 This creates a placeholder file in the `migrations/` directory.
@@ -122,7 +122,7 @@ If you see `CREATE TABLE` statements for existing tables, the migration is incor
 1. **Apply the migration to D1:**
 
    ```bash
-   bunx --bun wrangler d1 migrations apply cms_dev --local (and/or --remote)
+   bunx --bun wrangler d1 migrations apply rnld-tools-dev --local (and/or --remote)
    ```
 
 2. **IMPORTANT: Update the Shadow DB:**
@@ -153,7 +153,7 @@ Here's a complete example of adding an `image` field to the `Member` model:
 # 1. Edit prisma/schema.prisma (add the field manually)
 
 # 2. Create migration placeholder
-bunx --bun wrangler d1 migrations create cms_dev added-member-image
+bunx --bun wrangler d1 migrations create rnld-tools-dev added-member-image
 
 # 3. Generate migration SQL
 bunx --bun prisma migrate diff \
@@ -166,10 +166,10 @@ bunx --bun prisma migrate diff \
 cat migrations/0003_added-member-image.sql
 
 # 5. Apply to local database
-bunx --bun wrangler d1 migrations apply cms_dev --local
+bunx --bun wrangler d1 migrations apply rnld-tools-dev --local
 
 # 6. Apply to remote database
-bunx --bun wrangler d1 migrations apply cms_dev --remote
+bunx --bun wrangler d1 migrations apply rnld-tools-dev --remote
 
 # 7. Regenerate Prisma client
 bunx --bun prisma generate
@@ -201,7 +201,7 @@ Migration failed: table "member" already exists
 Apply all existing migrations to your local database:
 
 ```bash
-bunx --bun wrangler d1 migrations apply cms_dev --local
+bunx --bun wrangler d1 migrations apply rnld-tools-dev --local
 ```
 
 ### Issue: Migration Numbering
@@ -243,10 +243,10 @@ Always apply and test migrations on your local database before applying to remot
 
 ```bash
 # Test locally first
-bunx --bun wrangler d1 migrations apply cms_dev --local
+bunx --bun wrangler d1 migrations apply rnld-tools-dev --local
 
 # Then apply to remote
-bunx --bun wrangler d1 migrations apply cms_dev --remote
+bunx --bun wrangler d1 migrations apply rnld-tools-dev --remote
 ```
 
 ### 4. Keep Migrations Small
@@ -263,7 +263,7 @@ Before applying migrations that modify data or drop columns, backup your databas
 
 ```bash
 # Export data from D1
-bunx --bun wrangler d1 export cms_dev --remote --output backup.sql
+bunx --bun wrangler d1 export rnld-tools-dev --remote --output backup.sql
 ```
 
 ## Prisma Configuration
@@ -295,24 +295,24 @@ DATABASE_URL="file:./prisma/db.sqlite"
 ### View Migration Status
 
 ```bash
-bunx --bun wrangler d1 migrations list cms_dev --local
-bunx --bun wrangler d1 migrations list cms_dev --remote
+bunx --bun wrangler d1 migrations list rnld-tools-dev --local
+bunx --bun wrangler d1 migrations list rnld-tools-dev --remote
 ```
 
 ### Execute SQL Directly
 
 ```bash
 # Local
-bunx --bun wrangler d1 execute cms_dev --local --command "SELECT * FROM member LIMIT 5"
+bunx --bun wrangler d1 execute rnld-tools-dev --local --command "SELECT * FROM member LIMIT 5"
 
 # Remote
-bunx --bun wrangler d1 execute cms_dev --remote --command "SELECT * FROM member LIMIT 5"
+bunx --bun wrangler d1 execute rnld-tools-dev --remote --command "SELECT * FROM member LIMIT 5"
 ```
 
 ### Export Database
 
 ```bash
-bunx --bun wrangler d1 export cms_dev --remote --output backup.sql
+bunx --bun wrangler d1 export rnld-tools-dev --remote --output backup.sql
 ```
 
 ### Validate Prisma Schema

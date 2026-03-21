@@ -12,7 +12,7 @@ import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
 export const INSTALLMENT_REMINDER_CRON = '5 16 * * *';
 export const INSTALLMENT_OVERDUE_STATUS_CRON = '5 16 * * *';
 
-type ReminderTimestampField = 'dueReminderSentAt' | 'overdueReminderSentAt';
+type ReminderTimestampField = 'dueReminderSentAt' | 'dueDateReminderSentAt' | 'overdueReminderSentAt';
 
 const reminderScheduleConfigs: Array<{
   event: NotificationEvent.INSTALLMENT_DUE_REMINDER | NotificationEvent.INSTALLMENT_OVERDUE_REMINDER;
@@ -23,6 +23,11 @@ const reminderScheduleConfigs: Array<{
     event: NotificationEvent.INSTALLMENT_DUE_REMINDER,
     reminderOffsetDays: 3,
     reminderTimestampField: 'dueReminderSentAt',
+  },
+  {
+    event: NotificationEvent.INSTALLMENT_DUE_REMINDER,
+    reminderOffsetDays: 0,
+    reminderTimestampField: 'dueDateReminderSentAt',
   },
   {
     event: NotificationEvent.INSTALLMENT_OVERDUE_REMINDER,
@@ -64,9 +69,9 @@ async function processInstallmentReminderBatch(params: {
   const prisma = initializePrisma(env);
   const reminderDateRange = event === NotificationEvent.INSTALLMENT_DUE_REMINDER
     ? {
-      start: getManilaDayRange(scheduledDate).start,
-      end: getManilaDayRange(scheduledDate, reminderOffsetDays + 1).start,
-    }
+        start: getManilaDayRange(scheduledDate).start,
+        end: getManilaDayRange(scheduledDate, reminderOffsetDays + 1).start,
+      }
     : getManilaDayRange(scheduledDate, reminderOffsetDays);
   const reminderTimestamp = new Date();
 
@@ -82,6 +87,8 @@ async function processInstallmentReminderBatch(params: {
       },
       ...(reminderTimestampField === 'dueReminderSentAt'
         ? { dueReminderSentAt: null }
+        : reminderTimestampField === 'dueDateReminderSentAt'
+        ? { dueDateReminderSentAt: null }
         : { overdueReminderSentAt: null }),
       loan: {
         is: {
@@ -170,6 +177,8 @@ async function processInstallmentReminderBatch(params: {
         where: { id: installmentCandidate.id },
         data: reminderTimestampField === 'dueReminderSentAt'
           ? { dueReminderSentAt: reminderTimestamp }
+          : reminderTimestampField === 'dueDateReminderSentAt'
+          ? { dueDateReminderSentAt: reminderTimestamp }
           : { overdueReminderSentAt: reminderTimestamp },
       });
     } catch (error) {

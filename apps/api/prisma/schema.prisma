@@ -250,7 +250,8 @@ model LoanInstallment {
   paidAmount      Float                 @default(0)
   status          LoanInstallmentStatus @default(PENDING)
   paidAt          DateTime?
-  dueReminderSentAt DateTime?
+  dueReminderSentAt     DateTime?
+  dueDateReminderSentAt  DateTime?
   overdueReminderSentAt DateTime?
   remarks         String?
   createdAt       DateTime              @default(now())
