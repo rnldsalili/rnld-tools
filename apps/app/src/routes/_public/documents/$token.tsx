@@ -9,6 +9,7 @@ import {
   CardTitle,
   Checkbox,
   Label,
+  LoadingState,
   cn,
 } from '@workspace/ui';
 import { CheckCircleIcon, Loader2Icon, PenLineIcon, XCircleIcon } from 'lucide-react';
@@ -158,8 +159,8 @@ function PublicDocumentPage() {
 
 function PublicDocumentLoadingState() {
   return (
-    <div className="flex min-h-96 items-center justify-center">
-      <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <LoadingState className="min-h-[24rem] px-0 py-0" />
     </div>
   );
 }

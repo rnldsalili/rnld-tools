@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { LoadingState } from '@workspace/ui';
 
 import { healthQueryOptions, useHealth } from '@/app/hooks/use-health';
 import { BasicLayout } from '@/app/layouts/basic-layout';
@@ -7,8 +8,17 @@ export const Route = createFileRoute('/health')({
   head: () => ({ meta: [{ title: 'RTools - Health' }] }),
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(healthQueryOptions),
+  pendingComponent: HealthPendingState,
   component: HealthPage,
 });
+
+function HealthPendingState() {
+  return (
+    <BasicLayout>
+      <LoadingState className="min-h-screen px-6" />
+    </BasicLayout>
+  );
+}
 
 function HealthPage() {
   const { data } = useHealth();
@@ -38,4 +48,3 @@ function HealthPage() {
     </BasicLayout>
   );
 }
-
