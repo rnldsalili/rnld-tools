@@ -12,6 +12,7 @@ import { Provider as JotaiProvider, useAtomValue  } from 'jotai';
 import { Button, Toaster } from '@workspace/ui';
 import type { QueryClient } from '@tanstack/react-query';
 
+import { GlobalLoadingIndicator } from '@/app/components/global-loading-indicator';
 import { themeAtom } from '@/app/stores/theme';
 import appCss from '@/app/styles.css?url';
 
@@ -59,6 +60,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <GlobalLoadingIndicator />
         <JotaiProvider>
           <QueryClientProvider client={queryClient}>
             {children}

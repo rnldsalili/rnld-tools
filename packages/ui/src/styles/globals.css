@@ -43,6 +43,25 @@
     --sidebar-ring: oklch(0.737 0.021 106.9);
 }
 
+@keyframes progress-indicator {
+  0% {
+    transform: translateX(-100%);
+    width: 100%;
+  }
+  50% {
+    transform: translateX(0);
+    width: 70%;
+  }
+  100% {
+    transform: translateX(100%);
+    width: 70%;
+  }
+}
+
+.animate-progress-indicator {
+  animation: progress-indicator 1s ease-in-out infinite;
+}
+
 .dark {
     --background: oklch(0.153 0.006 107.1);
     --foreground: oklch(0.988 0.003 106.5);
