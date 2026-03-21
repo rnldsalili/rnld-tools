@@ -19,7 +19,7 @@ import { initializePrisma } from '@/api/lib/db';
 import { createLoanLog } from '@/api/lib/loans/logs';
 import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
 import { getInstallmentRemainingAmount, roundCurrencyAmount } from '@/api/lib/loans/payments';
-import { deleteImage } from '@/api/lib/storage/storage';
+import { deleteStoredObject } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
 
 const addInterval = (startDate: Date, interval: InstallmentInterval, step: number): Date => {
@@ -504,8 +504,19 @@ export const deleteLoan = createHandlers(
             .filter((signatureKey): signatureKey is string => Boolean(signatureKey)),
         ),
       );
+      const loanAttachmentKeys = Array.from(
+        new Set(
+          (
+            await prisma.loanAttachment.findMany({
+              where: { loanId },
+              select: { storageKey: true },
+            })
+          ).map((loanAttachment) => loanAttachment.storageKey),
+        ),
+      );
 
-      await Promise.all(signatureKeys.map((signatureKey) => deleteImage(c.env.STORAGE, signatureKey)));
+      await Promise.all(signatureKeys.map((signatureKey) => deleteStoredObject(c.env.STORAGE, signatureKey)));
+      await Promise.all(loanAttachmentKeys.map((storageKey) => deleteStoredObject(c.env.STORAGE, storageKey)));
       await prisma.loan.delete({ where: { id: loanId } });
       return c.json({ meta: { code: 200, message: 'Loan deleted successfully' } }, 200);
     } catch (dbError) {

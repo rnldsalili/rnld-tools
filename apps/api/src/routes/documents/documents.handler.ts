@@ -2,7 +2,7 @@ import { createDocumentSchema, documentIdParamSchema, documentQuerySchema, updat
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { parseDocumentContent, serializeDocumentContent } from '@/api/lib/documents/content';
-import { deleteImage } from '@/api/lib/storage/storage';
+import { deleteStoredObject } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
 
 export const getDocuments = createHandlers(
@@ -155,7 +155,7 @@ export const deleteDocument = createHandlers(
       ),
     );
 
-    await Promise.all(signatureKeys.map((signatureKey) => deleteImage(c.env.STORAGE, signatureKey)));
+    await Promise.all(signatureKeys.map((signatureKey) => deleteStoredObject(c.env.STORAGE, signatureKey)));
     await prisma.document.delete({ where: { id } });
 
     return c.json({ meta: { code: 200, message: 'Document deleted successfully' } }, 200);

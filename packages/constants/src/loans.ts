@@ -35,6 +35,8 @@ export enum LoanLogEventType {
   INSTALLMENT_DELETED = 'INSTALLMENT_DELETED',
   PAYMENT_RECORDED = 'PAYMENT_RECORDED',
   PAYMENT_VOIDED = 'PAYMENT_VOIDED',
+  ATTACHMENT_UPLOADED = 'ATTACHMENT_UPLOADED',
+  ATTACHMENT_DELETED = 'ATTACHMENT_DELETED',
 }
 
 export const LOAN_LOG_EVENT_TYPES = [
@@ -45,6 +47,8 @@ export const LOAN_LOG_EVENT_TYPES = [
   LoanLogEventType.INSTALLMENT_DELETED,
   LoanLogEventType.PAYMENT_RECORDED,
   LoanLogEventType.PAYMENT_VOIDED,
+  LoanLogEventType.ATTACHMENT_UPLOADED,
+  LoanLogEventType.ATTACHMENT_DELETED,
 ] as const;
 
 export const LOAN_LOG_EVENT_LABELS: Record<LoanLogEventType, string> = {
@@ -55,6 +59,8 @@ export const LOAN_LOG_EVENT_LABELS: Record<LoanLogEventType, string> = {
   [LoanLogEventType.INSTALLMENT_DELETED]: 'Installment Deleted',
   [LoanLogEventType.PAYMENT_RECORDED]: 'Payment Recorded',
   [LoanLogEventType.PAYMENT_VOIDED]: 'Payment Voided',
+  [LoanLogEventType.ATTACHMENT_UPLOADED]: 'Attachment Uploaded',
+  [LoanLogEventType.ATTACHMENT_DELETED]: 'Attachment Deleted',
 };
 
 export const INSTALLMENT_INTERVAL_VALUES = [
@@ -75,3 +81,33 @@ export const INSTALLMENT_INTERVAL_LABELS: Record<InstallmentInterval, string> = 
 
 export const LOANS_LIMIT = 10;
 export const INSTALLMENTS_LIMIT = 10;
+export const LOAN_ATTACHMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+export const LOAN_ATTACHMENT_ALLOWED_MIME_TYPES = [
+  'application/msword',
+  'application/pdf',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'text/csv',
+] as const;
+export const LOAN_ATTACHMENT_ALLOWED_EXTENSIONS = [
+  '.csv',
+  '.doc',
+  '.docx',
+  '.gif',
+  '.jpeg',
+  '.jpg',
+  '.pdf',
+  '.png',
+  '.webp',
+  '.xls',
+  '.xlsx',
+] as const;
+export const LOAN_ATTACHMENT_ACCEPT_ATTRIBUTE = [
+  ...LOAN_ATTACHMENT_ALLOWED_MIME_TYPES,
+  ...LOAN_ATTACHMENT_ALLOWED_EXTENSIONS,
+].join(',');

@@ -1,6 +1,7 @@
 // Components
 export { Button, buttonVariants } from '@workspace/ui/components/button';
 export { PasswordInput } from '@workspace/ui/components/composite/password-input';
+export { FileDropzone } from '@workspace/ui/components/composite/file-dropzone';
 export { Combobox, type ComboboxOption } from '@workspace/ui/components/composite/combobox';
 export {
   SectionCard,

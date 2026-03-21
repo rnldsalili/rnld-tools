@@ -7,7 +7,7 @@ import { isPlainRecord } from '@/app/lib/value-guards';
 
 const LOANS_QUERY_KEY = 'loans';
 const LOAN_QUERY_KEY = 'loan';
-const LOAN_LOGS_QUERY_KEY = 'loan-logs';
+export const LOAN_LOGS_QUERY_KEY = 'loan-logs';
 const INSTALLMENT_PAYMENTS_QUERY_KEY = 'installment-payments';
 
 export type LoansListResponse = InferResponseType<typeof apiClient.loans.$get, 200>;

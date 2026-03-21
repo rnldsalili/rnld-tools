@@ -45,6 +45,22 @@ export type ProcessImageResult = {
     };
 };
 
+export type UploadFileToStorageOptions = {
+    storage: R2Bucket;
+    file: Blob;
+    fileName: string;
+    destinationDir: string;
+    contentType?: string;
+};
+
+export type UploadFileToStorageResult = {
+    storageKey?: string;
+    error?: {
+        code: number;
+        message: string;
+    };
+};
+
 /**
  * Processes an image upload for create or update operations.
  * Handles temp file movement, existing image cleanup, and image removal.
@@ -140,27 +156,78 @@ export async function processImageUpload(
     return { imageKey: normalizedImageKey };
 }
 
+export function sanitizeStorageFileName(fileName: string): string {
+    const trimmedFileName = fileName.trim();
+    if (!trimmedFileName) {
+        return 'file';
+    }
+
+    const sanitizedFileName = trimmedFileName
+        .normalize('NFKD')
+        .replace(/[^\x20-\x7E]/g, '')
+        .replace(/[^a-zA-Z0-9._-]+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    return sanitizedFileName || 'file';
+}
+
+export async function uploadFileToStorage(
+    options: UploadFileToStorageOptions,
+): Promise<UploadFileToStorageResult> {
+    const {
+        storage,
+        file,
+        fileName,
+        destinationDir,
+        contentType,
+    } = options;
+
+    const sanitizedFileName = sanitizeStorageFileName(fileName);
+    const trimmedDestinationDir = destinationDir.replace(/^\/+|\/+$/g, '');
+    const storageKey = `${trimmedDestinationDir}/${crypto.randomUUID()}-${sanitizedFileName}`;
+
+    try {
+        await storage.put(storageKey, file, {
+            httpMetadata: {
+                contentType: contentType || 'application/octet-stream',
+            },
+        });
+
+        return { storageKey };
+    } catch (error) {
+        console.error(`Failed to upload file ${storageKey}:`, error);
+
+        return {
+            error: {
+                code: 500,
+                message: 'Failed to upload attachment file',
+            },
+        };
+    }
+}
+
 /**
- * Deletes an image from R2 storage.
+ * Deletes an object from R2 storage.
  * Logs errors but doesn't throw to prevent failing the main operation.
  * 
  * @param storage - The R2 bucket storage instance
- * @param imageKey - The key of the image to delete
+ * @param storageKey - The object key to delete
  * 
  * @example
  * ```typescript
- * await deleteImage(c.env.STORAGE, 'families/old-image.jpg');
+ * await deleteStoredObject(c.env.STORAGE, 'loan-attachments/loan_123/file.pdf');
  * ```
  */
-export async function deleteImage(
+export async function deleteStoredObject(
     storage: R2Bucket,
-    imageKey: string | null | undefined,
+    storageKey: string | null | undefined,
 ): Promise<void> {
-    if (!imageKey) return;
+    if (!storageKey) return;
 
     try {
-        await storage.delete(imageKey);
+        await storage.delete(storageKey);
     } catch (error) {
-        console.error(`Failed to delete image ${imageKey}:`, error);
+        console.error(`Failed to delete storage object ${storageKey}:`, error);
     }
 }

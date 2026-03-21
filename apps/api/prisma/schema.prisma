@@ -34,6 +34,7 @@ model User {
   loanInstallmentsUpdated LoanInstallment[]  @relation("LoanInstallmentUpdatedBy")
   loanInstallmentPaymentsCreated LoanInstallmentPayment[] @relation("LoanInstallmentPaymentCreatedBy")
   loanInstallmentPaymentsVoided LoanInstallmentPayment[]  @relation("LoanInstallmentPaymentVoidedBy")
+  loanAttachmentsCreated LoanAttachment[]    @relation("LoanAttachmentCreatedBy")
   loanLogs            LoanLog[]           @relation("LoanLogActorUser")
   loanDocumentLogs        LoanDocumentLog[]  @relation("LoanDocumentLogActorUser")
   notificationLogsQueued  NotificationLog[]  @relation("NotificationLogQueuedByUser")
@@ -128,6 +129,8 @@ enum LoanLogEventType {
   INSTALLMENT_DELETED
   PAYMENT_RECORDED
   PAYMENT_VOIDED
+  ATTACHMENT_UPLOADED
+  ATTACHMENT_DELETED
 }
 
 enum DocumentType {
@@ -207,6 +210,7 @@ model Loan {
   installments     LoanInstallment[]
   payments         LoanInstallmentPayment[]
   logs             LoanLog[]
+  attachments      LoanAttachment[]
   documents        LoanDocument[]
   loanDocumentLogs LoanDocumentLog[]
 
@@ -316,6 +320,24 @@ model LoanLog {
   @@index([paymentId])
   @@index([actorUserId])
   @@map("loan_log")
+}
+
+model LoanAttachment {
+  id              String   @id @default(cuid())
+  loanId          String
+  fileName        String
+  contentType     String
+  sizeBytes       Int
+  storageKey      String
+  createdAt       DateTime @default(now())
+  createdByUserId String
+
+  loan      Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  createdBy User @relation("LoanAttachmentCreatedBy", fields: [createdByUserId], references: [id])
+
+  @@index([loanId, createdAt])
+  @@index([createdByUserId])
+  @@map("loan_attachment")
 }
 
 model Document {

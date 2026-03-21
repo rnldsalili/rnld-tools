@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import {
   DownloadIcon,
   Loader2Icon,
+  PaperclipIcon,
   PencilIcon,
   PlusIcon,
   Share2Icon,
@@ -14,6 +15,7 @@ import {
   Badge,
   Button,
   DataTable,
+  FileDropzone,
   Pagination,
   SectionCard,
   SectionCardContent,
@@ -24,6 +26,8 @@ import {
   INSTALLMENT_INTERVAL_LABELS,
   INSTALLMENT_INTERVAL_VALUES,
   InstallmentStatus,
+  LOAN_ATTACHMENT_ACCEPT_ATTRIBUTE,
+  LOAN_ATTACHMENT_MAX_SIZE_BYTES,
   LOAN_LOG_EVENT_LABELS,
   LoanLogEventType,
 } from '@workspace/constants';
@@ -31,6 +35,7 @@ import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import { Can, useCan } from '@workspace/permissions/react';
 import type { ReactNode } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
+import type { LoanAttachment } from '@/app/hooks/use-loan-attachments';
 import type { LoanActivityLog, LoanInstallment } from '@/app/hooks/use-loan';
 import type { DocumentLinkTemplateEntry } from '@/app/hooks/use-document-links';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
@@ -44,6 +49,12 @@ import { InstallmentStatusBadge } from '@/app/components/loans/installment-statu
 import { RecordPaymentDialog } from '@/app/components/loans/mark-paid-dialog';
 import { ShareDocumentDialog } from '@/app/components/loans/share-document-dialog';
 import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
+import {
+  useCreateLoanAttachment,
+  useDeleteLoanAttachment,
+  useDownloadLoanAttachment,
+  useLoanAttachments,
+} from '@/app/hooks/use-loan-attachments';
 import { useDeleteLoan, useLoan, useLoanLogs } from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
 import { isOneOf, isPlainRecord } from '@/app/lib/value-guards';
@@ -62,12 +73,14 @@ function LoanDetailPage() {
   const [installmentsPage, setInstallmentsPage] = useState(1);
   const [loanLogsPage, setLoanLogsPage] = useState(1);
   const [selectedInstallment, setSelectedInstallment] = useState<LoanInstallment | null>(null);
+  const [selectedAttachment, setSelectedAttachment] = useState<LoanAttachment | null>(null);
   const [paymentInstallment, setPaymentInstallment] = useState<LoanInstallment | null>(null);
   const [paymentHistoryInstallment, setPaymentHistoryInstallment] = useState<LoanInstallment | null>(null);
   const [isEditLoanOpen, setIsEditLoanOpen] = useState(false);
   const [isAddInstallmentOpen, setIsAddInstallmentOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
 
   const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
   const canUpdateLoans = useCan(PermissionModule.LOANS, PermissionAction.UPDATE);
@@ -86,11 +99,16 @@ function LoanDetailPage() {
     limit: LOAN_LOGS_LIMIT,
   });
   const { mutateAsync: deleteLoan, isPending: isDeletePending } = useDeleteLoan();
+  const { data: attachmentsData, isLoading: isAttachmentsLoading } = useLoanAttachments(loanId);
+  const createLoanAttachmentMutation = useCreateLoanAttachment();
+  const deleteLoanAttachmentMutation = useDeleteLoanAttachment();
+  const downloadLoanAttachmentMutation = useDownloadLoanAttachment();
 
   const { data: documentLinksData } = useDocumentLinks(loanId);
   const downloadLoanDocumentPdfMutation = useDownloadLoanDocumentPdf();
 
   const loan = data?.data.loan;
+  const attachments: Array<LoanAttachment> = attachmentsData?.data.attachments ?? [];
   const installments = loan?.installments ?? [];
   const installmentsPagination = loan?.installmentsPagination;
   const loanLogs = loanLogsData?.data.logs ?? [];
@@ -98,6 +116,9 @@ function LoanDetailPage() {
   const templateEntries: Array<DocumentLinkTemplateEntry> = documentLinksData?.data.templates ?? [];
   const activeDownloadTemplateId = downloadLoanDocumentPdfMutation.isPending
     ? downloadLoanDocumentPdfMutation.variables.templateId
+    : null;
+  const activeAttachmentDownloadId = downloadLoanAttachmentMutation.isPending
+    ? downloadLoanAttachmentMutation.variables.attachmentId
     : null;
   const installmentIntervalLabel = loan && isOneOf(INSTALLMENT_INTERVAL_VALUES, loan.installmentInterval)
     ? INSTALLMENT_INTERVAL_LABELS[loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS]
@@ -120,6 +141,64 @@ function LoanDetailPage() {
       await router.navigate({ to: '/loans' });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete loan.');
+    }
+  }
+
+  async function uploadAttachmentFiles(attachmentFiles: Array<File>) {
+    if (attachmentFiles.length === 0) {
+      return;
+    }
+
+    setIsUploadingAttachments(true);
+
+    let uploadedCount = 0;
+    const failedUploads: Array<string> = [];
+
+    try {
+      for (const attachmentFile of attachmentFiles) {
+        try {
+          await createLoanAttachmentMutation.mutateAsync({
+            loanId,
+            form: { file: attachmentFile },
+          });
+          uploadedCount += 1;
+        } catch (error) {
+          failedUploads.push(
+            `${attachmentFile.name}: ${error instanceof Error ? error.message : 'Upload failed.'}`,
+          );
+        }
+      }
+
+      if (uploadedCount > 0) {
+        toast.success(
+          uploadedCount === 1
+            ? '1 attachment uploaded successfully.'
+            : `${uploadedCount} attachments uploaded successfully.`,
+        );
+      }
+
+      if (failedUploads.length > 0) {
+        toast.error(failedUploads[0]);
+      }
+    } finally {
+      setIsUploadingAttachments(false);
+    }
+  }
+
+  async function handleDeleteAttachment() {
+    if (!selectedAttachment) {
+      return;
+    }
+
+    try {
+      await deleteLoanAttachmentMutation.mutateAsync({
+        loanId,
+        attachmentId: selectedAttachment.id,
+      });
+      toast.success('Attachment deleted successfully.');
+      setSelectedAttachment(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete attachment.');
     }
   }
 
@@ -397,6 +476,128 @@ function LoanDetailPage() {
           </SectionCard>
         </div>
 
+        <SectionCard className="min-w-0">
+          <SectionCardHeader className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Attachments</span>
+              {!isAttachmentsLoading ? (
+                <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                  {attachments.length}
+                </Badge>
+              ) : null}
+            </div>
+          </SectionCardHeader>
+          <SectionCardContent>
+            {isAttachmentsLoading ? (
+              <div className="flex flex-col gap-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="h-16 animate-pulse rounded-md bg-muted" />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                  <FileDropzone
+                      title="Drag and drop files here"
+                      activeTitle="Release to upload attachments"
+                      description={(
+                        <>
+                          Supports images, PDF, Word, Excel, and CSV up to {formatAttachmentSize(LOAN_ATTACHMENT_MAX_SIZE_BYTES)} each.
+                        </>
+                      )}
+                      accept={LOAN_ATTACHMENT_ACCEPT_ATTRIBUTE}
+                      multiple
+                      isPending={isUploadingAttachments}
+                      onFilesSelected={uploadAttachmentFiles}
+                  />
+                </Can>
+
+                {attachments.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-border p-4">
+                    <p className="text-sm font-medium">No attachments yet.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Upload images, PDF, Word, Excel, or CSV files up to {formatAttachmentSize(LOAN_ATTACHMENT_MAX_SIZE_BYTES)}.
+                    </p>
+                  </div>
+                ) : null}
+
+                {attachments.map((attachment) => (
+                  <div
+                      key={attachment.id}
+                      className="flex flex-col gap-3 rounded-md border border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="rounded-md bg-muted p-2 text-muted-foreground">
+                        <PaperclipIcon className="size-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="truncate text-sm font-medium">{attachment.fileName}</span>
+                          <Badge variant="outline">{getAttachmentTypeLabel(attachment)}</Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {formatAttachmentSize(attachment.sizeBytes)}
+                          {' • '}
+                          Uploaded {format(new Date(attachment.createdAt), 'MMM d, yyyy h:mm a')}
+                          {' • '}
+                          {attachment.createdBy?.name ?? 'Unknown uploader'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 self-end sm:self-auto">
+                      <Button
+                          variant="ghost"
+                          className="gap-1.5"
+                          disabled={
+                            downloadLoanAttachmentMutation.isPending
+                            && activeAttachmentDownloadId === attachment.id
+                          }
+                          onClick={async () => {
+                            try {
+                              await downloadLoanAttachmentMutation.mutateAsync({
+                                loanId,
+                                attachmentId: attachment.id,
+                                fileName: attachment.fileName,
+                              });
+                            } catch (error) {
+                              toast.error(
+                                error instanceof Error
+                                  ? error.message
+                                  : 'Failed to download attachment.',
+                              );
+                            }
+                          }}
+                      >
+                        {downloadLoanAttachmentMutation.isPending
+                          && activeAttachmentDownloadId === attachment.id ? (
+                            <Loader2Icon className="size-3 animate-spin" />
+                          ) : (
+                            <DownloadIcon className="size-3" />
+                          )}
+                        Download
+                      </Button>
+                      <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                        <Button
+                            variant="ghost"
+                            className="gap-1.5 text-destructive hover:text-destructive/80"
+                            onClick={() => setSelectedAttachment(attachment)}
+                            disabled={
+                              deleteLoanAttachmentMutation.isPending
+                              && deleteLoanAttachmentMutation.variables.attachmentId === attachment.id
+                            }
+                        >
+                          <Trash2Icon className="size-3.5" />
+                          Delete
+                        </Button>
+                      </Can>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCardContent>
+        </SectionCard>
+
         <DataTable
             columns={installmentColumns}
             data={installments}
@@ -538,10 +739,30 @@ function LoanDetailPage() {
               }
             }}
             title="Delete Loan"
-            description="This will permanently remove the loan, its installments, payment history, loan logs, signed documents, document logs, and stored signature files."
+            description="This will permanently remove the loan, its attachments, installments, payment history, loan logs, signed documents, document logs, and stored files."
             confirmLabel="Delete Loan"
             isPending={isDeletePending}
             onConfirm={handleDeleteLoan}
+        />
+      </Can>
+
+      <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+        <ConfirmDeleteDialog
+            open={selectedAttachment !== null}
+            onOpenChange={(open) => {
+              if (!deleteLoanAttachmentMutation.isPending && !open) {
+                setSelectedAttachment(null);
+              }
+            }}
+            title="Delete Attachment"
+            description={
+              selectedAttachment
+                ? `This will permanently remove "${selectedAttachment.fileName}" from this loan.`
+                : 'This will permanently remove the selected attachment from this loan.'
+            }
+            confirmLabel="Delete Attachment"
+            isPending={deleteLoanAttachmentMutation.isPending}
+            onConfirm={handleDeleteAttachment}
         />
       </Can>
     </div>
@@ -608,6 +829,20 @@ function getLoanLogSummary(log: LoanActivityLog, currency: string) {
         `Loan amount ${formatCurrency(getNumberValue(eventData, 'amount'), currency)}.`,
         getStringValue(eventData, 'loanDate') ? `Loan date ${format(new Date(getStringValue(eventData, 'loanDate')), 'MMM d, yyyy')}.` : null,
       ].filter(Boolean).join(' ');
+    case LoanLogEventType.ATTACHMENT_UPLOADED:
+      return [
+        getStringValue(eventData, 'fileName') ? `Uploaded ${getStringValue(eventData, 'fileName')}.` : 'Attachment uploaded.',
+        getNumberValue(eventData, 'sizeBytes') > 0
+          ? `Size ${formatAttachmentSize(getNumberValue(eventData, 'sizeBytes'))}.`
+          : null,
+      ].filter(Boolean).join(' ');
+    case LoanLogEventType.ATTACHMENT_DELETED:
+      return [
+        getStringValue(eventData, 'fileName') ? `Deleted ${getStringValue(eventData, 'fileName')}.` : 'Attachment deleted.',
+        getNumberValue(eventData, 'sizeBytes') > 0
+          ? `Size ${formatAttachmentSize(getNumberValue(eventData, 'sizeBytes'))}.`
+          : null,
+      ].filter(Boolean).join(' ');
     default:
       return 'Activity recorded.';
   }
@@ -623,6 +858,35 @@ function getChangeSummary(eventData: Record<string, unknown> | null) {
   return changedFields.length > 0
     ? `Updated ${changedFields.join(', ')}.`
     : 'Updated.';
+}
+
+function formatAttachmentSize(sizeBytes: number) {
+  if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) {
+    return '0 B';
+  }
+
+  if (sizeBytes >= 1024 * 1024) {
+    return `${(sizeBytes / (1024 * 1024)).toFixed(sizeBytes >= 10 * 1024 * 1024 ? 0 : 1)} MB`;
+  }
+
+  if (sizeBytes >= 1024) {
+    return `${(sizeBytes / 1024).toFixed(sizeBytes >= 10 * 1024 ? 0 : 1)} KB`;
+  }
+
+  return `${sizeBytes} B`;
+}
+
+function getAttachmentTypeLabel(attachment: LoanAttachment) {
+  const fileNameParts = attachment.fileName.split('.');
+  const fileExtension = fileNameParts.length > 1
+    ? fileNameParts[fileNameParts.length - 1]?.trim().toUpperCase()
+    : '';
+
+  if (fileExtension) {
+    return fileExtension;
+  }
+
+  return attachment.contentType.startsWith('image/') ? 'IMAGE' : 'FILE';
 }
 
 function getNumberValue(source: Record<string, unknown> | null, key: string) {
