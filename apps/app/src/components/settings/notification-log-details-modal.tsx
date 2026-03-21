@@ -139,9 +139,7 @@ function NotificationOverview({ notificationLog }: { notificationLog: Notificati
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="secondary">{getNotificationChannelLabel(notificationLog.channel)}</Badge>
           <Badge variant={statusVariant}>{getNotificationLogStatusLabel(notificationLog.status)}</Badge>
-          <Badge variant={notificationLog.isTestSend ? 'secondary' : 'outline'}>
-            {notificationLog.isTestSend ? 'Test send' : 'Live delivery'}
-          </Badge>
+
         </div>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)] lg:items-start">
@@ -447,22 +445,22 @@ function getStatusSummary(notificationLog: NotificationLog) {
   const attemptLabel = `${notificationLog.attemptCount} attempt${notificationLog.attemptCount === 1 ? '' : 's'}`;
 
   if (notificationLog.status === NotificationLogStatus.SENT) {
-    return `${notificationLog.isTestSend ? 'Test send' : eventLabel} was delivered through ${providerLabel} after ${attemptLabel}.`;
+    return `${eventLabel} was delivered through ${providerLabel} after ${attemptLabel}.`;
   }
 
   if (notificationLog.status === NotificationLogStatus.FAILED) {
-    return `${notificationLog.isTestSend ? 'Test send' : eventLabel} failed after ${attemptLabel} through ${providerLabel}.`;
+    return `${eventLabel} failed after ${attemptLabel} through ${providerLabel}.`;
   }
 
   if (notificationLog.status === NotificationLogStatus.RETRYING) {
-    return `${notificationLog.isTestSend ? 'Test send' : eventLabel} is retrying after the latest provider response from ${providerLabel}.`;
+    return `${eventLabel} is retrying after the latest provider response from ${providerLabel}.`;
   }
 
   if (notificationLog.status === NotificationLogStatus.PROCESSING) {
-    return `${notificationLog.isTestSend ? 'Test send' : eventLabel} is currently being processed by ${providerLabel}.`;
+    return `${eventLabel} is currently being processed by ${providerLabel}.`;
   }
 
-  return `${notificationLog.isTestSend ? 'Test send' : eventLabel} is queued and waiting to be picked up by ${providerLabel}.`;
+  return `${eventLabel} is queued and waiting to be picked up by ${providerLabel}.`;
 }
 
 function getTimelineSteps(notificationLog: NotificationLog): Array<{

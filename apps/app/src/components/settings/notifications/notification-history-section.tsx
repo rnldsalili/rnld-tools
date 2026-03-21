@@ -129,15 +129,7 @@ export function NotificationHistorySection() {
       header: 'Attempts',
       cell: ({ row }) => row.original.attemptCount,
     },
-    {
-      accessorKey: 'isTestSend',
-      header: 'Type',
-      cell: ({ row }) => (
-        <Badge variant={row.original.isTestSend ? 'secondary' : 'outline'}>
-          {row.original.isTestSend ? 'Test' : 'Live'}
-        </Badge>
-      ),
-    },
+
     {
       id: 'actions',
       header: '',
