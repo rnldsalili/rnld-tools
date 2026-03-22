@@ -26,16 +26,19 @@ export const NOTIFICATION_EMAIL_PROVIDER_LABELS: Record<NotificationEmailProvide
 };
 
 export enum NotificationSmsProvider {
+  HTTPSMS = 'HTTPSMS',
   PHILSMS = 'PHILSMS',
   SEMAPHORE = 'SEMAPHORE',
 }
 
 export const NOTIFICATION_SMS_PROVIDERS = [
+  NotificationSmsProvider.HTTPSMS,
   NotificationSmsProvider.PHILSMS,
   NotificationSmsProvider.SEMAPHORE,
 ] as const;
 
 export const NOTIFICATION_SMS_PROVIDER_LABELS: Record<NotificationSmsProvider, string> = {
+  [NotificationSmsProvider.HTTPSMS]: 'httpSMS',
   [NotificationSmsProvider.PHILSMS]: 'PhilSMS',
   [NotificationSmsProvider.SEMAPHORE]: 'Semaphore',
 };

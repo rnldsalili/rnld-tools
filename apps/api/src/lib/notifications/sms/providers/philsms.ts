@@ -1,3 +1,4 @@
+import { normalizePhilippineMobileNumber } from '../philippine-mobile';
 import type { SmsProviderClient } from '../../types';
 
 const PHILSMS_API_URL = 'https://dashboard.philsms.com/api/v3/sms/send';
@@ -50,28 +51,7 @@ export const philsmsSmsClient: SmsProviderClient = {
 };
 
 export function normalizePhilSmsPhoneNumber(phoneNumber: string) {
-  const trimmedPhoneNumber = phoneNumber.trim();
-  const compactPhoneNumber = trimmedPhoneNumber.startsWith('+')
-    ? `+${trimmedPhoneNumber.slice(1).replace(/\D/g, '')}`
-    : trimmedPhoneNumber.replace(/\D/g, '');
-
-  if (/^639\d{9}$/.test(compactPhoneNumber)) {
-    return compactPhoneNumber;
-  }
-
-  if (/^\+639\d{9}$/.test(compactPhoneNumber)) {
-    return compactPhoneNumber.slice(1);
-  }
-
-  if (/^09\d{9}$/.test(compactPhoneNumber)) {
-    return `63${compactPhoneNumber.slice(1)}`;
-  }
-
-  if (/^9\d{9}$/.test(compactPhoneNumber)) {
-    return `63${compactPhoneNumber}`;
-  }
-
-  throw new Error('PhilSMS phone number must be a valid Philippine mobile number.');
+  return normalizePhilippineMobileNumber(phoneNumber, 'PhilSMS phone number').slice(1);
 }
 
 export function getPhilSmsMessageType(message: string) {

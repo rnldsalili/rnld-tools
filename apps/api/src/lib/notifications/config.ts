@@ -22,6 +22,10 @@ export function getEmailProviderStatus(env: CloudflareBindings): Record<Notifica
 }
 
 export function getSmsProviderStatus(env: CloudflareBindings): Record<NotificationSmsProvider, NotificationProviderStatus> {
+  const httpSmsMissing = [
+    !getOptionalBindingString(env, 'HTTPSMS_API_KEY') ? 'HTTPSMS_API_KEY' : null,
+    !getOptionalBindingString(env, 'HTTPSMS_FROM') ? 'HTTPSMS_FROM' : null,
+  ].filter((value): value is string => Boolean(value));
   const philsmsMissing = [
     !getOptionalBindingString(env, 'PHILSMS_API_TOKEN') ? 'PHILSMS_API_TOKEN' : null,
     !getOptionalBindingString(env, 'PHILSMS_SENDER_ID') ? 'PHILSMS_SENDER_ID' : null,
@@ -31,6 +35,10 @@ export function getSmsProviderStatus(env: CloudflareBindings): Record<Notificati
   ].filter((value): value is string => Boolean(value));
 
   return {
+    [NotificationSmsProvider.HTTPSMS]: {
+      configured: httpSmsMissing.length === 0,
+      missing: httpSmsMissing,
+    },
     [NotificationSmsProvider.PHILSMS]: {
       configured: philsmsMissing.length === 0,
       missing: philsmsMissing,

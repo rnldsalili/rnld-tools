@@ -40,6 +40,8 @@ export interface NotificationBindings {
   BREVO_API_KEY?: string;
   BREVO_SENDER_EMAIL?: string;
   BREVO_SENDER_NAME?: string;
+  HTTPSMS_API_KEY?: string;
+  HTTPSMS_FROM?: string;
   PHILSMS_API_TOKEN?: string;
   PHILSMS_SENDER_ID?: string;
   SEMAPHORE_API_KEY?: string;

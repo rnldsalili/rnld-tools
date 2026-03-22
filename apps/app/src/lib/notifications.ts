@@ -11,6 +11,7 @@ export function createEmptyNotificationProviderStatus() {
       [NotificationEmailProvider.BREVO]: { configured: false, missing: [] },
     },
     sms: {
+      [NotificationSmsProvider.HTTPSMS]: { configured: false, missing: [] },
       [NotificationSmsProvider.PHILSMS]: { configured: false, missing: [] },
       [NotificationSmsProvider.SEMAPHORE]: { configured: false, missing: [] },
     },

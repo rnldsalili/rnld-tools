@@ -56,6 +56,8 @@ jobs:
           # test -n "$SEMAPHORE_SENDER_NAME"
           test -n "$R2_ACCESS_KEY_ID"
           test -n "$R2_SECRET_ACCESS_KEY"
+          test -n "$HTTPSMS_API_KEY"
+          test -n "$HTTPSMS_FROM"
           bun -e 'console.log(JSON.stringify({
             BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
             SEED_TOKEN: process.env.SEED_TOKEN,
@@ -68,6 +70,8 @@ jobs:
             BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL,
             BREVO_SENDER_NAME: process.env.BREVO_SENDER_NAME,
             PHILSMS_SENDER_ID: process.env.PHILSMS_SENDER_ID,
+            HTTPSMS_API_KEY: process.env.HTTPSMS_API_KEY,
+            HTTPSMS_FROM: process.env.HTTPSMS_FROM,
           }))' | bunx wrangler secret bulk --env production
         env:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
@@ -81,6 +85,8 @@ jobs:
           BREVO_SENDER_EMAIL: ${{ vars.BREVO_SENDER_EMAIL }}
           BREVO_SENDER_NAME: ${{ vars.BREVO_SENDER_NAME }}
           PHILSMS_SENDER_ID: ${{ vars.PHILSMS_SENDER_ID }}
+          HTTPSMS_API_KEY: ${{ secrets.HTTPSMS_API_KEY }}
+          HTTPSMS_FROM: ${{ vars.HTTPSMS_FROM }}
 
       - name: Prebuild API client
         run: bun run --filter @workspace/api-client build

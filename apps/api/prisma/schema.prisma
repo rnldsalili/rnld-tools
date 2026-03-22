@@ -150,6 +150,7 @@ enum NotificationEmailProvider {
 }
 
 enum NotificationSmsProvider {
+  HTTPSMS
   PHILSMS
   SEMAPHORE
 }

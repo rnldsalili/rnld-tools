@@ -1,3 +1,4 @@
+import { normalizePhilippineMobileNumber } from '../philippine-mobile';
 import type { SmsProviderClient } from '../../types';
 
 const SEMAPHORE_API_URL = 'https://api.semaphore.co/api/v4/messages';
@@ -10,7 +11,7 @@ export const semaphoreSmsClient: SmsProviderClient = {
 
     const params = new URLSearchParams({
       apikey: env.SEMAPHORE_API_KEY,
-      number: job.recipient.phone,
+      number: normalizePhilippineMobileNumber(job.recipient.phone, 'Semaphore phone number'),
       message: job.text,
       ...(env.SEMAPHORE_SENDER_NAME && { sendername: env.SEMAPHORE_SENDER_NAME }),
     });
