@@ -1,6 +1,5 @@
 import { useForm } from '@tanstack/react-form';
 import {
-  NOTIFICATION_SMS_CONTENT_MAX_LENGTH,
   NotificationChannel,
 } from '@workspace/constants';
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
@@ -226,18 +225,12 @@ export function NotificationTemplateEditorForm({
                     <form.Field name="content">
                       {(field) => (
                         <Field>
-                          <div className="flex items-center justify-between gap-3">
-                            <FieldLabel htmlFor={field.name}>SMS Content</FieldLabel>
-                            <span className="text-xs text-muted-foreground">
-                              {(typeof field.state.value === 'string' ? field.state.value : '').length}/{NOTIFICATION_SMS_CONTENT_MAX_LENGTH}
-                            </span>
-                          </div>
+                          <FieldLabel htmlFor={field.name}>SMS Content</FieldLabel>
                           <Textarea
                               id={field.name}
                               value={typeof field.state.value === 'string' ? field.state.value : ''}
                               onChange={(event) => field.handleChange(event.target.value)}
                               rows={12}
-                              maxLength={NOTIFICATION_SMS_CONTENT_MAX_LENGTH}
                               placeholder="Write the SMS content here..."
                               readOnly={isReadOnly}
                           />

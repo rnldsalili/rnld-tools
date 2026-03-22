@@ -16,6 +16,7 @@ export interface NotificationTemplateSampleContext {
     installmentCount: number;
   };
   installment: {
+    number: number | null;
     amount: number | null;
     dueDate: string | null;
     paidAt: string | null;
@@ -55,25 +56,30 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
   const baseDate = new Date('2026-03-17T09:00:00+08:00');
   const dueDate = new Date(baseDate);
   const paidAt = new Date(baseDate);
+  let installmentNumber: number | null = null;
 
   if (event === NotificationEvent.LOAN_CREATED) {
     dueDate.setDate(dueDate.getDate() + 7);
     paidAt.setDate(paidAt.getDate() + 9);
+    installmentNumber = 1;
   }
 
   if (event === NotificationEvent.INSTALLMENT_DUE_REMINDER) {
     dueDate.setDate(dueDate.getDate() + 1);
     paidAt.setDate(paidAt.getDate() + 4);
+    installmentNumber = 4;
   }
 
   if (event === NotificationEvent.INSTALLMENT_OVERDUE_REMINDER) {
     dueDate.setDate(dueDate.getDate() - 3);
     paidAt.setDate(paidAt.getDate() + 2);
+    installmentNumber = 4;
   }
 
   if (event === NotificationEvent.INSTALLMENT_PAID) {
     dueDate.setDate(dueDate.getDate() - 5);
     paidAt.setDate(paidAt.getDate() - 1);
+    installmentNumber = 4;
   }
 
   return {
@@ -92,6 +98,7 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
       installmentCount: 5,
     },
     installment: {
+      number: installmentNumber,
       amount: 5000,
       dueDate: dueDate.toISOString(),
       paidAt: paidAt.toISOString(),
@@ -120,6 +127,7 @@ export function getNotificationPlaceholderValues(
     '{{loan.description}}': context.loan.description || missingValue,
     '{{loan.loanDate}}': formatDate(context.loan.loanDate),
     '{{loan.installmentCount}}': String(context.loan.installmentCount),
+    '{{installment.number}}': formatInstallmentNumber(context.installment.number),
     '{{installment.amount}}': formatCurrencyAmount(context.installment.amount, context.loan.currency),
     '{{installment.dueDate}}': formatDate(context.installment.dueDate),
     '{{installment.paidAt}}': formatDateTime(context.installment.paidAt),
@@ -157,4 +165,12 @@ function formatCurrencyAmount(value: number | null, currency: string) {
   }
 
   return `${currencyFormatter.format(value)} ${currency}`;
+}
+
+function formatInstallmentNumber(value: number | null) {
+  if (value === null || !Number.isFinite(value)) {
+    return missingValue;
+  }
+
+  return String(value);
 }

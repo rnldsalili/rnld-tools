@@ -16,6 +16,7 @@ import {
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { createLoanLog } from '@/api/lib/loans/logs';
+import { getLoanInstallmentNumber } from '@/api/lib/notifications/installment-number';
 import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
 import {
   calculateRecordedPayment,
@@ -528,6 +529,12 @@ export const recordInstallmentPayment = createHandlers(
       });
 
       if (shouldSendInstallmentPaidNotification) {
+        const installmentNumber = await getLoanInstallmentNumber(prisma, {
+          loanId,
+          installmentId: updatedInstallment.id,
+          dueDate: updatedInstallment.dueDate,
+        });
+
         await dispatchEventNotifications({
           env: c.env,
           prisma,
@@ -550,6 +557,7 @@ export const recordInstallmentPayment = createHandlers(
               installmentCount: loanFound._count.installments,
             },
             installment: {
+              number: installmentNumber,
               amount: updatedInstallment.amount,
               dueDate: updatedInstallment.dueDate.toISOString(),
               paidAt: updatedInstallment.paidAt?.toISOString() ?? null,

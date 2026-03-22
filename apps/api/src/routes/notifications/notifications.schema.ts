@@ -4,7 +4,6 @@ import {
   NOTIFICATION_EVENTS,
   NOTIFICATION_EVENT_CHANNELS,
   NOTIFICATION_LOG_STATUSES,
-  NOTIFICATION_SMS_CONTENT_MAX_LENGTH,
   NOTIFICATION_SMS_PROVIDERS,
   NotificationChannel,
   limitValidator,
@@ -51,7 +50,7 @@ export const createNotificationTemplateSchema = z.discriminatedUnion('channel', 
     channel: z.literal(NotificationChannel.SMS),
     name: z.string().trim().min(1),
     description: z.string().trim().optional(),
-    content: z.string().trim().max(NOTIFICATION_SMS_CONTENT_MAX_LENGTH).optional(),
+    content: z.string().trim().optional(),
   }),
 ]);
 
@@ -67,7 +66,7 @@ export const updateNotificationTemplateSchema = z.discriminatedUnion('channel', 
     channel: z.literal(NotificationChannel.SMS),
     name: z.string().trim().min(1),
     description: z.string().trim().optional().nullable(),
-    content: z.string().trim().min(1).max(NOTIFICATION_SMS_CONTENT_MAX_LENGTH),
+    content: z.string().trim().min(1),
   }),
 ]);
 

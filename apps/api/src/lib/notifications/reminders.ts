@@ -6,6 +6,7 @@ import {
 import type { NotificationEnv } from '@/api/lib/notifications/types';
 import { initializePrisma } from '@/api/lib/db';
 import { createLoanLog } from '@/api/lib/loans/logs';
+import { getLoanInstallmentNumber } from '@/api/lib/notifications/installment-number';
 import { getManilaDayRange } from '@/api/lib/loans/payments';
 import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
 
@@ -129,6 +130,12 @@ async function processInstallmentReminderBatch(params: {
 
   for (const installmentCandidate of installmentCandidates) {
     try {
+      const installmentNumber = await getLoanInstallmentNumber(prisma, {
+        loanId: installmentCandidate.loanId,
+        installmentId: installmentCandidate.id,
+        dueDate: installmentCandidate.dueDate,
+      });
+
       const dispatchResult = await dispatchEventNotifications({
         env,
         prisma,
@@ -151,6 +158,7 @@ async function processInstallmentReminderBatch(params: {
             installmentCount: installmentCandidate.loan._count.installments,
           },
           installment: {
+            number: installmentNumber,
             amount: installmentCandidate.amount,
             dueDate: installmentCandidate.dueDate.toISOString(),
             paidAt: null,

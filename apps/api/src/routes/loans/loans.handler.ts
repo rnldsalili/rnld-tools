@@ -330,6 +330,7 @@ export const createLoan = createHandlers(
           installmentCount: createdInstallments?.length ?? 0,
         },
         installment: {
+          number: createdInstallments?.[0] ? 1 : null,
           amount: createdInstallments?.[0]?.amount ?? null,
           dueDate: createdInstallments?.[0]?.dueDate.toISOString() ?? null,
           paidAt: createdInstallments?.[0]?.paidAt?.toISOString() ?? null,

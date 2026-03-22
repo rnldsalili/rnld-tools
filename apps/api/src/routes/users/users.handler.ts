@@ -318,6 +318,7 @@ export const createUser = createHandlers(
             installmentCount: 0,
           },
           installment: {
+            number: null,
             amount: 0,
             dueDate: new Date().toISOString(),
             paidAt: new Date().toISOString(),

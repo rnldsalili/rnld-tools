@@ -33,7 +33,21 @@ export function NotificationTemplatesSection() {
     name: string;
   } | null>(null);
 
-  const templates: Array<NotificationTemplateListItem> = templatesData?.data.templates ?? [];
+  const templates: Array<NotificationTemplateListItem> = [...(templatesData?.data.templates ?? [])].sort((left, right) => {
+    const nameComparison = left.name.localeCompare(right.name, undefined, { sensitivity: 'base' });
+
+    if (nameComparison !== 0) {
+      return nameComparison;
+    }
+
+    const channelComparison = left.channel.localeCompare(right.channel);
+
+    if (channelComparison !== 0) {
+      return channelComparison;
+    }
+
+    return left.id.localeCompare(right.id);
+  });
   const effectiveSelectedTemplateId = templates.some((template) => template.id === selectedTemplateId)
     ? selectedTemplateId
     : (templates[0]?.id ?? '');

@@ -40,8 +40,6 @@ export const NOTIFICATION_SMS_PROVIDER_LABELS: Record<NotificationSmsProvider, s
   [NotificationSmsProvider.SEMAPHORE]: 'Semaphore',
 };
 
-export const NOTIFICATION_SMS_CONTENT_MAX_LENGTH = 160;
-
 export enum NotificationEvent {
   LOAN_CREATED = 'LOAN_CREATED',
   INSTALLMENT_DUE_REMINDER = 'INSTALLMENT_DUE_REMINDER',
@@ -137,12 +135,13 @@ export const NOTIFICATION_PLACEHOLDER_GROUPS = [
       { key: '{{loan.currency}}', description: 'Loan currency code' },
       { key: '{{loan.description}}', description: 'Loan description' },
       { key: '{{loan.loanDate}}', description: 'Loan date' },
-      { key: '{{loan.installmentCount}}', description: 'Total number of loan installments' },
     ],
   },
   {
     label: 'Installment',
     items: [
+      { key: '{{loan.installmentCount}}', description: 'Total number of loan installments' },
+      { key: '{{installment.number}}', description: 'Current installment number in the loan schedule' },
       { key: '{{installment.amount}}', description: 'Installment amount' },
       { key: '{{installment.dueDate}}', description: 'Installment due date' },
       { key: '{{installment.paidAt}}', description: 'Installment paid date' },
