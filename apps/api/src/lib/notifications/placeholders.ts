@@ -1,4 +1,4 @@
-import { NotificationEvent } from '@workspace/constants';
+import { Currency, NotificationEvent } from '@workspace/constants';
 
 export interface NotificationTemplateSampleContext {
   client: {
@@ -43,10 +43,7 @@ const dateFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   year: 'numeric',
   timeZone: DISPLAY_TIME_ZONE,
 });
-const dateTimeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
+const timeFormatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
   hour: 'numeric',
   minute: '2-digit',
   timeZone: DISPLAY_TIME_ZONE,
@@ -121,7 +118,7 @@ export function getNotificationPlaceholderValues(
     '{{client.email}}': context.client.email || missingValue,
     '{{client.phone}}': context.client.phone || missingValue,
     '{{loan.id}}': context.loan.id,
-    '{{loan.amount}}': `${currencyFormatter.format(context.loan.amount)} ${context.loan.currency}`,
+    '{{loan.amount}}': formatCurrencyAmount(context.loan.amount, context.loan.currency),
     '{{loan.excessBalance}}': formatCurrencyAmount(context.loan.excessBalance, context.loan.currency),
     '{{loan.currency}}': context.loan.currency,
     '{{loan.description}}': context.loan.description || missingValue,
@@ -156,7 +153,11 @@ function formatDateTime(value: string | null) {
   }
 
   const dateValue = new Date(value);
-  return Number.isNaN(dateValue.getTime()) ? missingValue : dateTimeFormatter.format(dateValue);
+  if (Number.isNaN(dateValue.getTime())) {
+    return missingValue;
+  }
+
+  return `${dateFormatter.format(dateValue)} ${timeFormatter.format(dateValue)}`;
 }
 
 function formatCurrencyAmount(value: number | null, currency: string) {
@@ -164,7 +165,8 @@ function formatCurrencyAmount(value: number | null, currency: string) {
     return missingValue;
   }
 
-  return `${currencyFormatter.format(value)} ${currency}`;
+  const currencySymbol = getCurrencySymbol(currency);
+  return currencySymbol ? `${currencySymbol}${currencyFormatter.format(value)}` : `${currencyFormatter.format(value)} ${currency}`;
 }
 
 function formatInstallmentNumber(value: number | null) {
@@ -173,4 +175,16 @@ function formatInstallmentNumber(value: number | null) {
   }
 
   return String(value);
+}
+
+function getCurrencySymbol(currency: string) {
+  if (currency === Currency.PHP) {
+    return '₱';
+  }
+
+  if (currency === Currency.USD) {
+    return '$';
+  }
+
+  return null;
 }
