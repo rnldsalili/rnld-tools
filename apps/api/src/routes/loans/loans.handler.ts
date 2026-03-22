@@ -103,7 +103,7 @@ export const getLoans = createHandlers(
     const [loans, totalLoans] = await Promise.all([
       prisma.loan.findMany({
         where: loanFilter,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { client: { name: 'asc' } },
         skip: skipCount,
         take: limit,
         include: {
