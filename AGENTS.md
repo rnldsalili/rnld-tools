@@ -83,6 +83,7 @@ const prisma = initializePrisma(c.env); // src/lib/db.ts
 - `POST /api/seed` validates `seedToken`, creates missing users, and stores hashed credential accounts for Better Auth.
 - If you add database migrations, keep them in `apps/api/migrations/` and apply them with Wrangler. Refer to `apps/api/docs/database-migrations.md` for the full migration workflow.
 - **Do not run or apply database migrations** — the user handles all migration steps manually.
+- When adding or updating models in `apps/api/prisma/schema.prisma`, follow the existing patterns: include `id` with `@id @default(cuid())`, `createdAt` with `@default(now())`, `updatedAt` with `@updatedAt`, appropriate indexes with `@@index()`, `@@map()` for snake_case naming, and `@@unique()` constraints where needed. For models that track user actions, add `createdByUserId`/`updatedByUserId` fields and `createdBy`/`updatedBy` relations to User following the established conventions.
 
 ### Auth and Roles
 

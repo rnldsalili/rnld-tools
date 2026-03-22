@@ -6,8 +6,10 @@ import {
   FieldError,
   FieldLabel,
 } from '@workspace/ui';
+import { toast } from 'sonner';
+import { useEffect } from 'react';
 import type { ClientListItem } from '@/app/hooks/use-client';
-import {  useEnabledClients } from '@/app/hooks/use-client';
+import { useEnabledClients } from '@/app/hooks/use-client';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
 import { toFieldErrors } from '@/app/lib/form';
 
@@ -33,7 +35,13 @@ export function ClientSelector({
   label = 'Client',
   onChange,
 }: ClientSelectorProps) {
-  const { data, isLoading } = useEnabledClients();
+  const { data, isLoading, error } = useEnabledClients();
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to load clients.');
+    }
+  }, [error]);
 
   const enabledClients = data?.data.clients ?? [];
   const selectedClient = getSelectedClient(enabledClients, currentClient, clientId);

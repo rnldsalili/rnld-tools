@@ -38,6 +38,9 @@ model User {
   loanLogs            LoanLog[]           @relation("LoanLogActorUser")
   loanDocumentLogs        LoanDocumentLog[]  @relation("LoanDocumentLogActorUser")
   notificationLogsQueued  NotificationLog[]  @relation("NotificationLogQueuedByUser")
+  loanAssignmentsCreated LoanAssignment[]   @relation("LoanAssignmentCreatedBy")
+  loanAssignmentsUpdated LoanAssignment[]   @relation("LoanAssignmentUpdatedBy")
+  loanAssignmentsReceived LoanAssignment[]  @relation("LoanAssignedUser")
 
   @@unique([email])
   @@map("user")
@@ -213,11 +216,34 @@ model Loan {
   attachments      LoanAttachment[]
   documents        LoanDocument[]
   loanDocumentLogs LoanDocumentLog[]
+  assignments      LoanAssignment[]
 
   @@index([clientId])
   @@index([createdByUserId])
   @@index([updatedByUserId])
   @@map("loan")
+}
+
+model LoanAssignment {
+  id              String   @id @default(cuid())
+  loanId          String
+  userId          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdByUserId String
+  updatedByUserId String
+
+  loan      Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  user      User @relation("LoanAssignedUser", fields: [userId], references: [id])
+  createdBy User @relation("LoanAssignmentCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy User @relation("LoanAssignmentUpdatedBy", fields: [updatedByUserId], references: [id])
+
+  @@unique([loanId, userId])
+  @@index([loanId])
+  @@index([userId])
+  @@index([createdByUserId])
+  @@index([updatedByUserId])
+  @@map("loan_assignment")
 }
 
 model Client {

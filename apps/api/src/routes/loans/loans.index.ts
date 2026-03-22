@@ -1,5 +1,6 @@
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import loanAttachmentsRoute from './attachments/attachments.index';
+import loanAssignmentsRoute from './assignments/loans.assignments.index';
 import documentLogsRoute from './document-logs/document-logs.index';
 import loanDocumentsRoute from './documents/documents.index';
 import loanLogsRoute from './loan-logs/logs.index';
@@ -22,6 +23,7 @@ const loansRoute = createRouter()
   .route('/:loanId/logs', loanLogsRoute)
   .route('/:loanId/document-logs', documentLogsRoute)
   .route('/:loanId/documents', loanDocumentsRoute)
-  .route('/:loanId/document-links', documentLinksRoute);
+  .route('/:loanId/document-links', documentLinksRoute)
+  .route('/:loanId/assignments', loanAssignmentsRoute);
 
 export default loansRoute;

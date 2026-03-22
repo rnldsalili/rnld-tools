@@ -80,11 +80,25 @@ export const getLoans = createHandlers(
   async (c) => {
     const { search, page, limit } = c.req.valid('query');
     const prisma = initializePrisma(c.env);
+    const authenticatedUser = c.get('user');
 
     const skipCount = (page - 1) * limit;
     const loanFilter: Prisma.LoanWhereInput = search
       ? { client: { is: { name: { contains: search } } } }
       : {};
+
+    if (!authenticatedUser.hasSuperAdminRole) {
+      const assignedLoanIds = await prisma.loanAssignment.findMany({
+        where: { userId: authenticatedUser.id },
+        select: { loanId: true },
+      });
+      const assignedLoanIdSet = new Set(assignedLoanIds.map((a) => a.loanId));
+
+      loanFilter.OR = [
+        { createdByUserId: authenticatedUser.id },
+        { id: { in: Array.from(assignedLoanIdSet) } },
+      ];
+    }
 
     const [loans, totalLoans] = await Promise.all([
       prisma.loan.findMany({
@@ -132,6 +146,7 @@ export const getLoan = createHandlers(
     const { id: loanId } = c.req.valid('param');
     const { page, limit } = c.req.valid('query');
     const prisma = initializePrisma(c.env);
+    const authenticatedUser = c.get('user');
 
     const loanFound = await prisma.loan.findUnique({
       where: { id: loanId },
@@ -141,6 +156,17 @@ export const getLoan = createHandlers(
     });
     if (!loanFound) {
       return c.json({ meta: { code: 404, message: 'Loan not found' } }, 404);
+    }
+
+    if (!authenticatedUser.hasSuperAdminRole) {
+      const isCreator = loanFound.createdByUserId === authenticatedUser.id;
+      const isAssignee = await prisma.loanAssignment.findUnique({
+        where: { loanId_userId: { loanId, userId: authenticatedUser.id } },
+      });
+
+      if (!isCreator && !isAssignee) {
+        return c.json({ meta: { code: 403, message: 'Forbidden' } }, 403);
+      }
     }
 
     const skipCount = (page - 1) * limit;

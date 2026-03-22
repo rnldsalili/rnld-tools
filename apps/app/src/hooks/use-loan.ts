@@ -9,6 +9,7 @@ const LOANS_QUERY_KEY = 'loans';
 const LOAN_QUERY_KEY = 'loan';
 export const LOAN_LOGS_QUERY_KEY = 'loan-logs';
 const INSTALLMENT_PAYMENTS_QUERY_KEY = 'installment-payments';
+const LOAN_ASSIGNMENTS_QUERY_KEY = 'loan-assignments';
 
 export type LoansListResponse = InferResponseType<typeof apiClient.loans.$get, 200>;
 type LoanListItemBase = LoansListResponse['data']['loans'][number];
@@ -123,6 +124,19 @@ interface LoanLogsQueryParams {
 
 interface InstallmentPaymentsQueryParams {
   installmentId: string;
+  loanId: string;
+  page: number;
+  limit: number;
+}
+
+type LoanAssignmentsGetRoute = (typeof apiClient.loans)[':loanId']['assignments']['$get'];
+type AssignLoanUserRoute = (typeof apiClient.loans)[':loanId']['assignments']['$post'];
+
+export type LoanAssignmentsResponse = InferResponseType<LoanAssignmentsGetRoute, 200>;
+export type LoanAssignment = LoanAssignmentsResponse['data']['assignments'][number];
+type AssignLoanUserBody = InferRequestType<AssignLoanUserRoute>['json'];
+
+interface LoanAssignmentsQueryParams {
   loanId: string;
   page: number;
   limit: number;
@@ -397,6 +411,60 @@ export function useLoanLogs(params: LoanLogsQueryParams) {
 
 export function useInstallmentPayments(params: InstallmentPaymentsQueryParams) {
   return useQuery(installmentPaymentsQueryOptions(params));
+}
+
+export function loanAssignmentsQueryOptions(params: LoanAssignmentsQueryParams) {
+  return queryOptions({
+    queryKey: [LOAN_ASSIGNMENTS_QUERY_KEY, params.loanId, { page: params.page, limit: params.limit }],
+    queryFn: async () => {
+      const response = await apiClient.loans[':loanId'].assignments.$get({
+        param: { loanId: params.loanId },
+        query: { page: String(params.page), limit: String(params.limit) },
+      });
+
+      return parseOkResponseOrThrow<LoanAssignmentsResponse>(response, 'Failed to load loan assignments.');
+    },
+    enabled: !!params.loanId,
+  });
+}
+
+export function useLoanAssignments(params: LoanAssignmentsQueryParams) {
+  return useQuery(loanAssignmentsQueryOptions(params));
+}
+
+export function useAssignLoan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ loanId, body }: { loanId: string; body: AssignLoanUserBody }) => {
+      const response = await apiClient.loans[':loanId'].assignments.$post({
+        param: { loanId },
+        json: body,
+      });
+
+      return parseOkResponseOrThrow(response, 'Failed to assign user to loan.');
+    },
+    onSuccess: (_data, { loanId }) => {
+      queryClient.invalidateQueries({ queryKey: [LOAN_ASSIGNMENTS_QUERY_KEY, loanId] });
+    },
+  });
+}
+
+export function useRevokeLoanAssignment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ loanId, userId }: { loanId: string; userId: string }) => {
+      const response = await apiClient.loans[':loanId'].assignments[':userId'].$delete({
+        param: { loanId, userId },
+      });
+
+      return parseOkResponseOrThrow(response, 'Failed to revoke loan assignment.');
+    },
+    onSuccess: (_data, { loanId }) => {
+      queryClient.invalidateQueries({ queryKey: [LOAN_ASSIGNMENTS_QUERY_KEY, loanId] });
+    },
+  });
 }
 
 export function useCreateLoan() {

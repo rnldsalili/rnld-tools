@@ -3,12 +3,7 @@ import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import { useCan } from '@workspace/permissions/react';
 import { BellRingIcon } from 'lucide-react';
 import { z } from 'zod';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@workspace/ui';
+import { HorizontalTabs } from '@workspace/ui';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { NotificationEventMappingSection } from '@/app/components/settings/notifications/notification-event-mapping-section';
 import { NotificationHistorySection } from '@/app/components/settings/notifications/notification-history-section';
@@ -76,25 +71,27 @@ function NotificationSettingsPage() {
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={handleTabChange}>
-          <TabsList>
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-            <TabsTrigger value="event-mapping">Event Mapping</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="templates">
-            <NotificationTemplatesSection />
-          </TabsContent>
-
-          <TabsContent value="event-mapping">
-            <NotificationEventMappingSection />
-          </TabsContent>
-
-          <TabsContent value="history">
-            <NotificationHistorySection />
-          </TabsContent>
-        </Tabs>
+        <HorizontalTabs
+            value={tab}
+            onValueChange={handleTabChange}
+            items={[
+              {
+                value: 'templates',
+                label: 'Templates',
+                content: <NotificationTemplatesSection />,
+              },
+              {
+                value: 'event-mapping',
+                label: 'Event Mapping',
+                content: <NotificationEventMappingSection />,
+              },
+              {
+                value: 'history',
+                label: 'History',
+                content: <NotificationHistorySection />,
+              },
+            ]}
+        />
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import {
   SectionCard,
   SectionCardContent,
   SectionCardHeader,
+  HorizontalTabs,
 } from '@workspace/ui';
 import {
   INSTALLMENTS_LIMIT,
@@ -31,7 +32,7 @@ import {
   LOAN_LOG_EVENT_LABELS,
   LoanLogEventType,
 } from '@workspace/constants';
-import { PermissionAction, PermissionModule } from '@workspace/permissions';
+import { PermissionAction, PermissionModule, hasSuperAdminRole } from '@workspace/permissions';
 import { Can, useCan } from '@workspace/permissions/react';
 import type { ReactNode } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -39,6 +40,7 @@ import type { LoanAttachment } from '@/app/hooks/use-loan-attachments';
 import type { LoanActivityLog, LoanInstallment } from '@/app/hooks/use-loan';
 import type { DocumentLinkTemplateEntry } from '@/app/hooks/use-document-links';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
+import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
 import { ConfirmDeleteDialog } from '@/app/components/confirm-delete-dialog';
 import { AddInstallmentDialog } from '@/app/components/loans/add-installment-dialog';
@@ -46,6 +48,7 @@ import { EditInstallmentDialog } from '@/app/components/loans/edit-installment-d
 import { EditLoanDialog } from '@/app/components/loans/edit-loan-dialog';
 import { InstallmentPaymentHistoryDialog } from '@/app/components/loans/installment-payment-history-dialog';
 import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
+import { ManageAccessTab } from '@/app/components/loans/manage-access-tab';
 import { RecordPaymentDialog } from '@/app/components/loans/mark-paid-dialog';
 import { ShareDocumentDialog } from '@/app/components/loans/share-document-dialog';
 import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
@@ -84,6 +87,8 @@ function LoanDetailPage() {
 
   const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
   const canUpdateLoans = useCan(PermissionModule.LOANS, PermissionAction.UPDATE);
+  const { authorization } = useAppAuthorization();
+  const isSuperAdmin = authorization ? hasSuperAdminRole(authorization.roles) : false;
 
   const { data, isLoading } = useLoan({
     loanId,
@@ -329,343 +334,373 @@ function LoanDetailPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-4">
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <SectionCard className="min-w-0">
-            <SectionCardHeader className="flex items-center justify-between">
-              <span className="text-sm font-semibold">Loan Details</span>
-              {loan ? (
-                <div className="flex items-center gap-1">
-                  <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
-                    <>
-                      <Button
-                          variant="ghost"
-                          className="gap-1.5"
-                          onClick={() => setIsShareDialogOpen(true)}
-                      >
-                        <Share2Icon className="size-3.5" />
-                        Share
-                      </Button>
-                      <Button
-                          variant="ghost"
-                          className="gap-1.5"
-                          onClick={() => setIsEditLoanOpen(true)}
-                      >
-                        <PencilIcon className="size-3.5" />
-                        Edit
-                      </Button>
-                    </>
-                  </Can>
-                  <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
-                    <Button
-                        variant="ghost"
-                        className="gap-1.5 text-destructive hover:text-destructive/80"
-                        onClick={() => setIsDeleteDialogOpen(true)}
-                        disabled={isDeletePending}
-                    >
-                      <Trash2Icon className="size-3.5" />
-                      Delete
-                    </Button>
-                  </Can>
-                </div>
-              ) : null}
-            </SectionCardHeader>
-            <SectionCardContent>
-              {isLoading ? (
-                <div className="grid grid-cols-2 gap-3">
-                  {Array.from({ length: 8 }).map((_, index) => (
-                    <div key={index} className="h-4 w-full animate-pulse rounded-sm bg-muted" />
-                  ))}
-                </div>
-              ) : loan ? (
-                <div className="flex flex-col gap-3">
-                  <div className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
-                    <LoanField
-                        label="Client"
-                        value={loan.client.name}
-                        trailing={<ClientStatusBadge status={loan.client.status} />}
-                    />
-                    <LoanField label="Amount" value={formatCurrency(loan.amount, loan.currency)} />
-                    <LoanField label="Installment Interval" value={installmentIntervalLabel ?? '—'} />
-                    <LoanField label="Loan Date" value={format(new Date(loan.loanDate), 'MMM d, yyyy')} />
-                    <LoanField
-                        label="Interest Rate"
-                        value={loan.interestRate != null ? `${loan.interestRate}%` : '—'}
-                    />
-                    <LoanField label="Updated" value={format(new Date(loan.updatedAt), 'MMM d, yyyy')} />
-                    <LoanField label="Phone" value={loan.client.phone ?? '—'} />
-                    <LoanField label="Email" value={loan.client.email ?? '—'} />
-                    <LoanField label="Total Excess" value={formatCurrency(loan.excessBalance, loan.currency)} />
-                    <LoanField label="Address" value={loan.client.address ?? '—'} />
-                  </div>
-                  {loan.description ? (
-                    <div className="border-t border-border pt-3">
-                      <LoanField label="Description" value={loan.description} />
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </SectionCardContent>
-          </SectionCard>
-
-          <SectionCard className="min-w-0">
-            <SectionCardHeader>
-              <span className="text-sm font-semibold">Documents</span>
-            </SectionCardHeader>
-            <SectionCardContent>
-              {templateEntries.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No document templates configured.</p>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {templateEntries.map(({ template, document }: DocumentLinkTemplateEntry) => (
-                    <div key={template.id} className="flex flex-col gap-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium">{template.name}</span>
-                          {document?.signedAt ? (
-                            <Badge className="bg-green-600 text-xs text-white hover:bg-green-600">Signed</Badge>
-                          ) : template.requiresSignature ? (
-                            <Badge variant="secondary" className="text-xs">Unsigned</Badge>
-                          ) : (
-                            <Badge variant="secondary" className="text-xs">PDF only</Badge>
-                          )}
-                        </div>
+        <HorizontalTabs
+            items={[
+              {
+                value: 'details',
+                label: 'Details',
+                content: (
+                  <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+                    <SectionCard className="min-w-0">
+                      <SectionCardHeader className="flex items-center justify-between">
+                        <span className="text-sm font-semibold">Loan Details</span>
                         {loan ? (
-                          <Button
-                              variant="ghost"
-                              className="shrink-0"
-                              disabled={
-                                downloadLoanDocumentPdfMutation.isPending
-                                && activeDownloadTemplateId === template.id
-                              }
-                              onClick={async () => {
-                                try {
-                                  await downloadLoanDocumentPdfMutation.mutateAsync({
-                                    fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.client.name.replace(/\s+/g, '-').toLowerCase()}.pdf`,
-                                    loanId,
-                                    templateId: template.id,
-                                  });
-                                } catch (error) {
-                                  toast.error(
-                                    error instanceof Error
-                                      ? error.message
-                                      : 'Failed to download document PDF.',
-                                  );
-                                }
-                              }}
-                          >
-                            {downloadLoanDocumentPdfMutation.isPending
-                              && activeDownloadTemplateId === template.id ? (
-                                <Loader2Icon className="size-3 animate-spin" />
-                              ) : (
-                                <DownloadIcon className="size-3" />
-                              )}
-                            PDF
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                              <>
+                                <Button
+                                    variant="ghost"
+                                    className="gap-1.5"
+                                    onClick={() => setIsShareDialogOpen(true)}
+                                >
+                                  <Share2Icon className="size-3.5" />
+                                  Share
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="gap-1.5"
+                                    onClick={() => setIsEditLoanOpen(true)}
+                                >
+                                  <PencilIcon className="size-3.5" />
+                                  Edit
+                                </Button>
+                              </>
+                            </Can>
+                            <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
+                              <Button
+                                  variant="ghost"
+                                  className="gap-1.5 text-destructive hover:text-destructive/80"
+                                  onClick={() => setIsDeleteDialogOpen(true)}
+                                  disabled={isDeletePending}
+                              >
+                                <Trash2Icon className="size-3.5" />
+                                Delete
+                              </Button>
+                            </Can>
+                          </div>
+                        ) : null}
+                      </SectionCardHeader>
+                      <SectionCardContent>
+                        {isLoading ? (
+                          <div className="grid grid-cols-2 gap-3">
+                            {Array.from({ length: 8 }).map((_, index) => (
+                              <div key={index} className="h-4 w-full animate-pulse rounded-sm bg-muted" />
+                            ))}
+                          </div>
+                        ) : loan ? (
+                          <div className="flex flex-col gap-3">
+                            <div className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
+                              <LoanField
+                                  label="Client"
+                                  value={loan.client.name}
+                                  trailing={<ClientStatusBadge status={loan.client.status} />}
+                              />
+                              <LoanField label="Amount" value={formatCurrency(loan.amount, loan.currency)} />
+                              <LoanField label="Installment Interval" value={installmentIntervalLabel ?? '—'} />
+                              <LoanField label="Loan Date" value={format(new Date(loan.loanDate), 'MMM d, yyyy')} />
+                              <LoanField
+                                  label="Interest Rate"
+                                  value={loan.interestRate != null ? `${loan.interestRate}%` : '—'}
+                              />
+                              <LoanField label="Updated" value={format(new Date(loan.updatedAt), 'MMM d, yyyy')} />
+                              <LoanField label="Phone" value={loan.client.phone ?? '—'} />
+                              <LoanField label="Email" value={loan.client.email ?? '—'} />
+                              <LoanField label="Total Excess" value={formatCurrency(loan.excessBalance, loan.currency)} />
+                              <LoanField label="Address" value={loan.client.address ?? '—'} />
+                            </div>
+                            {loan.description ? (
+                              <div className="border-t border-border pt-3">
+                                <LoanField label="Description" value={loan.description} />
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </SectionCardContent>
+                    </SectionCard>
+
+                    <SectionCard className="min-w-0">
+                      <SectionCardHeader>
+                        <span className="text-sm font-semibold">Documents</span>
+                      </SectionCardHeader>
+                      <SectionCardContent>
+                        {templateEntries.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No document templates configured.</p>
+                        ) : (
+                          <div className="flex flex-col gap-3">
+                            {templateEntries.map(({ template, document }: DocumentLinkTemplateEntry) => (
+                              <div key={template.id} className="flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium">{template.name}</span>
+                                    {document?.signedAt ? (
+                                      <Badge className="bg-green-600 text-xs text-white hover:bg-green-600">Signed</Badge>
+                                    ) : template.requiresSignature ? (
+                                      <Badge variant="secondary" className="text-xs">Unsigned</Badge>
+                                    ) : (
+                                      <Badge variant="secondary" className="text-xs">PDF only</Badge>
+                                    )}
+                                  </div>
+                                  {loan ? (
+                                    <Button
+                                        variant="ghost"
+                                        className="shrink-0"
+                                        disabled={
+                                          downloadLoanDocumentPdfMutation.isPending
+                                          && activeDownloadTemplateId === template.id
+                                        }
+                                        onClick={async () => {
+                                          try {
+                                            await downloadLoanDocumentPdfMutation.mutateAsync({
+                                              fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.client.name.replace(/\s+/g, '-').toLowerCase()}.pdf`,
+                                              loanId,
+                                              templateId: template.id,
+                                            });
+                                          } catch (error) {
+                                            toast.error(
+                                              error instanceof Error
+                                                ? error.message
+                                                : 'Failed to download document PDF.',
+                                            );
+                                          }
+                                        }}
+                                    >
+                                      {downloadLoanDocumentPdfMutation.isPending
+                                        && activeDownloadTemplateId === template.id ? (
+                                          <Loader2Icon className="size-3 animate-spin" />
+                                        ) : (
+                                          <DownloadIcon className="size-3" />
+                                        )}
+                                      PDF
+                                    </Button>
+                                  ) : null}
+                                </div>
+                                {document?.signedAt ? (
+                                  <p className="text-xs text-muted-foreground">
+                                    Signed on {format(new Date(document.signedAt), 'MMM d, yyyy h:mm a')}
+                                  </p>
+                                ) : null}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </SectionCardContent>
+                    </SectionCard>
+                  </div>
+                ),
+              },
+              {
+                value: 'attachments',
+                label: 'Attachments',
+                content: (
+                  <SectionCard className="min-w-0">
+                    <SectionCardHeader className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold">Attachments</span>
+                        {!isAttachmentsLoading ? (
+                          <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                            {attachments.length}
+                          </Badge>
                         ) : null}
                       </div>
-                      {document?.signedAt ? (
-                        <p className="text-xs text-muted-foreground">
-                          Signed on {format(new Date(document.signedAt), 'MMM d, yyyy h:mm a')}
-                        </p>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </SectionCardContent>
-          </SectionCard>
-        </div>
-
-        <SectionCard className="min-w-0">
-          <SectionCardHeader className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold">Attachments</span>
-              {!isAttachmentsLoading ? (
-                <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                  {attachments.length}
-                </Badge>
-              ) : null}
-            </div>
-          </SectionCardHeader>
-          <SectionCardContent>
-            {isAttachmentsLoading ? (
-              <div className="flex flex-col gap-3">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="h-16 animate-pulse rounded-md bg-muted" />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
-                  <FileDropzone
-                      title="Drag and drop files here"
-                      activeTitle="Release to upload attachments"
-                      description={(
-                        <>
-                          Supports images, PDF, Word, Excel, and CSV up to {formatAttachmentSize(LOAN_ATTACHMENT_MAX_SIZE_BYTES)} each.
-                        </>
-                      )}
-                      accept={LOAN_ATTACHMENT_ACCEPT_ATTRIBUTE}
-                      multiple
-                      isPending={isUploadingAttachments}
-                      onFilesSelected={uploadAttachmentFiles}
-                  />
-                </Can>
-
-                {attachments.length === 0 ? (
-                  <div className="rounded-md border border-dashed border-border p-4">
-                    <p className="text-sm font-medium">No attachments yet.</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Upload images, PDF, Word, Excel, or CSV files up to {formatAttachmentSize(LOAN_ATTACHMENT_MAX_SIZE_BYTES)}.
-                    </p>
-                  </div>
-                ) : null}
-
-                {attachments.map((attachment) => (
-                  <div
-                      key={attachment.id}
-                      className="flex flex-col gap-3 rounded-md border border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div className="flex min-w-0 items-start gap-3">
-                      <div className="rounded-md bg-muted p-2 text-muted-foreground">
-                        <PaperclipIcon className="size-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="truncate text-sm font-medium">{attachment.fileName}</span>
-                          <Badge variant="outline">{getAttachmentTypeLabel(attachment)}</Badge>
+                    </SectionCardHeader>
+                    <SectionCardContent>
+                      {isAttachmentsLoading ? (
+                        <div className="flex flex-col gap-3">
+                          {Array.from({ length: 3 }).map((_, index) => (
+                            <div key={index} className="h-16 animate-pulse rounded-md bg-muted" />
+                          ))}
                         </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {formatAttachmentSize(attachment.sizeBytes)}
-                          {' • '}
-                          Uploaded {format(new Date(attachment.createdAt), 'MMM d, yyyy h:mm a')}
-                          {' • '}
-                          {attachment.createdBy?.name ?? 'Unknown uploader'}
-                        </p>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                            <FileDropzone
+                                title="Drag and drop files here"
+                                activeTitle="Release to upload attachments"
+                                description={(
+                                  <>
+                                    Supports images, PDF, Word, Excel, and CSV up to {formatAttachmentSize(LOAN_ATTACHMENT_MAX_SIZE_BYTES)} each.
+                                  </>
+                                )}
+                                accept={LOAN_ATTACHMENT_ACCEPT_ATTRIBUTE}
+                                multiple
+                                isPending={isUploadingAttachments}
+                                onFilesSelected={uploadAttachmentFiles}
+                            />
+                          </Can>
+
+                          {attachments.length === 0 ? (
+                            <div className="rounded-md border border-dashed border-border p-4">
+                              <p className="text-sm font-medium">No attachments yet.</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                Upload images, PDF, Word, Excel, or CSV files up to {formatAttachmentSize(LOAN_ATTACHMENT_MAX_SIZE_BYTES)}.
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {attachments.map((attachment) => (
+                            <div
+                                key={attachment.id}
+                                className="flex flex-col gap-3 rounded-md border border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="flex min-w-0 items-start gap-3">
+                                <div className="rounded-md bg-muted p-2 text-muted-foreground">
+                                  <PaperclipIcon className="size-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="truncate text-sm font-medium">{attachment.fileName}</span>
+                                    <Badge variant="outline">{getAttachmentTypeLabel(attachment)}</Badge>
+                                  </div>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {formatAttachmentSize(attachment.sizeBytes)}
+                                    {' • '}
+                                    Uploaded {format(new Date(attachment.createdAt), 'MMM d, yyyy h:mm a')}
+                                    {' • '}
+                                    {attachment.createdBy?.name ?? 'Unknown uploader'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 self-end sm:self-auto">
+                                <Button
+                                    variant="ghost"
+                                    className="gap-1.5"
+                                    disabled={
+                                      downloadLoanAttachmentMutation.isPending
+                                      && activeAttachmentDownloadId === attachment.id
+                                    }
+                                    onClick={async () => {
+                                      try {
+                                        await downloadLoanAttachmentMutation.mutateAsync({
+                                          loanId,
+                                          attachmentId: attachment.id,
+                                          fileName: attachment.fileName,
+                                        });
+                                      } catch (error) {
+                                        toast.error(
+                                          error instanceof Error
+                                            ? error.message
+                                            : 'Failed to download attachment.',
+                                        );
+                                      }
+                                    }}
+                                >
+                                  {downloadLoanAttachmentMutation.isPending
+                                    && activeAttachmentDownloadId === attachment.id ? (
+                                      <Loader2Icon className="size-3 animate-spin" />
+                                    ) : (
+                                      <DownloadIcon className="size-3" />
+                                    )}
+                                  Download
+                                </Button>
+                                <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                                  <Button
+                                      variant="ghost"
+                                      className="gap-1.5 text-destructive hover:text-destructive/80"
+                                      onClick={() => setSelectedAttachment(attachment)}
+                                      disabled={
+                                        deleteLoanAttachmentMutation.isPending
+                                        && deleteLoanAttachmentMutation.variables?.attachmentId === attachment.id
+                                      }
+                                  >
+                                    <Trash2Icon className="size-3.5" />
+                                    Delete
+                                  </Button>
+                                </Can>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </SectionCardContent>
+                  </SectionCard>
+                ),
+              },
+              {
+                value: 'installments',
+                label: 'Installments',
+                content: (
+                  <DataTable
+                      columns={installmentColumns}
+                      data={installments}
+                      isLoading={isLoading}
+                      getRowClassName={(row) => {
+                        const isOverdue = row.status === InstallmentStatus.PENDING && new Date(row.dueDate) < new Date();
+                        return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
+                      }}
+                      toolbar={(
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold">Installments</span>
+                          {!isLoading && installmentsPagination ? (
+                            <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                              {installmentsPagination.total}
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                          <Button
+                              className="gap-1.5"
+                              onClick={() => setIsAddInstallmentOpen(true)}
+                              disabled={isLoading || !loan}
+                          >
+                            <PlusIcon className="size-3.5" />
+                            Add Installment
+                          </Button>
+                        </Can>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1 self-end sm:self-auto">
-                      <Button
-                          variant="ghost"
-                          className="gap-1.5"
-                          disabled={
-                            downloadLoanAttachmentMutation.isPending
-                            && activeAttachmentDownloadId === attachment.id
-                          }
-                          onClick={async () => {
-                            try {
-                              await downloadLoanAttachmentMutation.mutateAsync({
-                                loanId,
-                                attachmentId: attachment.id,
-                                fileName: attachment.fileName,
-                              });
-                            } catch (error) {
-                              toast.error(
-                                error instanceof Error
-                                  ? error.message
-                                  : 'Failed to download attachment.',
-                              );
-                            }
-                          }}
-                      >
-                        {downloadLoanAttachmentMutation.isPending
-                          && activeAttachmentDownloadId === attachment.id ? (
-                            <Loader2Icon className="size-3 animate-spin" />
-                          ) : (
-                            <DownloadIcon className="size-3" />
-                          )}
-                        Download
-                      </Button>
-                      <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
-                        <Button
-                            variant="ghost"
-                            className="gap-1.5 text-destructive hover:text-destructive/80"
-                            onClick={() => setSelectedAttachment(attachment)}
-                            disabled={
-                              deleteLoanAttachmentMutation.isPending
-                              && deleteLoanAttachmentMutation.variables.attachmentId === attachment.id
-                            }
-                        >
-                          <Trash2Icon className="size-3.5" />
-                          Delete
-                        </Button>
-                      </Can>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </SectionCardContent>
-        </SectionCard>
-
-        <DataTable
-            columns={installmentColumns}
-            data={installments}
-            isLoading={isLoading}
-            getRowClassName={(row) => {
-              const isOverdue = row.status === InstallmentStatus.PENDING && new Date(row.dueDate) < new Date();
-              return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
-            }}
-            toolbar={(
-            <div className="flex w-full items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">Installments</span>
-                {!isLoading && installmentsPagination ? (
-                  <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                    {installmentsPagination.total}
-                  </Badge>
-                ) : null}
-              </div>
-              <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
-                <Button
-                    className="gap-1.5"
-                    onClick={() => setIsAddInstallmentOpen(true)}
-                    disabled={isLoading || !loan}
-                >
-                  <PlusIcon className="size-3.5" />
-                  Add Installment
-                </Button>
-              </Can>
-            </div>
-          )}
-            footer={
-            installmentsPagination && installmentsPagination.totalPages > 1 ? (
-              <Pagination
-                  page={installmentsPage}
-                  totalPages={installmentsPagination.totalPages}
-                  onPageChange={setInstallmentsPage}
-                  isLoading={isLoading}
-              />
-            ) : undefined
-          }
-        />
-
-        <DataTable
-            columns={loanLogColumns}
-            data={loanLogs}
-            isLoading={isLoanLogsLoading}
-            toolbar={(
-            <div className="flex w-full items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">Activity Log</span>
-                {!isLoanLogsLoading && loanLogsPagination ? (
-                  <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                    {loanLogsPagination.total}
-                  </Badge>
-                ) : null}
-              </div>
-            </div>
-          )}
-            footer={
-            loanLogsPagination && loanLogsPagination.totalPages > 1 ? (
-              <Pagination
-                  page={loanLogsPage}
-                  totalPages={loanLogsPagination.totalPages}
-                  onPageChange={setLoanLogsPage}
-                  isLoading={isLoanLogsLoading}
-              />
-            ) : undefined
-          }
+                    )}
+                      footer={
+                      installmentsPagination && installmentsPagination.totalPages > 1 ? (
+                        <Pagination
+                            page={installmentsPage}
+                            totalPages={installmentsPagination.totalPages}
+                            onPageChange={setInstallmentsPage}
+                            isLoading={isLoading}
+                        />
+                      ) : undefined
+                    }
+                  />
+                ),
+              },
+              {
+                value: 'activity',
+                label: 'Activity',
+                content: (
+                  <DataTable
+                      columns={loanLogColumns}
+                      data={loanLogs}
+                      isLoading={isLoanLogsLoading}
+                      toolbar={(
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-semibold">Activity Log</span>
+                          {!isLoanLogsLoading && loanLogsPagination ? (
+                            <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                              {loanLogsPagination.total}
+                            </Badge>
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
+                      footer={
+                      loanLogsPagination && loanLogsPagination.totalPages > 1 ? (
+                        <Pagination
+                            page={loanLogsPage}
+                            totalPages={loanLogsPagination.totalPages}
+                            onPageChange={setLoanLogsPage}
+                            isLoading={isLoanLogsLoading}
+                        />
+                      ) : undefined
+                    }
+                  />
+                ),
+              },
+              ...(isSuperAdmin ? [{
+                value: 'access',
+                label: 'Manage Access',
+                content: <ManageAccessTab loanId={loanId} />,
+              }] : []),
+            ]}
         />
       </div>
 
