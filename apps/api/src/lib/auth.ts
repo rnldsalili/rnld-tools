@@ -29,5 +29,13 @@ export const auth = (env: CloudflareBindings) => {
     trustedOrigins: env.CORS_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
+    advanced: {
+    ipAddress: {
+        ipAddressHeaders: ['cf-connecting-ip'],
+      },
+    },
+    rateLimit: {
+      enabled: true,
+    },
   });
 };
