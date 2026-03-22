@@ -117,6 +117,7 @@ export {
   TabsTrigger,
   tabsListVariants,
 } from '@workspace/ui/components/tabs';
+export { HorizontalTabs, type TabsItem } from '@workspace/ui/components/composite/horizontal-tabs';
 
 export {
   Popover,
