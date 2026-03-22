@@ -13,6 +13,7 @@ import {
 import type { ComboboxOption } from '@workspace/ui';
 import type { LoanAssignment } from '@/app/hooks/use-loan';
 import { useAssignLoan, useLoanAssignments, useRevokeLoanAssignment } from '@/app/hooks/use-loan';
+import { isPlainRecord } from '@/app/lib/value-guards';
 import { useUsers } from '@/app/hooks/use-users';
 
 interface ManageAccessTabProps {
@@ -20,6 +21,17 @@ interface ManageAccessTabProps {
 }
 
 const ASSIGNMENTS_LIMIT = 50;
+
+function hasAssignedUser(assignment: LoanAssignment): assignment is LoanAssignment & {
+  user: { id: string; name: string; email: string };
+} {
+  const userValue = Reflect.get(assignment, 'user');
+
+  return isPlainRecord(userValue)
+    && typeof userValue.id === 'string'
+    && typeof userValue.name === 'string'
+    && typeof userValue.email === 'string';
+}
 
 export function ManageAccessTab({ loanId }: ManageAccessTabProps) {
   const [selectedUserId, setSelectedUserId] = useState('');
@@ -40,9 +52,12 @@ export function ManageAccessTab({ loanId }: ManageAccessTabProps) {
   const revokeLoanMutation = useRevokeLoanAssignment();
 
   const assignments: Array<LoanAssignment> = assignmentsData?.data.assignments ?? [];
+  const assignmentsWithUsers = assignments.filter(hasAssignedUser);
   const users: Array<{ id: string; name: string; email: string }> = usersData?.data.users ?? [];
 
-  const assignedUserIds = new Set(assignments.map((a) => a.user.id));
+  const assignedUserIds = new Set(
+    assignmentsWithUsers.map((assignment) => assignment.user.id),
+  );
 
   const availableUserOptions: Array<ComboboxOption> = users
     .filter((u) => !assignedUserIds.has(u.id))
@@ -107,13 +122,13 @@ export function ManageAccessTab({ loanId }: ManageAccessTabProps) {
             <div className="flex justify-center py-6">
               <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
             </div>
-          ) : assignments.length === 0 ? (
+          ) : assignmentsWithUsers.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
               No users are currently assigned to this loan.
             </p>
           ) : (
             <div className="flex flex-col gap-3">
-              {assignments.map((assignment) => (
+              {assignmentsWithUsers.map((assignment) => (
                 <div
                     key={assignment.id}
                     className="flex items-center justify-between gap-3 rounded-md border border-border/70 p-3"
@@ -193,33 +208,35 @@ export function ManageAccessTab({ loanId }: ManageAccessTabProps) {
           title="Revoke Access"
           className="sm:max-w-sm"
       >
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            Are you sure you want to revoke access for{' '}
-            <span className="font-medium text-foreground">
-              {revokeTarget!.user.name}
-            </span>{' '}
-            ? They will no longer be able to view this loan.
-          </p>
-          <div className="flex justify-end gap-2">
-            <Button
-                variant="outline"
-                onClick={() => setRevokeTarget(null)}
-                disabled={revokeLoanMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-                variant="destructive"
-                onClick={handleRevoke}
-                disabled={revokeLoanMutation.isPending}
-            >
-              {revokeLoanMutation.isPending
-                ? <Loader2Icon className="size-3.5 animate-spin" />
-                : 'Revoke Access'}
-            </Button>
+        {revokeTarget ? (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to revoke access for{' '}
+              <span className="font-medium text-foreground">
+                {revokeTarget.user.name}
+              </span>{' '}
+              ? They will no longer be able to view this loan.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                  variant="outline"
+                  onClick={() => setRevokeTarget(null)}
+                  disabled={revokeLoanMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                  variant="destructive"
+                  onClick={handleRevoke}
+                  disabled={revokeLoanMutation.isPending}
+              >
+                {revokeLoanMutation.isPending
+                  ? <Loader2Icon className="size-3.5 animate-spin" />
+                  : 'Revoke Access'}
+              </Button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </Modal>
     </>
   );

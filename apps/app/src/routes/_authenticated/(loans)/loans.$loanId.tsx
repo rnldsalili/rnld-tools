@@ -9,8 +9,9 @@ import {
   Share2Icon,
   Trash2Icon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import {
   Badge,
   Button,
@@ -64,15 +65,27 @@ import { isOneOf, isPlainRecord } from '@/app/lib/value-guards';
 
 const LOAN_LOGS_LIMIT = 10;
 
+const LOAN_DETAIL_TABS = ['details', 'attachments', 'activity', 'access'] as const;
+
+type LoanDetailTab = typeof LOAN_DETAIL_TABS[number];
+
+function isLoanDetailTab(value: unknown): value is LoanDetailTab {
+  return isOneOf(LOAN_DETAIL_TABS, value);
+}
+
 export const Route = createFileRoute('/_authenticated/(loans)/loans/$loanId')({
   head: () => ({ meta: [{ title: 'RTools - Loan Detail' }] }),
   staticData: { title: 'Loan Detail' },
+  validateSearch: z.object({
+    tab: z.enum(LOAN_DETAIL_TABS).optional(),
+  }),
   component: LoanDetailPage,
 });
 
 function LoanDetailPage() {
   const router = useRouter();
   const { loanId } = Route.useParams();
+  const { tab = 'details' } = Route.useSearch();
   const [installmentsPage, setInstallmentsPage] = useState(1);
   const [loanLogsPage, setLoanLogsPage] = useState(1);
   const [selectedInstallment, setSelectedInstallment] = useState<LoanInstallment | null>(null);
@@ -89,6 +102,23 @@ function LoanDetailPage() {
   const canUpdateLoans = useCan(PermissionModule.LOANS, PermissionAction.UPDATE);
   const { authorization } = useAppAuthorization();
   const isSuperAdmin = authorization ? hasSuperAdminRole(authorization.roles) : false;
+  const activeTab = tab === 'access' && !isSuperAdmin ? 'details' : tab;
+
+  function handleTabChange(nextTab: string) {
+    if (!isLoanDetailTab(nextTab)) {
+      return;
+    }
+
+    void router.navigate({
+      to: Route.to,
+      params: { loanId },
+      search: (previousSearch) => ({
+        ...previousSearch,
+        tab: nextTab,
+      }),
+      replace: true,
+    });
+  }
 
   const { data, isLoading } = useLoan({
     loanId,
@@ -128,6 +158,20 @@ function LoanDetailPage() {
   const installmentIntervalLabel = loan && isOneOf(INSTALLMENT_INTERVAL_VALUES, loan.installmentInterval)
     ? INSTALLMENT_INTERVAL_LABELS[loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS]
     : loan?.installmentInterval;
+
+  useEffect(() => {
+    if (tab === 'access' && !isSuperAdmin) {
+      void router.navigate({
+        to: Route.to,
+        params: { loanId },
+        search: (previousSearch) => ({
+          ...previousSearch,
+          tab: 'details',
+        }),
+        replace: true,
+      });
+    }
+  }, [isSuperAdmin, loanId, router, tab]);
 
   if (!canViewLoans) {
     return (
@@ -340,6 +384,8 @@ function LoanDetailPage() {
     <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-4">
         <HorizontalTabs
+            value={activeTab}
+            onValueChange={handleTabChange}
             items={[
               {
                 value: 'details',
