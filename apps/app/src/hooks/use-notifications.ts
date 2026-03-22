@@ -11,7 +11,7 @@ import { parseOkResponseOrThrow } from '@/app/lib/api-response';
 const NOTIFICATION_TEMPLATES_QUERY_KEY = 'notification-templates';
 const NOTIFICATION_EVENT_CONFIGS_QUERY_KEY = 'notification-event-configs';
 const NOTIFICATION_LOGS_QUERY_KEY = 'notification-logs';
-const NOTIFICATION_EMAIL_PREVIEW_QUERY_KEY = 'notification-email-preview';
+const NOTIFICATION_TEMPLATE_PREVIEW_QUERY_KEY = 'notification-template-preview';
 
 type NotificationTemplatesGetRoute = typeof apiClient.notifications.templates.$get;
 type NotificationTemplateGetRoute = (typeof apiClient.notifications.templates)[':id']['$get'];
@@ -19,7 +19,7 @@ type NotificationEventConfigsGetRoute = (typeof apiClient.notifications)['event-
 type NotificationLogsGetRoute = typeof apiClient.notifications.logs.$get;
 type NotificationLogGetRoute = (typeof apiClient.notifications.logs)[':id']['$get'];
 type NotificationTestSendPostRoute = (typeof apiClient.notifications)['test-send']['$post'];
-type NotificationEmailPreviewPostRoute = (typeof apiClient.notifications)['render-email-preview']['$post'];
+type NotificationTemplatePreviewPostRoute = (typeof apiClient.notifications)['render-preview']['$post'];
 
 export type NotificationTemplateCreateInput =
   | {
@@ -121,14 +121,19 @@ export type NotificationTestSendResponse = InferResponseType<
   202
 >;
 
-export interface NotificationEmailPreviewInput {
-  event: NotificationEvent;
-  subject?: string;
-  content: Record<string, unknown>;
-}
+export type NotificationTemplatePreviewInput =
+  | {
+    channel: NotificationChannel.EMAIL;
+    subject?: string;
+    content: Record<string, unknown>;
+  }
+  | {
+    channel: NotificationChannel.SMS;
+    content: string;
+  };
 
-export type NotificationEmailPreviewResponse = InferResponseType<
-  NotificationEmailPreviewPostRoute,
+export type NotificationTemplatePreviewResponse = InferResponseType<
+  NotificationTemplatePreviewPostRoute,
   200
 >;
 
@@ -228,19 +233,19 @@ export function notificationLogQueryOptions(id: string) {
   });
 }
 
-export function notificationEmailPreviewQueryOptions(
-  input: NotificationEmailPreviewInput,
+export function notificationTemplatePreviewQueryOptions(
+  input: NotificationTemplatePreviewInput,
   enabled = true,
 ) {
   return queryOptions({
-    queryKey: [NOTIFICATION_EMAIL_PREVIEW_QUERY_KEY, input],
+    queryKey: [NOTIFICATION_TEMPLATE_PREVIEW_QUERY_KEY, input],
     enabled,
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      const response = await apiClient.notifications['render-email-preview'].$post({
+      const response = await apiClient.notifications['render-preview'].$post({
         json: input,
       });
-      return parseOkResponseOrThrow(response, 'Failed to render notification email preview.');
+      return parseOkResponseOrThrow(response, 'Failed to render notification template preview.');
     },
   });
 }
@@ -273,11 +278,11 @@ export function useNotificationLog(id: string) {
   return useQuery(notificationLogQueryOptions(id));
 }
 
-export function useNotificationEmailPreview(
-  input: NotificationEmailPreviewInput,
+export function useNotificationTemplatePreview(
+  input: NotificationTemplatePreviewInput,
   enabled = true,
 ) {
-  return useQuery(notificationEmailPreviewQueryOptions(input, enabled));
+  return useQuery(notificationTemplatePreviewQueryOptions(input, enabled));
 }
 
 export function useCreateNotificationTemplate() {

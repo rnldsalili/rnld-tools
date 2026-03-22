@@ -27,9 +27,9 @@ import type {
   NotificationTemplateFormValues,
 } from '@/app/hooks/use-notifications';
 import { AgreementEditor } from '@/app/components/settings/agreement-editor';
-import { NotificationEmailPreviewCard } from '@/app/components/settings/notification-email-preview-card';
 import { getNotificationChannelLabel } from '@/app/components/settings/notifications/utils';
 import { NotificationPlaceholderPanel } from '@/app/components/settings/notification-placeholder-panel';
+import { NotificationTemplatePreviewCard } from '@/app/components/settings/notification-template-preview-card';
 import { NotificationTestSendModal } from '@/app/components/settings/notification-test-send-modal';
 import { isPlainRecord, toPlainRecord } from '@/app/lib/value-guards';
 
@@ -216,27 +216,35 @@ export function NotificationTemplateEditorForm({
                         )}
                       </form.Field>
 
-                      <NotificationEmailPreviewCard
+                      <NotificationTemplatePreviewCard
+                          channel={NotificationChannel.EMAIL}
                           subject={formValues.channel === NotificationChannel.EMAIL ? formValues.subject : ''}
                           content={isPlainRecord(formValues.content) ? formValues.content : {}}
                       />
                     </>
                   ) : (
-                    <form.Field name="content">
-                      {(field) => (
-                        <Field>
-                          <FieldLabel htmlFor={field.name}>SMS Content</FieldLabel>
-                          <Textarea
-                              id={field.name}
-                              value={typeof field.state.value === 'string' ? field.state.value : ''}
-                              onChange={(event) => field.handleChange(event.target.value)}
-                              rows={12}
-                              placeholder="Write the SMS content here..."
-                              readOnly={isReadOnly}
-                          />
-                        </Field>
-                      )}
-                    </form.Field>
+                    <>
+                      <form.Field name="content">
+                        {(field) => (
+                          <Field>
+                            <FieldLabel htmlFor={field.name}>SMS Content</FieldLabel>
+                            <Textarea
+                                id={field.name}
+                                value={typeof field.state.value === 'string' ? field.state.value : ''}
+                                onChange={(event) => field.handleChange(event.target.value)}
+                                rows={12}
+                                placeholder="Write the SMS content here..."
+                                readOnly={isReadOnly}
+                            />
+                          </Field>
+                        )}
+                      </form.Field>
+
+                      <NotificationTemplatePreviewCard
+                          channel={NotificationChannel.SMS}
+                          content={typeof formValues.content === 'string' ? formValues.content : ''}
+                      />
+                    </>
                   )}
                 </div>
               </SectionCardContent>

@@ -7,14 +7,15 @@ import {
   NOTIFICATION_SMS_PROVIDER_LABELS,
   NotificationChannel,
   NotificationContentFormat,
+  NotificationEvent,
 } from '@workspace/constants';
 import {
   createNotificationTemplateSchema,
-  notificationEmailPreviewSchema,
   notificationEventConfigParamSchema,
   notificationLogIdParamSchema,
   notificationLogsQuerySchema,
   notificationTemplateIdParamSchema,
+  notificationTemplatePreviewSchema,
   notificationTemplatesQuerySchema,
   notificationTestSendSchema,
   updateNotificationEventConfigSchema,
@@ -499,20 +500,41 @@ export const updateNotificationEventConfig = createHandlers(
   },
 );
 
-export const renderNotificationEmailPreview = createHandlers(
-  validate('json', notificationEmailPreviewSchema),
+export const renderNotificationTemplatePreview = createHandlers(
+  validate('json', notificationTemplatePreviewSchema),
   (c) => {
-    const notificationEmailPreviewPayload = c.req.valid('json');
-    const renderedEmail = renderEmailTemplate({
-      event: notificationEmailPreviewPayload.event,
-      subject: notificationEmailPreviewPayload.subject?.trim() || 'Notification',
-      content: notificationEmailPreviewPayload.content,
+    const notificationTemplatePreviewPayload = c.req.valid('json');
+    const samplePreviewEvent = NotificationEvent.LOAN_CREATED;
+
+    if (notificationTemplatePreviewPayload.channel === NotificationChannel.EMAIL) {
+      const renderedEmail = renderEmailTemplate({
+        event: samplePreviewEvent,
+        subject: notificationTemplatePreviewPayload.subject?.trim() || 'Notification',
+        content: notificationTemplatePreviewPayload.content,
+        siteUrl: getNotificationSiteUrl(c.env),
+      });
+
+      return c.json({
+        meta: { code: 200, message: 'Notification template preview rendered successfully' },
+        data: {
+          channel: NotificationChannel.EMAIL,
+          preview: renderedEmail,
+        },
+      }, 200);
+    }
+
+    const renderedSms = renderSmsTemplate({
+      event: samplePreviewEvent,
+      content: notificationTemplatePreviewPayload.content,
       siteUrl: getNotificationSiteUrl(c.env),
     });
 
     return c.json({
-      meta: { code: 200, message: 'Notification email preview rendered successfully' },
-      data: { preview: renderedEmail },
+      meta: { code: 200, message: 'Notification template preview rendered successfully' },
+      data: {
+        channel: NotificationChannel.SMS,
+        preview: renderedSms,
+      },
     }, 200);
   },
 );
