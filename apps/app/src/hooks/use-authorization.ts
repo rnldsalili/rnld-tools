@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import type { InferResponseType } from '@workspace/api-client';
-import apiClient, { parseResponse } from '@/app/lib/api';
+import apiClient from '@/app/lib/api';
+import { parseOkResponseOrThrow } from '@/app/lib/api-response';
 
 const AUTHORIZATION_QUERY_KEY = 'authorization';
 
@@ -11,13 +12,7 @@ export function authorizationQueryOptions() {
     queryKey: [AUTHORIZATION_QUERY_KEY],
     queryFn: async () => {
       const response = await apiClient.users.me.$get();
-      const result = await parseResponse(response);
-
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to load authorization details.');
-      }
-
-      return result;
+      return parseOkResponseOrThrow(response, 'Failed to load authorization details.');
     },
   });
 }

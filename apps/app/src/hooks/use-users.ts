@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDetailedErrorMessage } from '@workspace/api-client';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
-import apiClient, { parseResponse } from '@/app/lib/api';
+import apiClient from '@/app/lib/api';
+import { parseOkResponseOrThrow } from '@/app/lib/api-response';
 
 const USERS_QUERY_KEY = 'users';
 
@@ -30,13 +30,7 @@ export function usersQueryOptions(params: UsersQueryParams) {
           limit: String(params.limit),
         },
       });
-      const result = await parseResponse(response);
-
-      if (!response.ok) {
-        throw new Error(result.meta.message || 'Failed to load users.');
-      }
-
-      return result;
+      return parseOkResponseOrThrow(response, 'Failed to load users.');
     },
   });
 }
@@ -56,21 +50,11 @@ export function useUpdateUserRoles() {
       userId: string;
       body: UpdateUserRolesBody;
     }) => {
-      try {
-        const response = await apiClient.users[':id'].roles.$put({
-          param: { id: userId },
-          json: body,
-        });
-        const result = await parseResponse(response);
-
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to update user roles.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to update user roles.');
-      }
+      const response = await apiClient.users[':id'].roles.$put({
+        param: { id: userId },
+        json: body,
+      });
+      return parseOkResponseOrThrow(response, 'Failed to update user roles.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
@@ -90,21 +74,11 @@ export function useUpdateUser() {
       userId: string;
       body: UpdateUserBody;
     }) => {
-      try {
-        const response = await apiClient.users[':id'].$put({
-          param: { id: userId },
-          json: body,
-        });
-        const result = await parseResponse(response);
-
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to update user.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to update user.');
-      }
+      const response = await apiClient.users[':id'].$put({
+        param: { id: userId },
+        json: body,
+      });
+      return parseOkResponseOrThrow(response, 'Failed to update user.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
@@ -118,18 +92,8 @@ export function useCreateUser() {
 
   return useMutation({
     mutationFn: async (body: CreateUserBody) => {
-      try {
-        const response = await apiClient.users.$post({ json: body });
-        const result = await parseResponse(response);
-
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to create user.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to create user.');
-      }
+      const response = await apiClient.users.$post({ json: body });
+      return parseOkResponseOrThrow(response, 'Failed to create user.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
@@ -143,18 +107,8 @@ export function useChangeMyPassword() {
 
   return useMutation({
     mutationFn: async (body: ChangeMyPasswordBody) => {
-      try {
-        const response = await apiClient.users.me['change-password'].$post({ json: body });
-        const result = await parseResponse(response);
-
-        if (!response.ok) {
-          throw new Error(result.meta.message || 'Failed to update password.');
-        }
-
-        return result;
-      } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || 'Failed to update password.');
-      }
+      const response = await apiClient.users.me['change-password'].$post({ json: body });
+      return parseOkResponseOrThrow(response, 'Failed to update password.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['authorization'] });

@@ -3,7 +3,7 @@ import { DetailedError, hc } from 'hono/client';
 import type { AppType } from '@workspace/api/routes';
 
 export { parseResponse, DetailedError } from 'hono/client';
-export type { InferRequestType, InferResponseType } from 'hono/client';
+export type { ClientResponse, InferRequestType, InferResponseType } from 'hono/client';
 
 // Default export triggers tsc to inline the full route types into the .d.ts,
 // removing the transitive dependency on @workspace/api/routes for consumers.

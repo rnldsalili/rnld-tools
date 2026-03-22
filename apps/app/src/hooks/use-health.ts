@@ -1,17 +1,12 @@
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
-import apiClient, { parseResponse } from '@/app/lib/api';
+import apiClient from '@/app/lib/api';
+import { parseOkResponseOrThrow } from '@/app/lib/api-response';
 
 export const healthQueryOptions = queryOptions({
   queryKey: ['health'],
   queryFn: async () => {
     const response = await apiClient.health.$get();
-    const result = await parseResponse(response);
-
-    if (!response.ok) {
-      throw new Error('Failed to load health status.');
-    }
-
-    return result;
+    return parseOkResponseOrThrow(response, 'Failed to load health status.');
   },
 });
 
