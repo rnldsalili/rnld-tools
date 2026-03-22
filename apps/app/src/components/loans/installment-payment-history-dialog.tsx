@@ -130,8 +130,8 @@ export function InstallmentPaymentHistoryDialog({
                       <TableCell>{formatCurrency(payment.appliedAmount, currency)}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
-                          <span className="font-medium">{payment.createdBy?.name ?? 'System'}</span>
-                          <span className="text-xs text-muted-foreground">{payment.createdBy?.email ?? '—'}</span>
+                          <span className="font-medium">{payment.createdBy.name || 'System'}</span>
+                          <span className="text-xs text-muted-foreground">{payment.createdBy.email || '—'}</span>
                         </div>
                       </TableCell>
                       <TableCell>

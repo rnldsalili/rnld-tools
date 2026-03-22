@@ -122,14 +122,14 @@ export function ManageAccessTab({ loanId }: ManageAccessTabProps) {
                     <span className="truncate text-sm font-medium">{assignment.user.name}</span>
                     <span className="truncate text-xs text-muted-foreground">{assignment.user.email}</span>
                     <span className="text-xs text-muted-foreground">
-                      Assigned by {assignment.createdBy?.name ?? 'Unknown'}
+                      Assigned by {assignment.createdBy.name}
                     </span>
                   </div>
                   <Button
                       variant="ghost"
                       className="gap-1.5 shrink-0 text-destructive hover:text-destructive/80"
                       onClick={() => setRevokeTarget(assignment)}
-                      disabled={revokeLoanMutation.isPending && revokeLoanMutation.variables?.userId === assignment.user.id}
+                      disabled={revokeLoanMutation.isPending && revokeLoanMutation.variables.userId === assignment.user.id}
                   >
                     <Trash2Icon className="size-3.5" />
                     Revoke
@@ -197,8 +197,8 @@ export function ManageAccessTab({ loanId }: ManageAccessTabProps) {
           <p className="text-sm text-muted-foreground">
             Are you sure you want to revoke access for{' '}
             <span className="font-medium text-foreground">
-              {revokeTarget?.user.name ?? 'this user'}
-            </span>
+              {revokeTarget!.user.name}
+            </span>{' '}
             ? They will no longer be able to view this loan.
           </p>
           <div className="flex justify-end gap-2">

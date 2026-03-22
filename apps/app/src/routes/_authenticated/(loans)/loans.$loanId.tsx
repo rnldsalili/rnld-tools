@@ -16,11 +16,11 @@ import {
   Button,
   DataTable,
   FileDropzone,
+  HorizontalTabs,
   Pagination,
   SectionCard,
   SectionCardContent,
   SectionCardHeader,
-  HorizontalTabs,
 } from '@workspace/ui';
 import {
   INSTALLMENTS_LIMIT,
@@ -209,6 +209,11 @@ function LoanDetailPage() {
 
   const installmentColumns: Array<ColumnDef<LoanInstallment>> = [
     {
+      id: 'number',
+      header: '#',
+      cell: ({ row }) => row.index + 1 + (installmentsPage - 1) * INSTALLMENTS_LIMIT,
+    },
+    {
       accessorKey: 'dueDate',
       header: 'Due Date',
       cell: ({ row }) => format(new Date(row.original.dueDate), 'MMM d, yyyy'),
@@ -340,152 +345,195 @@ function LoanDetailPage() {
                 value: 'details',
                 label: 'Details',
                 content: (
-                  <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-                    <SectionCard className="min-w-0">
-                      <SectionCardHeader className="flex items-center justify-between">
-                        <span className="text-sm font-semibold">Loan Details</span>
-                        {loan ? (
-                          <div className="flex items-center gap-1">
-                            <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
-                              <>
+                  <>
+                    <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+                      <SectionCard className="min-w-0">
+                        <SectionCardHeader className="flex items-center justify-between">
+                          <span className="text-sm font-semibold">Loan Details</span>
+                          {loan ? (
+                            <div className="flex items-center gap-1">
+                              <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                                <>
+                                  <Button
+                                      variant="ghost"
+                                      className="gap-1.5"
+                                      onClick={() => setIsShareDialogOpen(true)}
+                                  >
+                                    <Share2Icon className="size-3.5" />
+                                    Share
+                                  </Button>
+                                  <Button
+                                      variant="ghost"
+                                      className="gap-1.5"
+                                      onClick={() => setIsEditLoanOpen(true)}
+                                  >
+                                    <PencilIcon className="size-3.5" />
+                                    Edit
+                                  </Button>
+                                </>
+                              </Can>
+                              <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
                                 <Button
                                     variant="ghost"
-                                    className="gap-1.5"
-                                    onClick={() => setIsShareDialogOpen(true)}
+                                    className="gap-1.5 text-destructive hover:text-destructive/80"
+                                    onClick={() => setIsDeleteDialogOpen(true)}
+                                    disabled={isDeletePending}
                                 >
-                                  <Share2Icon className="size-3.5" />
-                                  Share
+                                  <Trash2Icon className="size-3.5" />
+                                  Delete
                                 </Button>
-                                <Button
-                                    variant="ghost"
-                                    className="gap-1.5"
-                                    onClick={() => setIsEditLoanOpen(true)}
-                                >
-                                  <PencilIcon className="size-3.5" />
-                                  Edit
-                                </Button>
-                              </>
-                            </Can>
-                            <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
-                              <Button
-                                  variant="ghost"
-                                  className="gap-1.5 text-destructive hover:text-destructive/80"
-                                  onClick={() => setIsDeleteDialogOpen(true)}
-                                  disabled={isDeletePending}
-                              >
-                                <Trash2Icon className="size-3.5" />
-                                Delete
-                              </Button>
-                            </Can>
-                          </div>
-                        ) : null}
-                      </SectionCardHeader>
-                      <SectionCardContent>
-                        {isLoading ? (
-                          <div className="grid grid-cols-2 gap-3">
-                            {Array.from({ length: 8 }).map((_, index) => (
-                              <div key={index} className="h-4 w-full animate-pulse rounded-sm bg-muted" />
-                            ))}
-                          </div>
-                        ) : loan ? (
-                          <div className="flex flex-col gap-3">
-                            <div className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
-                              <LoanField
-                                  label="Client"
-                                  value={loan.client.name}
-                                  trailing={<ClientStatusBadge status={loan.client.status} />}
-                              />
-                              <LoanField label="Amount" value={formatCurrency(loan.amount, loan.currency)} />
-                              <LoanField label="Installment Interval" value={installmentIntervalLabel ?? '—'} />
-                              <LoanField label="Loan Date" value={format(new Date(loan.loanDate), 'MMM d, yyyy')} />
-                              <LoanField
-                                  label="Interest Rate"
-                                  value={loan.interestRate != null ? `${loan.interestRate}%` : '—'}
-                              />
-                              <LoanField label="Updated" value={format(new Date(loan.updatedAt), 'MMM d, yyyy')} />
-                              <LoanField label="Phone" value={loan.client.phone ?? '—'} />
-                              <LoanField label="Email" value={loan.client.email ?? '—'} />
-                              <LoanField label="Total Excess" value={formatCurrency(loan.excessBalance, loan.currency)} />
-                              <LoanField label="Address" value={loan.client.address ?? '—'} />
+                              </Can>
                             </div>
-                            {loan.description ? (
-                              <div className="border-t border-border pt-3">
-                                <LoanField label="Description" value={loan.description} />
+                          ) : null}
+                        </SectionCardHeader>
+                        <SectionCardContent>
+                          {isLoading ? (
+                            <div className="grid grid-cols-2 gap-3">
+                              {Array.from({ length: 8 }).map((_, index) => (
+                                <div key={index} className="h-4 w-full animate-pulse rounded-sm bg-muted" />
+                              ))}
+                            </div>
+                          ) : loan ? (
+                            <div className="flex flex-col gap-3">
+                              <div className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
+                                <LoanField
+                                    label="Client"
+                                    value={loan.client.name}
+                                    trailing={<ClientStatusBadge status={loan.client.status} />}
+                                />
+                                <LoanField label="Amount" value={formatCurrency(loan.amount, loan.currency)} />
+                                <LoanField label="Installment Interval" value={installmentIntervalLabel ?? '—'} />
+                                <LoanField label="Loan Date" value={format(new Date(loan.loanDate), 'MMM d, yyyy')} />
+                                <LoanField
+                                    label="Interest Rate"
+                                    value={loan.interestRate != null ? `${loan.interestRate}%` : '—'}
+                                />
+                                <LoanField label="Updated" value={format(new Date(loan.updatedAt), 'MMM d, yyyy')} />
+                                <LoanField label="Phone" value={loan.client.phone ?? '—'} />
+                                <LoanField label="Email" value={loan.client.email ?? '—'} />
+                                <LoanField label="Total Excess" value={formatCurrency(loan.excessBalance, loan.currency)} />
+                                <LoanField label="Address" value={loan.client.address ?? '—'} />
                               </div>
-                            ) : null}
-                          </div>
-                        ) : null}
-                      </SectionCardContent>
-                    </SectionCard>
+                              {loan.description ? (
+                                <div className="border-t border-border pt-3">
+                                  <LoanField label="Description" value={loan.description} />
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </SectionCardContent>
+                      </SectionCard>
 
-                    <SectionCard className="min-w-0">
-                      <SectionCardHeader>
-                        <span className="text-sm font-semibold">Documents</span>
-                      </SectionCardHeader>
-                      <SectionCardContent>
-                        {templateEntries.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">No document templates configured.</p>
-                        ) : (
-                          <div className="flex flex-col gap-3">
-                            {templateEntries.map(({ template, document }: DocumentLinkTemplateEntry) => (
-                              <div key={template.id} className="flex flex-col gap-1.5">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs font-medium">{template.name}</span>
-                                    {document?.signedAt ? (
-                                      <Badge className="bg-green-600 text-xs text-white hover:bg-green-600">Signed</Badge>
-                                    ) : template.requiresSignature ? (
-                                      <Badge variant="secondary" className="text-xs">Unsigned</Badge>
-                                    ) : (
-                                      <Badge variant="secondary" className="text-xs">PDF only</Badge>
-                                    )}
-                                  </div>
-                                  {loan ? (
-                                    <Button
-                                        variant="ghost"
-                                        className="shrink-0"
-                                        disabled={
-                                          downloadLoanDocumentPdfMutation.isPending
-                                          && activeDownloadTemplateId === template.id
-                                        }
-                                        onClick={async () => {
-                                          try {
-                                            await downloadLoanDocumentPdfMutation.mutateAsync({
-                                              fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.client.name.replace(/\s+/g, '-').toLowerCase()}.pdf`,
-                                              loanId,
-                                              templateId: template.id,
-                                            });
-                                          } catch (error) {
-                                            toast.error(
-                                              error instanceof Error
-                                                ? error.message
-                                                : 'Failed to download document PDF.',
-                                            );
+                      <SectionCard className="min-w-0">
+                        <SectionCardHeader>
+                          <span className="text-sm font-semibold">Documents</span>
+                        </SectionCardHeader>
+                        <SectionCardContent>
+                          {templateEntries.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">No document templates configured.</p>
+                          ) : (
+                            <div className="flex flex-col gap-3">
+                              {templateEntries.map(({ template, document }: DocumentLinkTemplateEntry) => (
+                                <div key={template.id} className="flex flex-col gap-1.5">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-medium">{template.name}</span>
+                                      {document?.signedAt ? (
+                                        <Badge className="bg-green-600 text-xs text-white hover:bg-green-600">Signed</Badge>
+                                      ) : template.requiresSignature ? (
+                                        <Badge variant="secondary" className="text-xs">Unsigned</Badge>
+                                      ) : (
+                                        <Badge variant="secondary" className="text-xs">PDF only</Badge>
+                                      )}
+                                    </div>
+                                    {loan ? (
+                                      <Button
+                                          variant="ghost"
+                                          className="shrink-0"
+                                          disabled={
+                                            downloadLoanDocumentPdfMutation.isPending
+                                            && activeDownloadTemplateId === template.id
                                           }
-                                        }}
-                                    >
-                                      {downloadLoanDocumentPdfMutation.isPending
-                                        && activeDownloadTemplateId === template.id ? (
-                                          <Loader2Icon className="size-3 animate-spin" />
-                                        ) : (
-                                          <DownloadIcon className="size-3" />
-                                        )}
-                                      PDF
-                                    </Button>
+                                          onClick={async () => {
+                                            try {
+                                              await downloadLoanDocumentPdfMutation.mutateAsync({
+                                                fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.client.name.replace(/\s+/g, '-').toLowerCase()}.pdf`,
+                                                loanId,
+                                                templateId: template.id,
+                                              });
+                                            } catch (error) {
+                                              toast.error(
+                                                error instanceof Error
+                                                  ? error.message
+                                                  : 'Failed to download document PDF.',
+                                              );
+                                            }
+                                          }}
+                                      >
+                                        {downloadLoanDocumentPdfMutation.isPending
+                                          && activeDownloadTemplateId === template.id ? (
+                                            <Loader2Icon className="size-3 animate-spin" />
+                                          ) : (
+                                            <DownloadIcon className="size-3" />
+                                          )}
+                                        PDF
+                                      </Button>
+                                    ) : null}
+                                  </div>
+                                  {document?.signedAt ? (
+                                    <p className="text-xs text-muted-foreground">
+                                      Signed on {format(new Date(document.signedAt), 'MMM d, yyyy h:mm a')}
+                                    </p>
                                   ) : null}
                                 </div>
-                                {document?.signedAt ? (
-                                  <p className="text-xs text-muted-foreground">
-                                    Signed on {format(new Date(document.signedAt), 'MMM d, yyyy h:mm a')}
-                                  </p>
-                                ) : null}
-                              </div>
-                            ))}
+                              ))}
+                            </div>
+                          )}
+                        </SectionCardContent>
+                      </SectionCard>
+                    </div>
+                    <DataTable
+                        columns={installmentColumns}
+                        data={installments}
+                        isLoading={isLoading}
+                        getRowClassName={(row) => {
+                          const isOverdue = row.status === InstallmentStatus.PENDING && new Date(row.dueDate) < new Date();
+                          return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
+                        }}
+                        toolbar={(
+                        <div className="flex w-full items-center justify-between gap-2 mt-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-semibold">Installments</span>
+                            {!isLoading && installmentsPagination ? (
+                              <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                                {installmentsPagination.total}
+                              </Badge>
+                            ) : null}
                           </div>
-                        )}
-                      </SectionCardContent>
-                    </SectionCard>
-                  </div>
+                          <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+                            <Button
+                                className="gap-1.5"
+                                onClick={() => setIsAddInstallmentOpen(true)}
+                                disabled={isLoading || !loan}
+                            >
+                              <PlusIcon className="size-3.5" />
+                              Add Installment
+                            </Button>
+                          </Can>
+                        </div>
+                      )}
+                        footer={
+                        installmentsPagination && installmentsPagination.totalPages > 1 ? (
+                          <Pagination
+                              page={installmentsPage}
+                              totalPages={installmentsPagination.totalPages}
+                              onPageChange={setInstallmentsPage}
+                              isLoading={isLoading}
+                          />
+                        ) : undefined
+                      }
+                    />
+                  </>
                 ),
               },
               {
@@ -556,7 +604,7 @@ function LoanDetailPage() {
                                     {' • '}
                                     Uploaded {format(new Date(attachment.createdAt), 'MMM d, yyyy h:mm a')}
                                     {' • '}
-                                    {attachment.createdBy?.name ?? 'Unknown uploader'}
+                                    {attachment.createdBy.name}
                                   </p>
                                 </div>
                               </div>
@@ -599,7 +647,7 @@ function LoanDetailPage() {
                                       onClick={() => setSelectedAttachment(attachment)}
                                       disabled={
                                         deleteLoanAttachmentMutation.isPending
-                                        && deleteLoanAttachmentMutation.variables?.attachmentId === attachment.id
+                                        && deleteLoanAttachmentMutation.variables.attachmentId === attachment.id
                                       }
                                   >
                                     <Trash2Icon className="size-3.5" />
@@ -613,53 +661,6 @@ function LoanDetailPage() {
                       )}
                     </SectionCardContent>
                   </SectionCard>
-                ),
-              },
-              {
-                value: 'installments',
-                label: 'Installments',
-                content: (
-                  <DataTable
-                      columns={installmentColumns}
-                      data={installments}
-                      isLoading={isLoading}
-                      getRowClassName={(row) => {
-                        const isOverdue = row.status === InstallmentStatus.PENDING && new Date(row.dueDate) < new Date();
-                        return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
-                      }}
-                      toolbar={(
-                      <div className="flex w-full items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-semibold">Installments</span>
-                          {!isLoading && installmentsPagination ? (
-                            <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                              {installmentsPagination.total}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
-                          <Button
-                              className="gap-1.5"
-                              onClick={() => setIsAddInstallmentOpen(true)}
-                              disabled={isLoading || !loan}
-                          >
-                            <PlusIcon className="size-3.5" />
-                            Add Installment
-                          </Button>
-                        </Can>
-                      </div>
-                    )}
-                      footer={
-                      installmentsPagination && installmentsPagination.totalPages > 1 ? (
-                        <Pagination
-                            page={installmentsPage}
-                            totalPages={installmentsPagination.totalPages}
-                            onPageChange={setInstallmentsPage}
-                            isLoading={isLoading}
-                        />
-                      ) : undefined
-                    }
-                  />
                 ),
               },
               {
