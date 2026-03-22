@@ -34,7 +34,7 @@ export const getClients = createHandlers(
     const [clients, totalClients] = await Promise.all([
       prisma.client.findMany({
         where: clientFilter,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { name: 'asc' },
         skip: skipCount,
         take: limit,
         include: {
