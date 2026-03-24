@@ -16,6 +16,7 @@ import {
 } from '@workspace/ui';
 import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
 import { useChangeMyPassword } from '@/app/hooks/use-users';
+import { getDefaultAuthenticatedDestination } from '@/app/lib/default-authenticated-route';
 
 export const Route = createFileRoute('/_authenticated/change-password')({
   ssr: false,
@@ -33,12 +34,13 @@ function ChangePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const mustChangePassword = authorization?.user.mustChangePassword ?? false;
+  const defaultDestination = getDefaultAuthenticatedDestination(authorization);
 
   useEffect(() => {
     if (!mustChangePassword) {
-      void router.navigate({ to: '/dashboard', replace: true });
+      void router.navigate({ to: defaultDestination, replace: true });
     }
-  }, [mustChangePassword, router]);
+  }, [defaultDestination, mustChangePassword, router]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -57,7 +59,7 @@ function ChangePasswordPage() {
         newPassword,
       });
       toast.success('Password updated.');
-      await router.navigate({ to: '/dashboard', replace: true });
+      await router.navigate({ to: defaultDestination, replace: true });
     } catch (changePasswordError) {
       const message = changePasswordError instanceof Error
         ? changePasswordError.message

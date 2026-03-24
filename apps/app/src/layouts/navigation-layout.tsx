@@ -54,7 +54,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: Array<NavItem> = [
-  { to: '/dashboard', icon: LayoutDashboardIcon, label: 'Dashboard' },
+  {
+    to: '/dashboard',
+    icon: LayoutDashboardIcon,
+    label: 'Dashboard',
+    isVisible: (hasPermission) => hasPermission(PermissionModule.DASHBOARD, PermissionAction.VIEW),
+  },
   {
     to: '/clients',
     icon: UsersIcon,

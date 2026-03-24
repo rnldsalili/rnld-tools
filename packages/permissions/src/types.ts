@@ -1,4 +1,5 @@
 export enum PermissionModule {
+  DASHBOARD = 'dashboard',
   CLIENTS = 'clients',
   LOANS = 'loans',
   DOCUMENTS = 'documents',

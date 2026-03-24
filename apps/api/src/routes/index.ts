@@ -1,5 +1,6 @@
 import { createApp } from '@/api/app';
 import clientsRoute from '@/api/routes/clients/clients.index';
+import dashboardRoute from '@/api/routes/dashboard/dashboard.index';
 import documentsRoute from '@/api/routes/documents/documents.index';
 import authRoutes from '@/api/routes/auth/auth.index';
 import healthRoute from '@/api/routes/health/health.index';
@@ -18,6 +19,7 @@ export function registerRoutes(app: ReturnType<typeof createApp>) {
     .route('/auth', authRoutes)
     .route('/health', healthRoute)
     .route('/seed', seedRoute)
+    .route('/dashboard', dashboardRoute)
     .route('/clients', clientsRoute)
     .route('/loans', loansRoute)
     .route('/documents', documentsRoute)

@@ -17,6 +17,7 @@ import {
   Input,
   PasswordInput,
 } from '@workspace/ui';
+import { resolveDefaultAuthenticatedDestination } from '@/app/lib/default-authenticated-route';
 import { BasicLayout } from '@/app/layouts/basic-layout';
 
 export const Route = createFileRoute('/login')({
@@ -28,7 +29,8 @@ export const Route = createFileRoute('/login')({
   beforeLoad: async () => {
     const { data: session } = await authClient.getSession();
     if (session?.user) {
-      throw redirect({ to: '/dashboard' });
+      const destination = await resolveLoginDestination();
+      throw redirect({ to: destination });
     }
   },
   component: LoginPage,
@@ -58,7 +60,8 @@ function LoginPage() {
       return;
     }
 
-    router.history.push(resolveLoginDestination(next));
+    const destination = await resolveLoginDestination(next);
+    router.history.push(destination);
   }
 
   return (
@@ -164,15 +167,15 @@ function LoginPage() {
   );
 }
 
-function resolveLoginDestination(next: string | undefined) {
+async function resolveLoginDestination(next?: string) {
   if (!next || !next.startsWith('/') || next.startsWith('//')) {
-    return '/dashboard';
+    return resolveDefaultAuthenticatedDestination();
   }
 
   try {
     const parsed = new URL(next, 'https://rtools.local');
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    return '/dashboard';
+    return resolveDefaultAuthenticatedDestination();
   }
 }

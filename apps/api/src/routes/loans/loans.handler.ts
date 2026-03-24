@@ -17,6 +17,7 @@ import {
 import { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
+import { getAccessibleLoanFilter } from '@/api/lib/loans/access';
 import { createLoanLog } from '@/api/lib/loans/logs';
 import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
 import {
@@ -59,36 +60,6 @@ async function getLoanClientOrNull(prisma: ReturnType<typeof initializePrisma>, 
       status: true,
     },
   });
-}
-
-async function getAccessibleLoanFilter(
-  prisma: ReturnType<typeof initializePrisma>,
-  authenticatedUser: {
-    hasSuperAdminRole: boolean;
-    id: string;
-  },
-  search?: string,
-): Promise<Prisma.LoanWhereInput> {
-  const loanFilter: Prisma.LoanWhereInput = search
-    ? { client: { is: { name: { contains: search } } } }
-    : {};
-
-  if (authenticatedUser.hasSuperAdminRole) {
-    return loanFilter;
-  }
-
-  const assignedLoanIds = await prisma.loanAssignment.findMany({
-    where: { userId: authenticatedUser.id },
-    select: { loanId: true },
-  });
-  const assignedLoanIdSet = new Set(assignedLoanIds.map((assignedLoan) => assignedLoan.loanId));
-
-  loanFilter.OR = [
-    { createdByUserId: authenticatedUser.id },
-    { id: { in: Array.from(assignedLoanIdSet) } },
-  ];
-
-  return loanFilter;
 }
 
 function formatLoanInstallment<T extends {

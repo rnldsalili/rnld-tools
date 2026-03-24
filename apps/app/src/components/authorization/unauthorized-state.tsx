@@ -8,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@workspace/ui';
+import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
+import { getDefaultAuthenticatedDestination } from '@/app/lib/default-authenticated-route';
 
 export function UnauthorizedState({
   title = 'Access Restricted',
@@ -16,6 +18,9 @@ export function UnauthorizedState({
   title?: string;
   description?: string;
 }) {
+  const { authorization } = useAppAuthorization();
+  const defaultDestination = getDefaultAuthenticatedDestination(authorization);
+
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
@@ -55,7 +60,7 @@ export function UnauthorizedState({
                   Next Step
                 </p>
                 <p className="mt-1 text-sm text-foreground">
-                  Return to the dashboard or ask an administrator to review your role.
+                  Return to your first available workspace section or ask an administrator to review your role.
                 </p>
               </div>
             </div>
@@ -65,9 +70,9 @@ export function UnauthorizedState({
                 Permissions are enforced per section to protect records and settings.
               </p>
               <Button asChild className="gap-1.5 self-start">
-                <Link to="/dashboard">
+                <Link to={defaultDestination}>
                   <ArrowLeftIcon className="size-4" />
-                  Back to Dashboard
+                  Back to Workspace
                 </Link>
               </Button>
             </div>

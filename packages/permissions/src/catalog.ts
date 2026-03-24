@@ -3,6 +3,12 @@ import { PermissionAction, PermissionModule, RoleSlug } from './types';
 import type { RoleDefinition } from './types';
 
 export const permissionCatalog = {
+  [PermissionModule.DASHBOARD]: {
+    label: 'Dashboard',
+    actions: {
+      [PermissionAction.VIEW]: 'View',
+    },
+  },
   [PermissionModule.CLIENTS]: {
     label: 'Clients',
     actions: {
