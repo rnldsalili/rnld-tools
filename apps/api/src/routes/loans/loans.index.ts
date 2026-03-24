@@ -4,7 +4,14 @@ import loanAssignmentsRoute from './assignments/loans.assignments.index';
 import documentLogsRoute from './document-logs/document-logs.index';
 import loanDocumentsRoute from './documents/documents.index';
 import loanLogsRoute from './loan-logs/logs.index';
-import { createLoan, deleteLoan, getLoan, getLoans, updateLoan } from './loans.handler';
+import {
+  createLoan,
+  deleteLoan,
+  getInstallmentAttention,
+  getLoan,
+  getLoans,
+  updateLoan,
+} from './loans.handler';
 import documentLinksRoute from './document-links/document-links.index';
 import installmentsRoute from './installments/installments.index';
 import { createRouter } from '@/api/app';
@@ -14,6 +21,7 @@ import { authorize } from '@/api/middlewares/authorization.middleware';
 const loansRoute = createRouter()
   .use('*', requireAuth)
   .get('/', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoans)
+  .get('/installments/attention', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getInstallmentAttention)
   .get('/:id', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoan)
   .post('/', authorize(PermissionModule.LOANS, PermissionAction.CREATE), ...createLoan)
   .put('/:id', authorize(PermissionModule.LOANS, PermissionAction.UPDATE), ...updateLoan)

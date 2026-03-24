@@ -8,11 +8,15 @@ import { isPlainRecord } from '@/app/lib/value-guards';
 const LOANS_QUERY_KEY = 'loans';
 const LOAN_QUERY_KEY = 'loan';
 export const LOAN_LOGS_QUERY_KEY = 'loan-logs';
+const ATTENTION_INSTALLMENTS_QUERY_KEY = 'attention-installments';
 const INSTALLMENT_PAYMENTS_QUERY_KEY = 'installment-payments';
 const LOAN_ASSIGNMENTS_QUERY_KEY = 'loan-assignments';
 
 export type LoansListResponse = InferResponseType<typeof apiClient.loans.$get, 200>;
 type LoanListItemBase = LoansListResponse['data']['loans'][number];
+type AttentionInstallmentsGetRoute = (typeof apiClient.loans)['installments']['attention']['$get'];
+export type AttentionInstallmentsResponse = InferResponseType<AttentionInstallmentsGetRoute, 200>;
+type AttentionInstallmentItemBase = AttentionInstallmentsResponse['data']['installments'][number];
 
 export type LoanDetailResponse = InferResponseType<typeof apiClient.loans[':id']['$get'], 200>;
 type LoanDetailBase = LoanDetailResponse['data']['loan'];
@@ -88,6 +92,12 @@ export type LoanDetail = Omit<LoanDetailBase, 'client' | 'excessBalance' | 'inst
   notificationsEnabled: boolean;
 };
 
+export type LoanAttentionInstallment = Omit<AttentionInstallmentItemBase, 'attentionCategory' | 'client' | 'status'> & {
+  attentionCategory: AttentionInstallmentCategory;
+  client: Pick<LoanClient, 'id' | 'name'>;
+  status: string;
+};
+
 type CreateLoanBody = InferRequestType<typeof apiClient.loans.$post>['json'];
 type UpdateLoanBody = InferRequestType<UpdateLoanRoute>['json'];
 type UpdateInstallmentBody = InferRequestType<UpdateInstallmentRoute>['json'];
@@ -123,6 +133,8 @@ interface InstallmentPaymentsQueryParams {
 type LoanAssignmentsGetRoute = (typeof apiClient.loans)[':loanId']['assignments']['$get'];
 type AssignLoanUserRoute = (typeof apiClient.loans)[':loanId']['assignments']['$post'];
 
+export type AttentionInstallmentCategory = 'overdue' | 'near_due';
+
 export type LoanAssignmentsResponse = InferResponseType<LoanAssignmentsGetRoute, 200>;
 export type LoanAssignment = LoanAssignmentsResponse['data']['assignments'][number];
 type AssignLoanUserBody = InferRequestType<AssignLoanUserRoute>['json'];
@@ -150,6 +162,15 @@ function normalizeLoanDetail(loan: LoanDetailBase): LoanDetail {
     installments: getLoanInstallments(loan),
     installmentsPagination: getPagination(loan, 'installmentsPagination'),
     notificationsEnabled: getOptionalBoolean(loan, 'notificationsEnabled') ?? true,
+  };
+}
+
+function normalizeAttentionInstallment(installment: AttentionInstallmentItemBase): LoanAttentionInstallment {
+  return {
+    ...installment,
+    attentionCategory: getAttentionInstallmentCategory(installment),
+    client: getAttentionInstallmentClient(installment),
+    status: getOptionalString(installment, 'status') ?? '',
   };
 }
 
@@ -182,6 +203,25 @@ function getLoanClient(loan: object): LoanClient {
   };
 }
 
+function getAttentionInstallmentClient(installment: object): Pick<LoanClient, 'id' | 'name'> {
+  const clientValue = Reflect.get(installment, 'client');
+  if (
+    isPlainRecord(clientValue)
+    && typeof clientValue.id === 'string'
+    && typeof clientValue.name === 'string'
+  ) {
+    return {
+      id: clientValue.id,
+      name: clientValue.name,
+    };
+  }
+
+  return {
+    id: '',
+    name: '',
+  };
+}
+
 function getPagination(source: object, key: string): PaginationState {
   const paginationValue = Reflect.get(source, key);
   if (
@@ -205,6 +245,11 @@ function getPagination(source: object, key: string): PaginationState {
     total: 0,
     totalPages: 0,
   };
+}
+
+function getAttentionInstallmentCategory(source: object): AttentionInstallmentCategory {
+  const value = Reflect.get(source, 'attentionCategory');
+  return value === 'near_due' ? 'near_due' : 'overdue';
 }
 
 function getLoanInstallments(loan: object): Array<LoanInstallment> {
@@ -277,6 +322,7 @@ function invalidateLoanQueries(queryClient: ReturnType<typeof useQueryClient>, p
   loanId: string;
 }) {
   queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
+  queryClient.invalidateQueries({ queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY] });
   queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, params.loanId] });
   queryClient.invalidateQueries({ queryKey: [LOAN_LOGS_QUERY_KEY, params.loanId] });
 
@@ -305,6 +351,30 @@ export function loansQueryOptions(params: LoansQueryParams) {
         data: {
           ...result.data,
           loans: result.data.loans.map(normalizeLoanListItem),
+        },
+      };
+    },
+  });
+}
+
+export function attentionInstallmentsQueryOptions(params: LoansQueryParams) {
+  return queryOptions({
+    queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY, params],
+    queryFn: async () => {
+      const response = await apiClient.loans.installments.attention.$get({
+        query: {
+          search: params.search,
+          page: String(params.page),
+          limit: String(params.limit),
+        },
+      });
+      const result = await parseOkResponseOrThrow(response, 'Failed to load installments requiring attention.');
+
+      return {
+        ...result,
+        data: {
+          ...result.data,
+          installments: result.data.installments.map(normalizeAttentionInstallment),
         },
       };
     },
@@ -370,6 +440,10 @@ export function installmentPaymentsQueryOptions(params: InstallmentPaymentsQuery
 
 export function useLoans(params: LoansQueryParams) {
   return useQuery(loansQueryOptions(params));
+}
+
+export function useAttentionInstallments(params: LoansQueryParams) {
+  return useQuery(attentionInstallmentsQueryOptions(params));
 }
 
 export function useLoan(params: LoanQueryParams) {
@@ -448,6 +522,7 @@ export function useCreateLoan() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY] });
     },
   });
 }
@@ -489,6 +564,7 @@ export function useDeleteLoan() {
     },
     onSuccess: (_data, loanId) => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY] });
       queryClient.removeQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
       queryClient.removeQueries({ queryKey: [LOAN_LOGS_QUERY_KEY, loanId] });
     },

@@ -10,6 +10,7 @@ import {
   loanCreateSchema,
   loanGetQuerySchema,
   loanIdParamSchema,
+  loanInstallmentAttentionQuerySchema,
   loanListQuerySchema,
   loanUpdateSchema,
 } from './loans.schema';
@@ -18,9 +19,16 @@ import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { createLoanLog } from '@/api/lib/loans/logs';
 import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
-import { getInstallmentRemainingAmount, roundCurrencyAmount } from '@/api/lib/loans/payments';
+import {
+  getInstallmentRemainingAmount,
+  getInstallmentStatus,
+  getManilaDayRange,
+  roundCurrencyAmount,
+} from '@/api/lib/loans/payments';
 import { deleteStoredObject } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
+
+type InstallmentAttentionCategory = 'overdue' | 'near_due';
 
 const addInterval = (startDate: Date, interval: InstallmentInterval, step: number): Date => {
   const originalDay = startDate.getDate();
@@ -53,6 +61,36 @@ async function getLoanClientOrNull(prisma: ReturnType<typeof initializePrisma>, 
   });
 }
 
+async function getAccessibleLoanFilter(
+  prisma: ReturnType<typeof initializePrisma>,
+  authenticatedUser: {
+    hasSuperAdminRole: boolean;
+    id: string;
+  },
+  search?: string,
+): Promise<Prisma.LoanWhereInput> {
+  const loanFilter: Prisma.LoanWhereInput = search
+    ? { client: { is: { name: { contains: search } } } }
+    : {};
+
+  if (authenticatedUser.hasSuperAdminRole) {
+    return loanFilter;
+  }
+
+  const assignedLoanIds = await prisma.loanAssignment.findMany({
+    where: { userId: authenticatedUser.id },
+    select: { loanId: true },
+  });
+  const assignedLoanIdSet = new Set(assignedLoanIds.map((assignedLoan) => assignedLoan.loanId));
+
+  loanFilter.OR = [
+    { createdByUserId: authenticatedUser.id },
+    { id: { in: Array.from(assignedLoanIdSet) } },
+  ];
+
+  return loanFilter;
+}
+
 function formatLoanInstallment<T extends {
   amount: number;
   paidAmount: number;
@@ -75,6 +113,25 @@ function formatLoanInstallment<T extends {
   };
 }
 
+function getInstallmentAttentionCategory(params: {
+  dueDate: Date;
+  currentManilaDayStart: Date;
+  nearDueWindowEnd: Date;
+}): InstallmentAttentionCategory | null {
+  if (params.dueDate.getTime() < params.currentManilaDayStart.getTime()) {
+    return 'overdue';
+  }
+
+  if (
+    params.dueDate.getTime() >= params.currentManilaDayStart.getTime()
+    && params.dueDate.getTime() < params.nearDueWindowEnd.getTime()
+  ) {
+    return 'near_due';
+  }
+
+  return null;
+}
+
 export const getLoans = createHandlers(
   validate('query', loanListQuerySchema),
   async (c) => {
@@ -83,22 +140,7 @@ export const getLoans = createHandlers(
     const authenticatedUser = c.get('user');
 
     const skipCount = (page - 1) * limit;
-    const loanFilter: Prisma.LoanWhereInput = search
-      ? { client: { is: { name: { contains: search } } } }
-      : {};
-
-    if (!authenticatedUser.hasSuperAdminRole) {
-      const assignedLoanIds = await prisma.loanAssignment.findMany({
-        where: { userId: authenticatedUser.id },
-        select: { loanId: true },
-      });
-      const assignedLoanIdSet = new Set(assignedLoanIds.map((a) => a.loanId));
-
-      loanFilter.OR = [
-        { createdByUserId: authenticatedUser.id },
-        { id: { in: Array.from(assignedLoanIdSet) } },
-      ];
-    }
+    const loanFilter = await getAccessibleLoanFilter(prisma, authenticatedUser, search);
 
     const [loans, totalLoans] = await Promise.all([
       prisma.loan.findMany({
@@ -136,6 +178,159 @@ export const getLoans = createHandlers(
           limit,
           total: totalLoans,
           totalPages: Math.ceil(totalLoans / limit),
+        },
+      },
+    }, 200);
+  },
+);
+
+export const getInstallmentAttention = createHandlers(
+  validate('query', loanInstallmentAttentionQuerySchema),
+  async (c) => {
+    const { search, page, limit } = c.req.valid('query');
+    const prisma = initializePrisma(c.env);
+    const authenticatedUser = c.get('user');
+    const skipCount = (page - 1) * limit;
+    const referenceDate = new Date();
+    const currentManilaDayStart = getManilaDayRange(referenceDate).start;
+    const nearDueWindowEnd = getManilaDayRange(referenceDate, 3).start;
+    const loanFilter = await getAccessibleLoanFilter(prisma, authenticatedUser, search);
+
+    const baseInstallmentFilter: Prisma.LoanInstallmentWhereInput = {
+      paidAt: null,
+      status: {
+        not: InstallmentStatus.PAID,
+      },
+      loan: {
+        is: loanFilter,
+      },
+    };
+    const overdueInstallmentFilter: Prisma.LoanInstallmentWhereInput = {
+      ...baseInstallmentFilter,
+      dueDate: {
+        lt: currentManilaDayStart,
+      },
+    };
+    const nearDueInstallmentFilter: Prisma.LoanInstallmentWhereInput = {
+      ...baseInstallmentFilter,
+      dueDate: {
+        gte: currentManilaDayStart,
+        lt: nearDueWindowEnd,
+      },
+    };
+
+    const [overdueInstallmentCount, nearDueInstallmentCount] = await Promise.all([
+      prisma.loanInstallment.count({ where: overdueInstallmentFilter }),
+      prisma.loanInstallment.count({ where: nearDueInstallmentFilter }),
+    ]);
+    const totalInstallments = overdueInstallmentCount + nearDueInstallmentCount;
+    const overdueTakeCount = skipCount < overdueInstallmentCount
+      ? Math.min(limit, overdueInstallmentCount - skipCount)
+      : 0;
+    const overdueSkipCount = skipCount < overdueInstallmentCount ? skipCount : overdueInstallmentCount;
+    const nearDueSkipCount = skipCount > overdueInstallmentCount
+      ? skipCount - overdueInstallmentCount
+      : 0;
+    const nearDueTakeCount = limit - overdueTakeCount;
+
+    const installmentSelect = {
+      id: true,
+      loanId: true,
+      dueDate: true,
+      amount: true,
+      paidAmount: true,
+      status: true,
+      loan: {
+        select: {
+          currency: true,
+          client: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    } satisfies Prisma.LoanInstallmentSelect;
+
+    const [overdueInstallments, nearDueInstallments] = await Promise.all([
+      overdueTakeCount > 0
+        ? prisma.loanInstallment.findMany({
+            where: overdueInstallmentFilter,
+            orderBy: [
+              { dueDate: 'asc' },
+              { id: 'asc' },
+            ],
+            skip: overdueSkipCount,
+            take: overdueTakeCount,
+            select: installmentSelect,
+          })
+        : Promise.resolve([]),
+      nearDueTakeCount > 0
+        ? prisma.loanInstallment.findMany({
+            where: nearDueInstallmentFilter,
+            orderBy: [
+              { dueDate: 'asc' },
+              { id: 'asc' },
+            ],
+            skip: nearDueSkipCount,
+            take: nearDueTakeCount,
+            select: installmentSelect,
+          })
+        : Promise.resolve([]),
+    ]);
+
+    const installments = [...overdueInstallments, ...nearDueInstallments]
+      .map((installment) => {
+        const normalizedStatus = getInstallmentStatus({
+          amount: installment.amount,
+          paidAmount: installment.paidAmount,
+          dueDate: installment.dueDate,
+          currentStatus: installment.status,
+          referenceDate,
+        });
+
+        if (normalizedStatus === InstallmentStatus.PAID) {
+          return null;
+        }
+
+        const attentionCategory = getInstallmentAttentionCategory({
+          dueDate: installment.dueDate,
+          currentManilaDayStart,
+          nearDueWindowEnd,
+        });
+
+        if (!attentionCategory) {
+          return null;
+        }
+
+        return {
+          id: installment.id,
+          loanId: installment.loanId,
+          dueDate: installment.dueDate.toISOString(),
+          amount: installment.amount,
+          paidAmount: roundCurrencyAmount(installment.paidAmount),
+          remainingAmount: getInstallmentRemainingAmount(installment.amount, installment.paidAmount),
+          currency: installment.loan.currency,
+          status: normalizedStatus,
+          attentionCategory,
+          client: {
+            id: installment.loan.client.id,
+            name: installment.loan.client.name,
+          },
+        };
+      })
+      .filter((installment) => installment !== null);
+
+    return c.json({
+      meta: { code: 200, message: 'Installments requiring attention retrieved successfully' },
+      data: {
+        installments,
+        pagination: {
+          page,
+          limit,
+          total: totalInstallments,
+          totalPages: Math.ceil(totalInstallments / limit),
         },
       },
     }, 200);
