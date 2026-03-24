@@ -1,14 +1,30 @@
-import { useRouterState } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { useRouter, useRouterState } from '@tanstack/react-router';
 
 export function GlobalLoadingIndicator() {
-  const routerState = useRouterState({
-    select: (state) => ({
-      isLoading: state.isLoading,
-      status: state.status,
-    }),
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const isRouterLoading = useRouterState({
+    select: (state) => state.isLoading,
   });
 
-  const isLoading = routerState.isLoading || routerState.status === 'pending';
+  useEffect(() => {
+    const unsubscribeBeforeLoad = router.subscribe('onBeforeLoad', () => {
+      setIsNavigating(true);
+    });
+
+    const unsubscribeResolved = router.subscribe('onResolved', () => {
+      setIsNavigating(false);
+    });
+
+    return () => {
+      unsubscribeBeforeLoad();
+      unsubscribeResolved();
+      setIsNavigating(false);
+    };
+  }, [router]);
+
+  const isLoading = isRouterLoading || isNavigating;
 
   if (!isLoading) {
     return null;
