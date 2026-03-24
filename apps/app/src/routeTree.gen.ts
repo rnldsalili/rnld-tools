@@ -20,6 +20,7 @@ import { Route as AuthenticatedChangePasswordRouteImport } from './routes/_authe
 import { Route as toolsUuidGeneratorRouteImport } from './routes/(tools)/uuid-generator'
 import { Route as toolsSecretGeneratorRouteImport } from './routes/(tools)/secret-generator'
 import { Route as toolsPasswordGeneratorRouteImport } from './routes/(tools)/password-generator'
+import { Route as toolsLoanCalculatorRouteImport } from './routes/(tools)/loan-calculator'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
 import { Route as PublicDocumentsTokenRouteImport } from './routes/_public/documents/$token'
 import { Route as AuthenticatedSettingsUsersRouteImport } from './routes/_authenticated/settings/users'
@@ -89,6 +90,11 @@ const toolsSecretGeneratorRoute = toolsSecretGeneratorRouteImport.update({
 const toolsPasswordGeneratorRoute = toolsPasswordGeneratorRouteImport.update({
   id: '/password-generator',
   path: '/password-generator',
+  getParentRoute: () => toolsRouteRoute,
+} as any)
+const toolsLoanCalculatorRoute = toolsLoanCalculatorRouteImport.update({
+  id: '/loan-calculator',
+  path: '/loan-calculator',
   getParentRoute: () => toolsRouteRoute,
 } as any)
 const AuthenticatedSettingsRouteRoute =
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/loan-calculator': typeof toolsLoanCalculatorRoute
   '/password-generator': typeof toolsPasswordGeneratorRoute
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/loan-calculator': typeof toolsLoanCalculatorRoute
   '/password-generator': typeof toolsPasswordGeneratorRoute
   '/secret-generator': typeof toolsSecretGeneratorRoute
   '/uuid-generator': typeof toolsUuidGeneratorRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
+  '/(tools)/loan-calculator': typeof toolsLoanCalculatorRoute
   '/(tools)/password-generator': typeof toolsPasswordGeneratorRoute
   '/(tools)/secret-generator': typeof toolsSecretGeneratorRoute
   '/(tools)/uuid-generator': typeof toolsUuidGeneratorRoute
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/login'
     | '/settings'
+    | '/loan-calculator'
     | '/password-generator'
     | '/secret-generator'
     | '/uuid-generator'
@@ -307,6 +317,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/login'
     | '/settings'
+    | '/loan-calculator'
     | '/password-generator'
     | '/secret-generator'
     | '/uuid-generator'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/login'
     | '/_authenticated/settings'
+    | '/(tools)/loan-calculator'
     | '/(tools)/password-generator'
     | '/(tools)/secret-generator'
     | '/(tools)/uuid-generator'
@@ -442,6 +454,13 @@ declare module '@tanstack/react-router' {
       path: '/password-generator'
       fullPath: '/password-generator'
       preLoaderRoute: typeof toolsPasswordGeneratorRouteImport
+      parentRoute: typeof toolsRouteRoute
+    }
+    '/(tools)/loan-calculator': {
+      id: '/(tools)/loan-calculator'
+      path: '/loan-calculator'
+      fullPath: '/loan-calculator'
+      preLoaderRoute: typeof toolsLoanCalculatorRouteImport
       parentRoute: typeof toolsRouteRoute
     }
     '/_authenticated/settings': {
@@ -567,12 +586,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface toolsRouteRouteChildren {
+  toolsLoanCalculatorRoute: typeof toolsLoanCalculatorRoute
   toolsPasswordGeneratorRoute: typeof toolsPasswordGeneratorRoute
   toolsSecretGeneratorRoute: typeof toolsSecretGeneratorRoute
   toolsUuidGeneratorRoute: typeof toolsUuidGeneratorRoute
 }
 
 const toolsRouteRouteChildren: toolsRouteRouteChildren = {
+  toolsLoanCalculatorRoute: toolsLoanCalculatorRoute,
   toolsPasswordGeneratorRoute: toolsPasswordGeneratorRoute,
   toolsSecretGeneratorRoute: toolsSecretGeneratorRoute,
   toolsUuidGeneratorRoute: toolsUuidGeneratorRoute,

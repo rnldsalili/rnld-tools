@@ -3,6 +3,7 @@ import {
   ArrowRightIcon,
   FingerprintIcon,
   KeyRoundIcon,
+  HandCoinsIcon,
   LayoutDashboardIcon,
   LockIcon,
   ShieldCheckIcon,
@@ -45,6 +46,13 @@ const FREE_TOOLS = [
       'Create cryptographically secure random secrets in base64, base64url, or hex encoding.',
     icon: ShieldCheckIcon,
     href: '/secret-generator',
+  },
+  {
+    title: 'Loan Calculator',
+    description:
+      'Estimate loan payments, total interest, processing fees, and the expected amount released.',
+    icon: HandCoinsIcon,
+    href: '/loan-calculator',
   },
 ];
 
