@@ -9,6 +9,7 @@ const LOANS_QUERY_KEY = 'loans';
 const LOAN_QUERY_KEY = 'loan';
 export const LOAN_LOGS_QUERY_KEY = 'loan-logs';
 const ATTENTION_INSTALLMENTS_QUERY_KEY = 'attention-installments';
+const LATEST_PAID_INSTALLMENTS_QUERY_KEY = 'latest-paid-installments';
 const INSTALLMENT_PAYMENTS_QUERY_KEY = 'installment-payments';
 const LOAN_ASSIGNMENTS_QUERY_KEY = 'loan-assignments';
 
@@ -17,6 +18,9 @@ type LoanListItemBase = LoansListResponse['data']['loans'][number];
 type AttentionInstallmentsGetRoute = (typeof apiClient.loans)['installments']['attention']['$get'];
 export type AttentionInstallmentsResponse = InferResponseType<AttentionInstallmentsGetRoute, 200>;
 type AttentionInstallmentItemBase = AttentionInstallmentsResponse['data']['installments'][number];
+type LatestPaidInstallmentsGetRoute = (typeof apiClient.loans)['installments']['latest-payments']['$get'];
+export type LatestPaidInstallmentsResponse = InferResponseType<LatestPaidInstallmentsGetRoute, 200>;
+type LatestPaidInstallmentItemBase = LatestPaidInstallmentsResponse['data']['installments'][number];
 
 export type LoanDetailResponse = InferResponseType<typeof apiClient.loans[':id']['$get'], 200>;
 type LoanDetailBase = LoanDetailResponse['data']['loan'];
@@ -98,6 +102,12 @@ export type LoanAttentionInstallment = Omit<AttentionInstallmentItemBase, 'atten
   status: string;
 };
 
+export type LoanPaidInstallment = Omit<LatestPaidInstallmentItemBase, 'client' | 'status'> & {
+  client: Pick<LoanClient, 'id' | 'name'>;
+  paidByUser: Pick<LoanClient, 'id' | 'name'>;
+  status: string;
+};
+
 type CreateLoanBody = InferRequestType<typeof apiClient.loans.$post>['json'];
 type UpdateLoanBody = InferRequestType<UpdateLoanRoute>['json'];
 type UpdateInstallmentBody = InferRequestType<UpdateInstallmentRoute>['json'];
@@ -109,6 +119,7 @@ interface LoansQueryParams {
   search: string;
   page: number;
   limit: number;
+  enabled?: boolean;
 }
 
 interface LoanQueryParams {
@@ -174,6 +185,15 @@ function normalizeAttentionInstallment(installment: AttentionInstallmentItemBase
   };
 }
 
+function normalizePaidInstallment(installment: LatestPaidInstallmentItemBase): LoanPaidInstallment {
+  return {
+    ...installment,
+    client: getAttentionInstallmentClient(installment),
+    paidByUser: getInstallmentActor(installment, 'paidByUser'),
+    status: getOptionalString(installment, 'status') ?? '',
+  };
+}
+
 function getLoanInstallmentCount(loan: object) {
   const countValue = Reflect.get(loan, '_count');
   if (!isPlainRecord(countValue) || typeof countValue.installments !== 'number') {
@@ -204,15 +224,19 @@ function getLoanClient(loan: object): LoanClient {
 }
 
 function getAttentionInstallmentClient(installment: object): Pick<LoanClient, 'id' | 'name'> {
-  const clientValue = Reflect.get(installment, 'client');
+  return getInstallmentActor(installment, 'client');
+}
+
+function getInstallmentActor(source: object, key: string): Pick<LoanClient, 'id' | 'name'> {
+  const actorValue = Reflect.get(source, key);
   if (
-    isPlainRecord(clientValue)
-    && typeof clientValue.id === 'string'
-    && typeof clientValue.name === 'string'
+    isPlainRecord(actorValue)
+    && typeof actorValue.id === 'string'
+    && typeof actorValue.name === 'string'
   ) {
     return {
-      id: clientValue.id,
-      name: clientValue.name,
+      id: actorValue.id,
+      name: actorValue.name,
     };
   }
 
@@ -323,6 +347,7 @@ function invalidateLoanQueries(queryClient: ReturnType<typeof useQueryClient>, p
 }) {
   queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
   queryClient.invalidateQueries({ queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY] });
+  queryClient.invalidateQueries({ queryKey: [LATEST_PAID_INSTALLMENTS_QUERY_KEY] });
   queryClient.invalidateQueries({ queryKey: [LOAN_QUERY_KEY, params.loanId] });
   queryClient.invalidateQueries({ queryKey: [LOAN_LOGS_QUERY_KEY, params.loanId] });
 
@@ -335,7 +360,7 @@ function invalidateLoanQueries(queryClient: ReturnType<typeof useQueryClient>, p
 
 export function loansQueryOptions(params: LoansQueryParams) {
   return queryOptions({
-    queryKey: [LOANS_QUERY_KEY, params],
+    queryKey: [LOANS_QUERY_KEY, { search: params.search, page: params.page, limit: params.limit }],
     queryFn: async () => {
       const response = await apiClient.loans.$get({
         query: {
@@ -354,12 +379,13 @@ export function loansQueryOptions(params: LoansQueryParams) {
         },
       };
     },
+    enabled: params.enabled ?? true,
   });
 }
 
 export function attentionInstallmentsQueryOptions(params: LoansQueryParams) {
   return queryOptions({
-    queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY, params],
+    queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY, { search: params.search, page: params.page, limit: params.limit }],
     queryFn: async () => {
       const response = await apiClient.loans.installments.attention.$get({
         query: {
@@ -378,6 +404,32 @@ export function attentionInstallmentsQueryOptions(params: LoansQueryParams) {
         },
       };
     },
+    enabled: params.enabled ?? true,
+  });
+}
+
+export function latestPaidInstallmentsQueryOptions(params: LoansQueryParams) {
+  return queryOptions({
+    queryKey: [LATEST_PAID_INSTALLMENTS_QUERY_KEY, { search: params.search, page: params.page, limit: params.limit }],
+    queryFn: async () => {
+      const response = await apiClient.loans.installments['latest-payments'].$get({
+        query: {
+          search: params.search,
+          page: String(params.page),
+          limit: String(params.limit),
+        },
+      });
+      const result = await parseOkResponseOrThrow(response, 'Failed to load latest paid installments.');
+
+      return {
+        ...result,
+        data: {
+          ...result.data,
+          installments: result.data.installments.map(normalizePaidInstallment),
+        },
+      };
+    },
+    enabled: params.enabled ?? true,
   });
 }
 
@@ -444,6 +496,10 @@ export function useLoans(params: LoansQueryParams) {
 
 export function useAttentionInstallments(params: LoansQueryParams) {
   return useQuery(attentionInstallmentsQueryOptions(params));
+}
+
+export function useLatestPaidInstallments(params: LoansQueryParams) {
+  return useQuery(latestPaidInstallmentsQueryOptions(params));
 }
 
 export function useLoan(params: LoanQueryParams) {
@@ -523,6 +579,7 @@ export function useCreateLoan() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [LATEST_PAID_INSTALLMENTS_QUERY_KEY] });
     },
   });
 }
@@ -565,6 +622,7 @@ export function useDeleteLoan() {
     onSuccess: (_data, loanId) => {
       queryClient.invalidateQueries({ queryKey: [LOANS_QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: [ATTENTION_INSTALLMENTS_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: [LATEST_PAID_INSTALLMENTS_QUERY_KEY] });
       queryClient.removeQueries({ queryKey: [LOAN_QUERY_KEY, loanId] });
       queryClient.removeQueries({ queryKey: [LOAN_LOGS_QUERY_KEY, loanId] });
     },

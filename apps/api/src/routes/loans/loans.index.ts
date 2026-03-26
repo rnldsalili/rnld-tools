@@ -8,6 +8,7 @@ import {
   createLoan,
   deleteLoan,
   getInstallmentAttention,
+  getLatestPaidInstallments,
   getLoan,
   getLoans,
   updateLoan,
@@ -22,6 +23,7 @@ const loansRoute = createRouter()
   .use('*', requireAuth)
   .get('/', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoans)
   .get('/installments/attention', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getInstallmentAttention)
+  .get('/installments/latest-payments', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLatestPaidInstallments)
   .get('/:id', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoan)
   .post('/', authorize(PermissionModule.LOANS, PermissionAction.CREATE), ...createLoan)
   .put('/:id', authorize(PermissionModule.LOANS, PermissionAction.UPDATE), ...updateLoan)

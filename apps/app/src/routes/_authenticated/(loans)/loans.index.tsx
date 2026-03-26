@@ -1,50 +1,82 @@
-import { Link, createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import { HandCoinsIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { LOANS_LIMIT } from '@workspace/constants';
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import { Can, useCan } from '@workspace/permissions/react';
-import { Badge, Button, DataTable, Input, Pagination, cn } from '@workspace/ui';
+import { Badge, Button, DataTable, HorizontalTabs, Input, Pagination, cn } from '@workspace/ui';
+import { z } from 'zod';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { AttentionInstallmentCategory, LoanAttentionInstallment, LoanListItem } from '@/app/hooks/use-loan';
+import type {
+  AttentionInstallmentCategory,
+  LoanAttentionInstallment,
+  LoanListItem,
+  LoanPaidInstallment,
+} from '@/app/hooks/use-loan';
 import { CreateLoanDialog } from '@/app/components/loans/create-loan-dialog';
 import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
 import { useDebounce } from '@/app/hooks/use-debounce';
-import { useAttentionInstallments, useLoans } from '@/app/hooks/use-loan';
+import { useAttentionInstallments, useLatestPaidInstallments, useLoans } from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
+
+const LOANS_TABS = ['all', 'review', 'latest-payments'] as const;
+
+type LoansTab = typeof LOANS_TABS[number];
+
+function isLoansTab(value: string): value is LoansTab {
+  return LOANS_TABS.includes(value as LoansTab);
+}
 
 export const Route = createFileRoute('/_authenticated/(loans)/loans/')({
   head: () => ({ meta: [{ title: 'RTools - Loans' }] }),
+  validateSearch: z.object({
+    tab: z.enum(LOANS_TABS).optional(),
+  }),
   component: LoansPage,
 });
 
 function LoansPage() {
+  const router = useRouter();
+  const { tab = 'all' } = Route.useSearch();
   const [searchInput, setSearchInput] = useState('');
-  const [page, setPage] = useState(1);
-  const [attentionPage, setAttentionPage] = useState(1);
+  const [allLoansPage, setAllLoansPage] = useState(1);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [latestPaymentsPage, setLatestPaymentsPage] = useState(1);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const debouncedSearch = useDebounce(searchInput);
+  const activeTab = tab;
 
   const { data, isLoading } = useLoans({
     search: debouncedSearch,
-    page,
+    page: allLoansPage,
     limit: LOANS_LIMIT,
+    enabled: activeTab === 'all',
   });
   const { data: attentionData, isLoading: isAttentionLoading } = useAttentionInstallments({
     search: debouncedSearch,
-    page: attentionPage,
+    page: reviewPage,
     limit: LOANS_LIMIT,
+    enabled: activeTab === 'review',
+  });
+  const { data: latestPaymentsData, isLoading: isLatestPaymentsLoading } = useLatestPaidInstallments({
+    search: debouncedSearch,
+    page: latestPaymentsPage,
+    limit: LOANS_LIMIT,
+    enabled: activeTab === 'latest-payments',
   });
 
   const loans = data?.data.loans ?? [];
   const totalLoans = data?.data.pagination.total ?? 0;
-  const totalPages = data?.data.pagination.totalPages ?? 1;
+  const allLoansTotalPages = data?.data.pagination.totalPages ?? 1;
   const attentionInstallments = attentionData?.data.installments ?? [];
   const totalAttentionInstallments = attentionData?.data.pagination.total ?? 0;
-  const attentionTotalPages = attentionData?.data.pagination.totalPages ?? 1;
+  const reviewTotalPages = attentionData?.data.pagination.totalPages ?? 1;
+  const latestPaidInstallments = latestPaymentsData?.data.installments ?? [];
+  const totalLatestPayments = latestPaymentsData?.data.pagination.total ?? 0;
+  const latestPaymentsTotalPages = latestPaymentsData?.data.pagination.totalPages ?? 1;
   const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
 
   if (!canViewLoans) {
@@ -156,10 +188,79 @@ function LoansPage() {
     },
   ];
 
+  const latestPaymentsColumns: Array<ColumnDef<LoanPaidInstallment>> = [
+    {
+      accessorKey: 'client.name',
+      header: 'Client',
+      cell: ({ row }) => <span className="font-medium">{row.original.client.name}</span>,
+    },
+    {
+      accessorKey: 'dueDate',
+      header: 'Due Date',
+      cell: ({ row }) => format(new Date(row.original.dueDate), 'MMM d, yyyy'),
+    },
+    {
+      accessorKey: 'paidAmount',
+      header: 'Paid',
+      cell: ({ row }) => formatCurrency(row.original.paidAmount, row.original.currency),
+    },
+    {
+      accessorKey: 'paidAt',
+      header: 'Paid At',
+      cell: ({ row }) =>
+        row.original.paidAt ? (
+          format(new Date(row.original.paidAt), 'MMM d, yyyy')
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
+      accessorKey: 'paidByUser.name',
+      header: 'Paid By',
+      cell: ({ row }) => row.original.paidByUser.name || '—',
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <InstallmentStatusBadge status={row.original.status} />,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end text-sm">
+          <Link
+              to="/loans/$loanId"
+              params={{ loanId: row.original.loanId }}
+              className="font-medium text-foreground transition-colors hover:text-primary"
+          >
+            View
+          </Link>
+        </div>
+      ),
+    },
+  ];
+
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchInput(e.target.value);
-    setPage(1);
-    setAttentionPage(1);
+    setAllLoansPage(1);
+    setReviewPage(1);
+    setLatestPaymentsPage(1);
+  }
+
+  function handleTabChange(nextTab: string) {
+    if (!isLoansTab(nextTab)) {
+      return;
+    }
+
+    void router.navigate({
+      to: Route.to,
+      search: (previousSearch) => ({
+        ...previousSearch,
+        tab: nextTab,
+      }),
+      replace: true,
+    });
   }
 
   return (
@@ -185,60 +286,109 @@ function LoansPage() {
       )}
     >
       <div className="grid gap-4 p-4 sm:p-5">
-        <div className="min-w-0">
-          <DataTable
-              columns={attentionColumns}
-              data={attentionInstallments}
-              isLoading={isAttentionLoading}
-              variant="card"
-              getRowClassName={(row) => getAttentionRowClassName(row.attentionCategory)}
-              toolbar={(
-                <div className="flex w-full items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">Installments Requiring Attention</span>
-                    <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                      {totalAttentionInstallments}
-                    </Badge>
+        <HorizontalTabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            items={[
+              {
+                value: 'all',
+                label: 'All Loans',
+                content: (
+                  <div className="min-w-0">
+                    <DataTable
+                        columns={columns}
+                        data={loans}
+                        isLoading={isLoading}
+                        variant="card"
+                        toolbar={(
+                          <div className="flex w-full items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold">All Loans</span>
+                              <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                                {totalLoans}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        footer={(
+                          <Pagination
+                              page={allLoansPage}
+                              totalPages={allLoansTotalPages}
+                              onPageChange={setAllLoansPage}
+                              isLoading={isLoading}
+                          />
+                        )}
+                    />
                   </div>
-                </div>
-              )}
-              footer={(
-                <Pagination
-                    page={attentionPage}
-                    totalPages={attentionTotalPages}
-                    onPageChange={setAttentionPage}
-                    isLoading={isAttentionLoading}
-                />
-              )}
-          />
-        </div>
-
-        <div className="min-w-0">
-          <DataTable
-              columns={columns}
-              data={loans}
-              isLoading={isLoading}
-              variant="card"
-              toolbar={(
-                <div className="flex w-full items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">All Loans</span>
-                    <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                      {totalLoans}
-                    </Badge>
+                ),
+              },
+              {
+                value: 'review',
+                label: 'Items Requiring Review',
+                content: (
+                  <div className="min-w-0">
+                    <DataTable
+                        columns={attentionColumns}
+                        data={attentionInstallments}
+                        isLoading={isAttentionLoading}
+                        variant="card"
+                        getRowClassName={(row) => getAttentionRowClassName(row.attentionCategory)}
+                        toolbar={(
+                          <div className="flex w-full items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold">Items Requiring Review</span>
+                              <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                                {totalAttentionInstallments}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        footer={(
+                          <Pagination
+                              page={reviewPage}
+                              totalPages={reviewTotalPages}
+                              onPageChange={setReviewPage}
+                              isLoading={isAttentionLoading}
+                          />
+                        )}
+                    />
                   </div>
-                </div>
-              )}
-              footer={(
-                <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
-                    isLoading={isLoading}
-                />
-              )}
-          />
-        </div>
+                ),
+              },
+              {
+                value: 'latest-payments',
+                label: 'Latest Payments',
+                content: (
+                  <div className="min-w-0">
+                    <DataTable
+                        columns={latestPaymentsColumns}
+                        data={latestPaidInstallments}
+                        isLoading={isLatestPaymentsLoading}
+                        variant="card"
+                        toolbar={(
+                          <div className="flex w-full items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold">Latest Payments</span>
+                              <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                                {totalLatestPayments}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        footer={(
+                          <Pagination
+                              page={latestPaymentsPage}
+                              totalPages={latestPaymentsTotalPages}
+                              onPageChange={setLatestPaymentsPage}
+                              isLoading={isLatestPaymentsLoading}
+                          />
+                        )}
+                    />
+                  </div>
+                ),
+              },
+            ]}
+        />
       </div>
       <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
         <CreateLoanDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />

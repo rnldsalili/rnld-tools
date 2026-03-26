@@ -11,6 +11,7 @@ import {
   loanGetQuerySchema,
   loanIdParamSchema,
   loanInstallmentAttentionQuerySchema,
+  loanLatestPaymentsQuerySchema,
   loanListQuerySchema,
   loanUpdateSchema,
 } from './loans.schema';
@@ -297,6 +298,118 @@ export const getInstallmentAttention = createHandlers(
       meta: { code: 200, message: 'Installments requiring attention retrieved successfully' },
       data: {
         installments,
+        pagination: {
+          page,
+          limit,
+          total: totalInstallments,
+          totalPages: Math.ceil(totalInstallments / limit),
+        },
+      },
+    }, 200);
+  },
+);
+
+export const getLatestPaidInstallments = createHandlers(
+  validate('query', loanLatestPaymentsQuerySchema),
+  async (c) => {
+    const { search, page, limit } = c.req.valid('query');
+    const prisma = initializePrisma(c.env);
+    const authenticatedUser = c.get('user');
+    const skipCount = (page - 1) * limit;
+    const loanFilter = await getAccessibleLoanFilter(prisma, authenticatedUser, search);
+
+    const latestPaidInstallmentFilter: Prisma.LoanInstallmentWhereInput = {
+      paidAt: {
+        not: null,
+      },
+      status: InstallmentStatus.PAID,
+      loan: {
+        is: loanFilter,
+      },
+    };
+
+    const [installments, totalInstallments] = await Promise.all([
+      prisma.loanInstallment.findMany({
+        where: latestPaidInstallmentFilter,
+        orderBy: [
+          { paidAt: 'desc' },
+          { id: 'desc' },
+        ],
+        skip: skipCount,
+        take: limit,
+        select: {
+          id: true,
+          loanId: true,
+          dueDate: true,
+          amount: true,
+          paidAmount: true,
+          paidAt: true,
+          status: true,
+          updatedBy: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          payments: {
+            where: {
+              voidedAt: null,
+            },
+            orderBy: [
+              { createdAt: 'desc' },
+              { id: 'desc' },
+            ],
+            take: 1,
+            select: {
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          loan: {
+            select: {
+              currency: true,
+              client: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.loanInstallment.count({ where: latestPaidInstallmentFilter }),
+    ]);
+
+    return c.json({
+      meta: { code: 200, message: 'Latest paid installments retrieved successfully' },
+      data: {
+        installments: installments.map((installment) => {
+          const paidByUser = installment.payments[0]?.createdBy ?? installment.updatedBy;
+
+          return {
+            id: installment.id,
+            loanId: installment.loanId,
+            dueDate: installment.dueDate.toISOString(),
+            amount: roundCurrencyAmount(installment.amount),
+            paidAmount: roundCurrencyAmount(installment.paidAmount),
+            paidAt: installment.paidAt?.toISOString() ?? null,
+            status: installment.status,
+            currency: installment.loan.currency,
+            paidByUser: {
+              id: paidByUser.id,
+              name: paidByUser.name,
+            },
+            client: {
+              id: installment.loan.client.id,
+              name: installment.loan.client.name,
+            },
+          };
+        }),
         pagination: {
           page,
           limit,

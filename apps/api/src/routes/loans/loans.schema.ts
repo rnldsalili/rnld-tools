@@ -27,6 +27,12 @@ export const loanInstallmentAttentionQuerySchema = z.object({
   limit: limitValidator,
 });
 
+export const loanLatestPaymentsQuerySchema = z.object({
+  search: searchValidator,
+  page: pageValidator,
+  limit: limitValidator,
+});
+
 export const loanGetQuerySchema = z.object({
   page: pageValidator,
   limit: limitValidator,
