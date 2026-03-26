@@ -1,8 +1,8 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
-import { getDetailedErrorMessage } from '@workspace/api-client';
 import type { InferResponseType } from '@workspace/api-client';
-import apiClient, { parseResponse } from '@/app/lib/api';
+import apiClient from '@/app/lib/api';
 import { parseOkResponseOrThrow } from '@/app/lib/api-response';
+import { downloadBlobFile, getFileTransferErrorMessage, readBlobResponseOrThrow } from '@/app/lib/file-transfer';
 
 const DOCUMENT_LINKS_QUERY_KEY = 'document-links';
 
@@ -56,28 +56,26 @@ export function useDownloadLoanDocumentPdf() {
       loanId: string;
       templateId: string;
     }) => {
-      const fallbackMessage = 'Failed to download document PDF.';
-
       try {
-        const response = await apiClient.loans[':loanId'].documents[':templateId'].pdf.$get({
-          param: { loanId, templateId },
-        });
-
-        if (!response.ok) {
-          await parseResponse(response);
-          throw new Error(fallbackMessage);
-        }
-
-        const pdfBlob = await response.blob();
-        const objectUrl = URL.createObjectURL(pdfBlob);
-        const anchorElement = document.createElement('a');
-        anchorElement.href = objectUrl;
-        anchorElement.download = fileName;
-        anchorElement.click();
-        URL.revokeObjectURL(objectUrl);
+        const pdfBlob = await fetchLoanDocumentPdfBlob({ loanId, templateId });
+        downloadBlobFile(pdfBlob, fileName);
       } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || fallbackMessage);
+        throw new Error(getFileTransferErrorMessage(error, 'Failed to download document PDF.'));
       }
     },
   });
+}
+
+export async function fetchLoanDocumentPdfBlob({
+  loanId,
+  templateId,
+}: {
+  loanId: string;
+  templateId: string;
+}) {
+  const response = await apiClient.loans[':loanId'].documents[':templateId'].pdf.$get({
+    param: { loanId, templateId },
+  });
+
+  return readBlobResponseOrThrow(response, 'Failed to load document PDF.');
 }

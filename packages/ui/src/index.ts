@@ -2,6 +2,7 @@
 export { Button, buttonVariants } from '@workspace/ui/components/button';
 export { PasswordInput } from '@workspace/ui/components/composite/password-input';
 export { FileDropzone } from '@workspace/ui/components/composite/file-dropzone';
+export { FilePreviewModal, type FilePreviewModalProps } from '@workspace/ui/components/composite/file-preview-modal';
 export { Combobox, type ComboboxOption } from '@workspace/ui/components/composite/combobox';
 export { LoadingState } from '@workspace/ui/components/composite/loading-state';
 export {

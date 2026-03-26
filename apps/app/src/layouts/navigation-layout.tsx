@@ -325,6 +325,7 @@ function MobileNavigationSheet({
 
 function Breadcrumb() {
   const matches = useMatches();
+  const { pathname: currentPath } = useLocation();
   const router = useRouter();
 
   const crumbs = matches
@@ -332,7 +333,17 @@ function Breadcrumb() {
       title: getMatchTitle(match.staticData),
       pathname: match.pathname,
     }))
-    .filter((match): match is { title: string; pathname: string } => Boolean(match.title));
+    .filter((match): match is { title: string; pathname: string } => Boolean(match.title))
+    .filter((crumb) => {
+      if (
+        currentPath.startsWith('/settings/')
+        && crumb.pathname === '/settings'
+      ) {
+        return false;
+      }
+
+      return true;
+    });
 
   if (crumbs.length === 0) return null;
 

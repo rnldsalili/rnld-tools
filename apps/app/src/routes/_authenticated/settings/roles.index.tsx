@@ -10,7 +10,6 @@ import { useRoles } from '@/app/hooks/use-roles';
 
 export const Route = createFileRoute('/_authenticated/settings/roles/')({
   head: () => ({ meta: [{ title: 'RTools - Roles' }] }),
-  staticData: { title: 'Roles' },
   component: RolesListPage,
 });
 

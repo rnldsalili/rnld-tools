@@ -2,6 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { format } from 'date-fns';
 import {
   DownloadIcon,
+  EyeIcon,
   Loader2Icon,
   PaperclipIcon,
   PencilIcon,
@@ -17,6 +18,7 @@ import {
   Button,
   DataTable,
   FileDropzone,
+  FilePreviewModal,
   HorizontalTabs,
   Pagination,
   SectionCard,
@@ -32,14 +34,13 @@ import {
   LOAN_ATTACHMENT_MAX_SIZE_BYTES,
   LOAN_LOG_EVENT_LABELS,
   LoanLogEventType,
+  isPreviewableContentType,
 } from '@workspace/constants';
 import { PermissionAction, PermissionModule, hasSuperAdminRole } from '@workspace/permissions';
 import { Can, useCan } from '@workspace/permissions/react';
 import type { ReactNode } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { LoanAttachment } from '@/app/hooks/use-loan-attachments';
-import type { LoanActivityLog, LoanInstallment } from '@/app/hooks/use-loan';
-import type { DocumentLinkTemplateEntry } from '@/app/hooks/use-document-links';
+import { useFilePreview } from '@/app/hooks/use-file-preview';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
@@ -52,14 +53,27 @@ import { InstallmentStatusBadge } from '@/app/components/loans/installment-statu
 import { ManageAccessTab } from '@/app/components/loans/manage-access-tab';
 import { RecordPaymentDialog } from '@/app/components/loans/mark-paid-dialog';
 import { ShareDocumentDialog } from '@/app/components/loans/share-document-dialog';
-import { useDocumentLinks, useDownloadLoanDocumentPdf } from '@/app/hooks/use-document-links';
 import {
+  fetchLoanDocumentPdfBlob,
+  type DocumentLinkTemplateEntry,
+  useDocumentLinks,
+  useDownloadLoanDocumentPdf,
+} from '@/app/hooks/use-document-links';
+import {
+  fetchLoanAttachmentBlob,
+  type LoanAttachment,
   useCreateLoanAttachment,
   useDeleteLoanAttachment,
   useDownloadLoanAttachment,
   useLoanAttachments,
 } from '@/app/hooks/use-loan-attachments';
-import { useDeleteLoan, useLoan, useLoanLogs } from '@/app/hooks/use-loan';
+import {
+  type LoanActivityLog,
+  type LoanInstallment,
+  useDeleteLoan,
+  useLoan,
+  useLoanLogs,
+} from '@/app/hooks/use-loan';
 import { formatCurrency } from '@/app/lib/format';
 import { isOneOf, isPlainRecord } from '@/app/lib/value-guards';
 
@@ -97,6 +111,7 @@ function LoanDetailPage() {
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isUploadingAttachments, setIsUploadingAttachments] = useState(false);
+  const { openPreview, previewState, setPreviewOpen } = useFilePreview();
 
   const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
   const canUpdateLoans = useCan(PermissionModule.LOANS, PermissionAction.UPDATE);
@@ -152,8 +167,14 @@ function LoanDetailPage() {
   const activeDownloadTemplateId = downloadLoanDocumentPdfMutation.isPending
     ? downloadLoanDocumentPdfMutation.variables.templateId
     : null;
+  const activePreviewTemplateId = previewState.isLoading && previewState.source?.kind === 'loan-document-pdf'
+    ? previewState.source.id
+    : null;
   const activeAttachmentDownloadId = downloadLoanAttachmentMutation.isPending
     ? downloadLoanAttachmentMutation.variables.attachmentId
+    : null;
+  const activeAttachmentPreviewId = previewState.isLoading && previewState.source?.kind === 'loan-attachment'
+    ? previewState.source.id
     : null;
   const installmentIntervalLabel = loan && isOneOf(INSTALLMENT_INTERVAL_VALUES, loan.installmentInterval)
     ? INSTALLMENT_INTERVAL_LABELS[loan.installmentInterval as keyof typeof INSTALLMENT_INTERVAL_LABELS]
@@ -248,6 +269,61 @@ function LoanDetailPage() {
       setSelectedAttachment(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete attachment.');
+    }
+  }
+
+  async function handleOpenAttachmentPreview(attachment: LoanAttachment) {
+    await openPreview({
+      contentType: attachment.contentType,
+      fileName: attachment.fileName,
+      loadPreview: () => fetchLoanAttachmentBlob({
+        loanId,
+        attachmentId: attachment.id,
+      }),
+      source: {
+        id: attachment.id,
+        kind: 'loan-attachment',
+      },
+    });
+  }
+
+  async function handleOpenDocumentPreview(template: DocumentLinkTemplateEntry) {
+    await openPreview({
+      contentType: 'application/pdf',
+      fileName: buildLoanDocumentPdfFileName(template.template.name, loan?.client.name ?? ''),
+      loadPreview: () => fetchLoanDocumentPdfBlob({
+        loanId,
+        templateId: template.template.id,
+      }),
+      source: {
+        id: template.template.id,
+        kind: 'loan-document-pdf',
+      },
+    });
+  }
+
+  async function handleDownloadActivePreview() {
+    if (!previewState.source) {
+      return;
+    }
+
+    try {
+      if (previewState.source.kind === 'loan-attachment') {
+        await downloadLoanAttachmentMutation.mutateAsync({
+          loanId,
+          attachmentId: previewState.source.id,
+          fileName: previewState.fileName,
+        });
+        return;
+      }
+
+      await downloadLoanDocumentPdfMutation.mutateAsync({
+        fileName: previewState.fileName,
+        loanId,
+        templateId: previewState.source.id,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to download file.');
     }
   }
 
@@ -479,7 +555,10 @@ function LoanDetailPage() {
                             <p className="text-sm text-muted-foreground">No document templates configured.</p>
                           ) : (
                             <div className="flex flex-col gap-3">
-                              {templateEntries.map(({ template, document }: DocumentLinkTemplateEntry) => (
+                              {templateEntries.map((templateEntry: DocumentLinkTemplateEntry) => {
+                                const { template, document } = templateEntry;
+
+                                return (
                                 <div key={template.id} className="flex flex-col gap-1.5">
                                   <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
@@ -494,35 +573,20 @@ function LoanDetailPage() {
                                     </div>
                                     {loan ? (
                                       <Button
-                                          variant="ghost"
-                                          className="shrink-0"
-                                          disabled={
-                                            downloadLoanDocumentPdfMutation.isPending
-                                            && activeDownloadTemplateId === template.id
-                                          }
-                                          onClick={async () => {
-                                            try {
-                                              await downloadLoanDocumentPdfMutation.mutateAsync({
-                                                fileName: `${template.name.replace(/\s+/g, '-').toLowerCase()}-${loan.client.name.replace(/\s+/g, '-').toLowerCase()}.pdf`,
-                                                loanId,
-                                                templateId: template.id,
-                                              });
-                                            } catch (error) {
-                                              toast.error(
-                                                error instanceof Error
-                                                  ? error.message
-                                                  : 'Failed to download document PDF.',
-                                              );
-                                            }
+                                          variant="outline"
+                                          size="sm"
+                                          className="gap-1.5"
+                                          disabled={activePreviewTemplateId === template.id}
+                                          onClick={() => {
+                                            void handleOpenDocumentPreview(templateEntry);
                                           }}
                                       >
-                                        {downloadLoanDocumentPdfMutation.isPending
-                                          && activeDownloadTemplateId === template.id ? (
-                                            <Loader2Icon className="size-3 animate-spin" />
-                                          ) : (
-                                            <DownloadIcon className="size-3" />
-                                          )}
-                                        PDF
+                                        {activePreviewTemplateId === template.id ? (
+                                          <Loader2Icon className="size-3 animate-spin" />
+                                        ) : (
+                                          <EyeIcon className="size-3" />
+                                        )}
+                                        View
                                       </Button>
                                     ) : null}
                                   </div>
@@ -532,7 +596,8 @@ function LoanDetailPage() {
                                     </p>
                                   ) : null}
                                 </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </SectionCardContent>
@@ -542,10 +607,7 @@ function LoanDetailPage() {
                         columns={installmentColumns}
                         data={installments}
                         isLoading={isLoading}
-                        getRowClassName={(row) => {
-                          const isOverdue = row.status === InstallmentStatus.PENDING && new Date(row.dueDate) < new Date();
-                          return isOverdue ? 'bg-destructive/10 hover:bg-destructive/15' : undefined;
-                        }}
+                        getRowClassName={getInstallmentRowClassName}
                         toolbar={(
                         <div className="flex w-full items-center justify-between gap-2 mt-3">
                           <div className="flex items-center gap-2">
@@ -655,37 +717,55 @@ function LoanDetailPage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-1 self-end sm:self-auto">
-                                <Button
-                                    variant="ghost"
-                                    className="gap-1.5"
-                                    disabled={
-                                      downloadLoanAttachmentMutation.isPending
-                                      && activeAttachmentDownloadId === attachment.id
-                                    }
-                                    onClick={async () => {
-                                      try {
-                                        await downloadLoanAttachmentMutation.mutateAsync({
-                                          loanId,
-                                          attachmentId: attachment.id,
-                                          fileName: attachment.fileName,
-                                        });
-                                      } catch (error) {
-                                        toast.error(
-                                          error instanceof Error
-                                            ? error.message
-                                            : 'Failed to download attachment.',
-                                        );
-                                      }
-                                    }}
-                                >
-                                  {downloadLoanAttachmentMutation.isPending
-                                    && activeAttachmentDownloadId === attachment.id ? (
+                                {isPreviewableContentType(attachment.contentType) ? (
+                                  <Button
+                                      variant="outline"
+                                      className="gap-1.5"
+                                      disabled={activeAttachmentPreviewId === attachment.id}
+                                      onClick={() => {
+                                        void handleOpenAttachmentPreview(attachment);
+                                      }}
+                                  >
+                                    {activeAttachmentPreviewId === attachment.id ? (
                                       <Loader2Icon className="size-3 animate-spin" />
                                     ) : (
-                                      <DownloadIcon className="size-3" />
+                                      <EyeIcon className="size-3" />
                                     )}
-                                  Download
-                                </Button>
+                                    View
+                                  </Button>
+                                ) : (
+                                  <Button
+                                      variant="ghost"
+                                      className="gap-1.5"
+                                      disabled={
+                                        downloadLoanAttachmentMutation.isPending
+                                        && activeAttachmentDownloadId === attachment.id
+                                      }
+                                      onClick={async () => {
+                                        try {
+                                          await downloadLoanAttachmentMutation.mutateAsync({
+                                            loanId,
+                                            attachmentId: attachment.id,
+                                            fileName: attachment.fileName,
+                                          });
+                                        } catch (error) {
+                                          toast.error(
+                                            error instanceof Error
+                                              ? error.message
+                                              : 'Failed to download attachment.',
+                                          );
+                                        }
+                                      }}
+                                  >
+                                    {downloadLoanAttachmentMutation.isPending
+                                      && activeAttachmentDownloadId === attachment.id ? (
+                                        <Loader2Icon className="size-3 animate-spin" />
+                                      ) : (
+                                        <DownloadIcon className="size-3" />
+                                      )}
+                                    Download
+                                  </Button>
+                                )}
                                 <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
                                   <Button
                                       variant="ghost"
@@ -828,6 +908,18 @@ function LoanDetailPage() {
         />
       </Can>
 
+      <FilePreviewModal
+          open={previewState.isOpen}
+          onOpenChange={setPreviewOpen}
+          title={getFilePreviewTitle(previewState.source)}
+          fileName={previewState.fileName}
+          contentType={previewState.contentType}
+          previewUrl={previewState.previewUrl}
+          isLoading={previewState.isLoading}
+          errorMessage={previewState.errorMessage}
+          onDownload={previewState.source ? handleDownloadActivePreview : undefined}
+      />
+
       <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
         <ConfirmDeleteDialog
             open={selectedAttachment !== null}
@@ -849,6 +941,12 @@ function LoanDetailPage() {
       </Can>
     </div>
   );
+}
+
+function getInstallmentRowClassName(installment: LoanInstallment) {
+  return installment.status === InstallmentStatus.OVERDUE
+    ? 'bg-destructive/10 hover:bg-destructive/15'
+    : undefined;
 }
 
 function LoanField({
@@ -969,6 +1067,31 @@ function getAttachmentTypeLabel(attachment: LoanAttachment) {
   }
 
   return attachment.contentType.startsWith('image/') ? 'IMAGE' : 'FILE';
+}
+
+function getFilePreviewTitle(
+  source: {
+    kind: 'loan-attachment' | 'loan-document-pdf';
+  } | null,
+) {
+  if (!source) {
+    return 'File Preview';
+  }
+
+  return source.kind === 'loan-document-pdf' ? 'Document Preview' : 'Attachment Preview';
+}
+
+function buildLoanDocumentPdfFileName(templateName: string, clientName: string) {
+  return `${normalizeFileNameSegment(templateName)}-${normalizeFileNameSegment(clientName)}.pdf`;
+}
+
+function normalizeFileNameSegment(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    || 'document';
 }
 
 function getNumberValue(source: Record<string, unknown> | null, key: string) {

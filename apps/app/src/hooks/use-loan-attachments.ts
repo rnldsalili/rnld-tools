@@ -1,8 +1,8 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getDetailedErrorMessage } from '@workspace/api-client';
 import type { InferRequestType, InferResponseType } from '@workspace/api-client';
-import apiClient, { parseResponse } from '@/app/lib/api';
+import apiClient from '@/app/lib/api';
 import { parseOkResponseOrThrow } from '@/app/lib/api-response';
+import { downloadBlobFile, getFileTransferErrorMessage, readBlobResponseOrThrow } from '@/app/lib/file-transfer';
 import { LOAN_LOGS_QUERY_KEY } from '@/app/hooks/use-loan';
 
 const LOAN_ATTACHMENTS_QUERY_KEY = 'loan-attachments';
@@ -92,28 +92,26 @@ export function useDownloadLoanAttachment() {
       attachmentId: string;
       fileName: string;
     }) => {
-      const fallbackMessage = 'Failed to download loan attachment.';
-
       try {
-        const response = await apiClient.loans[':loanId'].attachments[':attachmentId'].download.$get({
-          param: { loanId, attachmentId },
-        });
-
-        if (!response.ok) {
-          await parseResponse(response);
-          throw new Error(fallbackMessage);
-        }
-
-        const attachmentBlob = await response.blob();
-        const objectUrl = URL.createObjectURL(attachmentBlob);
-        const anchorElement = document.createElement('a');
-        anchorElement.href = objectUrl;
-        anchorElement.download = fileName;
-        anchorElement.click();
-        URL.revokeObjectURL(objectUrl);
+        const attachmentBlob = await fetchLoanAttachmentBlob({ loanId, attachmentId });
+        downloadBlobFile(attachmentBlob, fileName);
       } catch (error) {
-        throw new Error(getDetailedErrorMessage(error) || fallbackMessage);
+        throw new Error(getFileTransferErrorMessage(error, 'Failed to download loan attachment.'));
       }
     },
   });
+}
+
+export async function fetchLoanAttachmentBlob({
+  loanId,
+  attachmentId,
+}: {
+  loanId: string;
+  attachmentId: string;
+}) {
+  const response = await apiClient.loans[':loanId'].attachments[':attachmentId'].download.$get({
+    param: { loanId, attachmentId },
+  });
+
+  return readBlobResponseOrThrow(response, 'Failed to load loan attachment.');
 }
