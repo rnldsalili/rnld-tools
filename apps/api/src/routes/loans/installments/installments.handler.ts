@@ -556,6 +556,11 @@ export const recordInstallmentPayment = createHandlers(
               loanDate: loanFound.loanDate.toISOString(),
               installmentCount: loanFound._count.installments,
             },
+            document: {
+              name: '',
+              signUrl: '',
+              signedAt: null,
+            },
             installment: {
               number: installmentNumber,
               amount: updatedInstallment.amount,

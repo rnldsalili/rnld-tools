@@ -14,6 +14,10 @@ export type CreateDocumentLinkResponse = InferResponseType<
   typeof apiClient.loans[':loanId']['document-links']['$post'],
   201
 >;
+export type RequestDocumentSignatureResponse = InferResponseType<
+  typeof apiClient.loans[':loanId']['document-links']['request-signature']['$post'],
+  201
+>;
 export type DocumentLinkTemplateEntry = DocumentLinksResponse['data']['templates'][number];
 
 export function documentLinksQueryOptions(loanId: string) {
@@ -41,6 +45,18 @@ export function useCreateDocumentLink() {
         json: { templateId },
       });
       return parseOkResponseOrThrow(response, 'Failed to generate document link.');
+    },
+  });
+}
+
+export function useRequestLoanDocumentSignature() {
+  return useMutation({
+    mutationFn: async ({ loanId, templateId }: { loanId: string; templateId: string }) => {
+      const response = await apiClient.loans[':loanId']['document-links']['request-signature'].$post({
+        param: { loanId },
+        json: { templateId },
+      });
+      return parseOkResponseOrThrow(response, 'Failed to request document signature.');
     },
   });
 }

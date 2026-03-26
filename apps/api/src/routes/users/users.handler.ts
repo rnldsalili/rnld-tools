@@ -350,6 +350,11 @@ export const createUser = createHandlers(
             loanDate: new Date().toISOString(),
             installmentCount: 0,
           },
+          document: {
+            name: '',
+            signUrl: '',
+            signedAt: null,
+          },
           installment: {
             number: null,
             amount: 0,

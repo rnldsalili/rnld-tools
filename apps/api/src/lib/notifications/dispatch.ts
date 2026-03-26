@@ -18,12 +18,16 @@ import {
   renderSmsTemplate,
 } from './renderer';
 import type {
+  LoanDocumentPdfAttachmentSource,
+  NotificationEmailAttachment,
+  NotificationEnv,
+} from './types';
+import type {
   NotificationEmailProvider,
   NotificationEvent,
   NotificationSmsProvider,
 } from '@workspace/constants';
 import type { NotificationTemplateSampleContext } from './placeholders';
-import type { NotificationEnv } from './types';
 import type { Prisma, PrismaClient } from '@/prisma/client';
 
 interface DispatchEventNotificationsParams {
@@ -32,6 +36,8 @@ interface DispatchEventNotificationsParams {
   event: NotificationEvent;
   queuedByUserId: string | null;
   context: NotificationTemplateSampleContext;
+  emailAttachments?: Array<NotificationEmailAttachment>;
+  emailAttachmentSources?: Array<LoanDocumentPdfAttachmentSource>;
   notificationsEnabled?: boolean;
 }
 
@@ -50,6 +56,8 @@ export async function dispatchEventNotifications({
   event,
   queuedByUserId,
   context,
+  emailAttachments,
+  emailAttachmentSources,
   notificationsEnabled = true,
 }: DispatchEventNotificationsParams): Promise<DispatchEventNotificationsResult> {
   if (!notificationsEnabled) {
@@ -93,6 +101,8 @@ export async function dispatchEventNotifications({
             event,
             queuedByUserId,
             context,
+            emailAttachments,
+            emailAttachmentSources,
             notificationEventConfig,
           });
           if (emailQueued) {
@@ -141,9 +151,19 @@ async function dispatchEmailEventNotification(params: {
   event: NotificationEvent;
   queuedByUserId: string | null;
   context: NotificationTemplateSampleContext;
+  emailAttachments?: Array<NotificationEmailAttachment>;
+  emailAttachmentSources?: Array<LoanDocumentPdfAttachmentSource>;
   notificationEventConfig: NotificationEventConfigWithTemplate;
 }): Promise<boolean> {
-  const { env, event, queuedByUserId, context, notificationEventConfig } = params;
+  const {
+    env,
+    event,
+    queuedByUserId,
+    context,
+    emailAttachments,
+    emailAttachmentSources,
+    notificationEventConfig,
+  } = params;
 
   if (!notificationEventConfig.emailProvider) {
     console.warn('Skipping event email notification because no provider is configured', {
@@ -209,6 +229,8 @@ async function dispatchEmailEventNotification(params: {
       },
       subject: renderedEmail.subject,
       html: renderedEmail.html,
+      attachments: emailAttachments,
+      attachmentSources: emailAttachmentSources,
       trace: {
         event,
         queuedAt: notificationLog.queuedAt.toISOString(),

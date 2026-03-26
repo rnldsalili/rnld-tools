@@ -32,6 +32,14 @@ export const brevoEmailClient: EmailProviderClient = {
         ],
         subject: job.subject,
         htmlContent: job.html,
+        ...(job.attachments && job.attachments.length > 0
+          ? {
+            attachment: job.attachments.map((attachment) => ({
+              content: attachment.contentBase64,
+              name: attachment.name,
+            })),
+          }
+          : {}),
       }),
     });
 

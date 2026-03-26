@@ -611,6 +611,11 @@ export const createLoan = createHandlers(
           loanDate: createdLoan.loanDate.toISOString(),
           installmentCount: createdInstallments?.length ?? 0,
         },
+        document: {
+          name: '',
+          signUrl: '',
+          signedAt: null,
+        },
         installment: {
           number: createdInstallments?.[0] ? 1 : null,
           amount: createdInstallments?.[0]?.amount ?? null,

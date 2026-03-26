@@ -11,9 +11,14 @@ export interface NotificationTemplateSampleContext {
     amount: number;
     excessBalance: number;
     currency: string;
-    description: string | null;
-    loanDate: string;
-    installmentCount: number;
+      description: string | null;
+      loanDate: string;
+      installmentCount: number;
+  };
+  document: {
+    name: string;
+    signUrl: string;
+    signedAt: string | null;
   };
   installment: {
     number: number | null;
@@ -53,12 +58,23 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
   const baseDate = new Date('2026-03-17T09:00:00+08:00');
   const dueDate = new Date(baseDate);
   const paidAt = new Date(baseDate);
+  const signedAt = new Date(baseDate);
   let installmentNumber: number | null = null;
+  let documentSignedAt: string | null = null;
 
   if (event === NotificationEvent.LOAN_CREATED) {
     dueDate.setDate(dueDate.getDate() + 7);
     paidAt.setDate(paidAt.getDate() + 9);
     installmentNumber = 1;
+  }
+
+  if (event === NotificationEvent.DOCUMENT_SIGNATURE_REQUESTED) {
+    dueDate.setDate(dueDate.getDate() + 7);
+  }
+
+  if (event === NotificationEvent.DOCUMENT_SIGNED) {
+    signedAt.setDate(signedAt.getDate() + 2);
+    documentSignedAt = signedAt.toISOString();
   }
 
   if (event === NotificationEvent.INSTALLMENT_DUE_REMINDER) {
@@ -94,6 +110,11 @@ export function buildNotificationSampleContext(event: NotificationEvent): Notifi
       loanDate: baseDate.toISOString(),
       installmentCount: 5,
     },
+    document: {
+      name: 'Promissory Note',
+      signUrl: `${defaultNotificationSiteUrl}/documents/sample-token`,
+      signedAt: documentSignedAt,
+    },
     installment: {
       number: installmentNumber,
       amount: 5000,
@@ -124,6 +145,9 @@ export function getNotificationPlaceholderValues(
     '{{loan.description}}': context.loan.description || missingValue,
     '{{loan.loanDate}}': formatDate(context.loan.loanDate),
     '{{loan.installmentCount}}': String(context.loan.installmentCount),
+    '{{document.name}}': context.document.name || missingValue,
+    '{{document.signUrl}}': context.document.signUrl || missingValue,
+    '{{document.signedAt}}': formatDateTime(context.document.signedAt),
     '{{installment.number}}': formatInstallmentNumber(context.installment.number),
     '{{installment.amount}}': formatCurrencyAmount(context.installment.amount, context.loan.currency),
     '{{installment.dueDate}}': formatDate(context.installment.dueDate),

@@ -45,6 +45,8 @@ export const NOTIFICATION_SMS_PROVIDER_LABELS: Record<NotificationSmsProvider, s
 
 export enum NotificationEvent {
   LOAN_CREATED = 'LOAN_CREATED',
+  DOCUMENT_SIGNATURE_REQUESTED = 'DOCUMENT_SIGNATURE_REQUESTED',
+  DOCUMENT_SIGNED = 'DOCUMENT_SIGNED',
   INSTALLMENT_DUE_REMINDER = 'INSTALLMENT_DUE_REMINDER',
   INSTALLMENT_OVERDUE_REMINDER = 'INSTALLMENT_OVERDUE_REMINDER',
   INSTALLMENT_PAID = 'INSTALLMENT_PAID',
@@ -53,6 +55,8 @@ export enum NotificationEvent {
 
 export const NOTIFICATION_EVENTS = [
   NotificationEvent.LOAN_CREATED,
+  NotificationEvent.DOCUMENT_SIGNATURE_REQUESTED,
+  NotificationEvent.DOCUMENT_SIGNED,
   NotificationEvent.INSTALLMENT_DUE_REMINDER,
   NotificationEvent.INSTALLMENT_OVERDUE_REMINDER,
   NotificationEvent.INSTALLMENT_PAID,
@@ -61,6 +65,8 @@ export const NOTIFICATION_EVENTS = [
 
 export const NOTIFICATION_EVENT_LABELS: Record<NotificationEvent, string> = {
   [NotificationEvent.LOAN_CREATED]: 'Loan Created',
+  [NotificationEvent.DOCUMENT_SIGNATURE_REQUESTED]: 'Document Signature Requested',
+  [NotificationEvent.DOCUMENT_SIGNED]: 'Document Signed',
   [NotificationEvent.INSTALLMENT_DUE_REMINDER]: 'Installment Due Reminder',
   [NotificationEvent.INSTALLMENT_OVERDUE_REMINDER]: 'Installment Overdue Reminder',
   [NotificationEvent.INSTALLMENT_PAID]: 'Installment Paid',
@@ -69,6 +75,8 @@ export const NOTIFICATION_EVENT_LABELS: Record<NotificationEvent, string> = {
 
 export const NOTIFICATION_EVENT_CHANNELS: Record<NotificationEvent, ReadonlyArray<NotificationChannel>> = {
   [NotificationEvent.LOAN_CREATED]: NOTIFICATION_CHANNELS,
+  [NotificationEvent.DOCUMENT_SIGNATURE_REQUESTED]: NOTIFICATION_CHANNELS,
+  [NotificationEvent.DOCUMENT_SIGNED]: [NotificationChannel.EMAIL],
   [NotificationEvent.INSTALLMENT_DUE_REMINDER]: NOTIFICATION_CHANNELS,
   [NotificationEvent.INSTALLMENT_OVERDUE_REMINDER]: NOTIFICATION_CHANNELS,
   [NotificationEvent.INSTALLMENT_PAID]: NOTIFICATION_CHANNELS,
@@ -138,6 +146,14 @@ export const NOTIFICATION_PLACEHOLDER_GROUPS = [
       { key: '{{loan.currency}}', description: 'Loan currency code' },
       { key: '{{loan.description}}', description: 'Loan description' },
       { key: '{{loan.loanDate}}', description: 'Loan date' },
+    ],
+  },
+  {
+    label: 'Document',
+    items: [
+      { key: '{{document.name}}', description: 'Document template name' },
+      { key: '{{document.signUrl}}', description: 'Public signing URL for the document' },
+      { key: '{{document.signedAt}}', description: 'Document signed date and time' },
     ],
   },
   {

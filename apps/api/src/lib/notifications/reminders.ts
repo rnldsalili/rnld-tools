@@ -157,6 +157,11 @@ async function processInstallmentReminderBatch(params: {
             loanDate: installmentCandidate.loan.loanDate.toISOString(),
             installmentCount: installmentCandidate.loan._count.installments,
           },
+          document: {
+            name: '',
+            signUrl: '',
+            signedAt: null,
+          },
           installment: {
             number: installmentNumber,
             amount: installmentCandidate.amount,

@@ -1,10 +1,6 @@
 import { renderLoanDocumentHtml } from '@workspace/document-renderer/server';
-import type { Context } from 'hono';
-import type { AppBindings } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
 import { parseDocumentContent } from '@/api/lib/documents/content';
-
-type LoanDocumentSnapshotContext = Context<AppBindings>;
 
 type LoanWithInstallments = {
   amount: number;
@@ -67,14 +63,14 @@ export function base64DataUrlToUint8Array(dataUrl: string): Uint8Array {
 }
 
 export async function getSignatureDataUrlFromStorage(
-  c: LoanDocumentSnapshotContext,
+  env: CloudflareBindings,
   signatureKey: string | null | undefined,
 ) {
   if (!signatureKey) {
     return null;
   }
 
-  const signatureObject = await c.env.STORAGE.get(signatureKey);
+  const signatureObject = await env.STORAGE.get(signatureKey);
   if (!signatureObject) {
     return null;
   }
@@ -86,7 +82,7 @@ export async function getSignatureDataUrlFromStorage(
   return `data:${contentType};base64,${base64EncodedBytes}`;
 }
 
-export async function ensureLoanDocumentContentSnapshot(c: LoanDocumentSnapshotContext, params: {
+export async function ensureLoanDocumentContentSnapshot(env: CloudflareBindings, params: {
   contentSnapshotHtml: string | null;
   loanDocumentId: string;
   loanId: string;
@@ -98,7 +94,7 @@ export async function ensureLoanDocumentContentSnapshot(c: LoanDocumentSnapshotC
     return params.contentSnapshotHtml;
   }
 
-  const prisma = initializePrisma(c.env);
+  const prisma = initializePrisma(env);
   const [loanFound, documentFound, signatureDataUrl] = await Promise.all([
     prisma.loan.findUnique({
       where: { id: params.loanId },
@@ -108,7 +104,7 @@ export async function ensureLoanDocumentContentSnapshot(c: LoanDocumentSnapshotC
       },
     }),
     prisma.document.findUnique({ where: { id: params.templateId } }),
-    getSignatureDataUrlFromStorage(c, params.signatureKey),
+    getSignatureDataUrlFromStorage(env, params.signatureKey),
   ]);
 
   if (!loanFound || !documentFound) {

@@ -17,6 +17,8 @@ import type {
   NotificationEnv,
   SmsNotificationJob,
 } from './types';
+import { generateLoanDocumentPdf } from '@/api/lib/documents/pdf';
+import { initializePrisma } from '@/api/lib/db';
 
 export async function enqueueEmailNotificationJob(
   env: NotificationBindings,
@@ -57,7 +59,8 @@ async function processEmailBatch(
     await markNotificationLogProcessingSafely(env, message.body.notificationLogId, message.attempts);
 
     try {
-      await getEmailProviderClient(message.body.provider).send(message.body, env);
+      const resolvedEmailJob = await resolveEmailNotificationJobAttachments(env, message.body);
+      await getEmailProviderClient(resolvedEmailJob.provider).send(resolvedEmailJob, env);
       await markNotificationLogSentSafely(env, message.body.notificationLogId, message.attempts);
       message.ack();
     } catch (error) {
@@ -80,6 +83,34 @@ async function processEmailBatch(
       message.retry();
     }
   }
+}
+
+async function resolveEmailNotificationJobAttachments(
+  env: NotificationEnv,
+  job: EmailNotificationJob,
+): Promise<EmailNotificationJob> {
+  if (!job.attachmentSources || job.attachmentSources.length === 0) {
+    return job;
+  }
+
+  const prisma = initializePrisma(env);
+  const resolvedAttachments = await Promise.all(job.attachmentSources.map(async (attachmentSource) => {
+    const generatedLoanDocumentPdf = await generateLoanDocumentPdf(env, prisma, {
+      loanId: attachmentSource.loanId,
+      templateId: attachmentSource.templateId,
+    });
+
+    return {
+      contentBase64: Buffer.from(generatedLoanDocumentPdf.pdfBytes).toString('base64'),
+      name: generatedLoanDocumentPdf.fileName,
+    };
+  }));
+
+  return {
+    ...job,
+    attachments: [...(job.attachments ?? []), ...resolvedAttachments],
+    attachmentSources: undefined,
+  };
 }
 
 async function processSmsBatch(

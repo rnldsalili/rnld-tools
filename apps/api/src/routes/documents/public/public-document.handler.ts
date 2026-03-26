@@ -1,4 +1,9 @@
-import { LoanDocumentLogActorType, LoanDocumentLogEventType } from '@workspace/constants';
+import {
+  LoanDocumentLogActorType,
+  LoanDocumentLogEventType,
+  NotificationChannel,
+  NotificationEvent,
+} from '@workspace/constants';
 import { documentSignSchema, documentTokenParamSchema } from './public-document.schema';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
@@ -8,6 +13,8 @@ import {
   getLoanDocumentRequestMetadata,
   logLoanDocumentEventSafely,
 } from '@/api/lib/documents/logs';
+import { dispatchEventNotifications } from '@/api/lib/notifications/dispatch';
+import { getNotificationSiteUrl } from '@/api/lib/notifications/placeholders';
 import {
   base64DataUrlToUint8Array,
   ensureLoanDocumentContentSnapshot,
@@ -67,7 +74,7 @@ export const getPublicDocument = createHandlers(
     }
 
     const contentSnapshotHtml = loanDocumentFound?.signedAt
-      ? await ensureLoanDocumentContentSnapshot(c, {
+      ? await ensureLoanDocumentContentSnapshot(c.env, {
         contentSnapshotHtml: loanDocumentFound.contentSnapshotHtml,
         loanDocumentId: loanDocumentFound.id,
         loanId,
@@ -280,6 +287,69 @@ export const signPublicDocument = createHandlers(
         signatureStored: signatureKey !== null,
       },
     });
+
+    try {
+      const hasSignedNotificationConfig = await prisma.notificationEventConfig.count({
+        where: {
+          event: NotificationEvent.DOCUMENT_SIGNED,
+          channel: NotificationChannel.EMAIL,
+          isEnabled: true,
+        },
+      });
+
+      if (hasSignedNotificationConfig > 0) {
+        const signUrl = new URL(`/documents/${token}`, getNotificationSiteUrl(c.env)).toString();
+
+        await dispatchEventNotifications({
+          env: c.env,
+          prisma,
+          event: NotificationEvent.DOCUMENT_SIGNED,
+          queuedByUserId: null,
+          notificationsEnabled: loanFound.notificationsEnabled,
+          emailAttachmentSources: [
+            {
+              kind: 'loan_document_pdf',
+              loanId,
+              templateId,
+            },
+          ],
+          context: {
+            client: {
+              name: loanFound.client.name,
+              email: loanFound.client.email ?? '',
+              phone: loanFound.client.phone ?? '',
+            },
+            loan: {
+              id: loanFound.id,
+              amount: loanFound.amount,
+              excessBalance: loanFound.excessBalance,
+              currency: loanFound.currency,
+              description: loanFound.description,
+              loanDate: loanFound.loanDate.toISOString(),
+              installmentCount: loanFound.installments.length,
+            },
+            document: {
+              name: documentFound.name,
+              signUrl,
+              signedAt: savedLoanDocument.signedAt?.toISOString() ?? now.toISOString(),
+            },
+            installment: {
+              number: null,
+              amount: null,
+              dueDate: null,
+              paidAt: null,
+            },
+            user: {
+              name: '',
+              email: '',
+              temporaryPassword: '',
+            },
+          },
+        });
+      }
+    } catch (notificationError) {
+      console.error('Failed to queue signed document notification', notificationError);
+    }
 
     return c.json({
       meta: { code: 200, message: 'Document signed successfully' },

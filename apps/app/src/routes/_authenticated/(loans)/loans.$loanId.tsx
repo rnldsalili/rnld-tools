@@ -7,6 +7,7 @@ import {
   PaperclipIcon,
   PencilIcon,
   PlusIcon,
+  SendIcon,
   Share2Icon,
   Trash2Icon,
 } from 'lucide-react';
@@ -20,6 +21,7 @@ import {
   FileDropzone,
   FilePreviewModal,
   HorizontalTabs,
+  Modal,
   Pagination,
   SectionCard,
   SectionCardContent,
@@ -40,6 +42,9 @@ import { PermissionAction, PermissionModule, hasSuperAdminRole } from '@workspac
 import { Can, useCan } from '@workspace/permissions/react';
 import type { ReactNode } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
+import type { DocumentLinkTemplateEntry } from '@/app/hooks/use-document-links';
+import type { LoanAttachment } from '@/app/hooks/use-loan-attachments';
+import type { LoanActivityLog, LoanInstallment } from '@/app/hooks/use-loan';
 import { useFilePreview } from '@/app/hooks/use-file-preview';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { useAppAuthorization } from '@/app/components/authorization/authorization-provider';
@@ -55,21 +60,18 @@ import { RecordPaymentDialog } from '@/app/components/loans/mark-paid-dialog';
 import { ShareDocumentDialog } from '@/app/components/loans/share-document-dialog';
 import {
   fetchLoanDocumentPdfBlob,
-  type DocumentLinkTemplateEntry,
   useDocumentLinks,
   useDownloadLoanDocumentPdf,
+  useRequestLoanDocumentSignature,
 } from '@/app/hooks/use-document-links';
 import {
   fetchLoanAttachmentBlob,
-  type LoanAttachment,
   useCreateLoanAttachment,
   useDeleteLoanAttachment,
   useDownloadLoanAttachment,
   useLoanAttachments,
 } from '@/app/hooks/use-loan-attachments';
 import {
-  type LoanActivityLog,
-  type LoanInstallment,
   useDeleteLoan,
   useLoan,
   useLoanLogs,
@@ -106,6 +108,7 @@ function LoanDetailPage() {
   const [selectedAttachment, setSelectedAttachment] = useState<LoanAttachment | null>(null);
   const [paymentInstallment, setPaymentInstallment] = useState<LoanInstallment | null>(null);
   const [paymentHistoryInstallment, setPaymentHistoryInstallment] = useState<LoanInstallment | null>(null);
+  const [signatureRequestTemplate, setSignatureRequestTemplate] = useState<DocumentLinkTemplateEntry | null>(null);
   const [isEditLoanOpen, setIsEditLoanOpen] = useState(false);
   const [isAddInstallmentOpen, setIsAddInstallmentOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
@@ -156,6 +159,7 @@ function LoanDetailPage() {
 
   const { data: documentLinksData } = useDocumentLinks(loanId);
   const downloadLoanDocumentPdfMutation = useDownloadLoanDocumentPdf();
+  const requestLoanDocumentSignatureMutation = useRequestLoanDocumentSignature();
 
   const loan = data?.data.loan;
   const attachments: Array<LoanAttachment> = attachmentsData?.data.attachments ?? [];
@@ -166,6 +170,9 @@ function LoanDetailPage() {
   const templateEntries: Array<DocumentLinkTemplateEntry> = documentLinksData?.data.templates ?? [];
   const activePreviewTemplateId = previewState.isLoading && previewState.source?.kind === 'loan-document-pdf'
     ? previewState.source.id
+    : null;
+  const activeSignatureRequestTemplateId = requestLoanDocumentSignatureMutation.isPending
+    ? requestLoanDocumentSignatureMutation.variables.templateId
     : null;
   const activeAttachmentDownloadId = downloadLoanAttachmentMutation.isPending
     ? downloadLoanAttachmentMutation.variables.attachmentId
@@ -321,6 +328,30 @@ function LoanDetailPage() {
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to download file.');
+    }
+  }
+
+  async function handleRequestDocumentSignature() {
+    if (!signatureRequestTemplate) {
+      return;
+    }
+
+    try {
+      const requestSignatureResponse = await requestLoanDocumentSignatureMutation.mutateAsync({
+        loanId,
+        templateId: signatureRequestTemplate.template.id,
+      });
+
+      setSignatureRequestTemplate(null);
+
+      if (requestSignatureResponse.data.notification.queuedChannelCount > 0) {
+        toast.success('Signature request sent to the client.');
+        return;
+      }
+
+      toast.warning('Signing link created, but no notification was sent. Use Share to send it manually.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to request document signature.');
     }
   }
 
@@ -568,24 +599,42 @@ function LoanDetailPage() {
                                         <Badge variant="secondary" className="text-xs">PDF only</Badge>
                                       )}
                                     </div>
-                                    {loan ? (
-                                      <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="gap-1.5"
-                                          disabled={activePreviewTemplateId === template.id}
-                                          onClick={() => {
-                                            void handleOpenDocumentPreview(templateEntry);
-                                          }}
-                                      >
-                                        {activePreviewTemplateId === template.id ? (
-                                          <Loader2Icon className="size-3 animate-spin" />
-                                        ) : (
-                                          <EyeIcon className="size-3" />
-                                        )}
-                                        View
-                                      </Button>
-                                    ) : null}
+                                    <div className="flex items-center gap-2">
+                                      {canUpdateLoans && !document?.signedAt && template.requiresSignature ? (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-1.5"
+                                            disabled={activeSignatureRequestTemplateId === template.id}
+                                            onClick={() => setSignatureRequestTemplate(templateEntry)}
+                                        >
+                                          {activeSignatureRequestTemplateId === template.id ? (
+                                            <Loader2Icon className="size-3 animate-spin" />
+                                          ) : (
+                                            <SendIcon className="size-3" />
+                                          )}
+                                          Ask Client to Sign
+                                        </Button>
+                                      ) : null}
+                                      {loan ? (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-1.5"
+                                            disabled={activePreviewTemplateId === template.id}
+                                            onClick={() => {
+                                              void handleOpenDocumentPreview(templateEntry);
+                                            }}
+                                        >
+                                          {activePreviewTemplateId === template.id ? (
+                                            <Loader2Icon className="size-3 animate-spin" />
+                                          ) : (
+                                            <EyeIcon className="size-3" />
+                                          )}
+                                          View
+                                        </Button>
+                                      ) : null}
+                                    </div>
                                   </div>
                                   {document?.signedAt ? (
                                     <p className="text-xs text-muted-foreground">
@@ -888,6 +937,49 @@ function LoanDetailPage() {
           />
         </Can>
       ) : null}
+
+      <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+        <Modal
+            open={signatureRequestTemplate !== null}
+            onOpenChange={(open) => {
+              if (!requestLoanDocumentSignatureMutation.isPending && !open) {
+                setSignatureRequestTemplate(null);
+              }
+            }}
+            title="Ask Client to Sign"
+            description="Send the document signing request to the client using the configured notification channels."
+            className="sm:max-w-md"
+            footer={(
+            <>
+              <Button
+                  variant="ghost"
+                  onClick={() => setSignatureRequestTemplate(null)}
+                  disabled={requestLoanDocumentSignatureMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                  onClick={() => void handleRequestDocumentSignature()}
+                  disabled={requestLoanDocumentSignatureMutation.isPending || !signatureRequestTemplate}
+                  className="gap-2"
+              >
+                {requestLoanDocumentSignatureMutation.isPending ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <SendIcon className="size-4" />
+                )}
+                Ask Client to Sign
+              </Button>
+            </>
+          )}
+        >
+          <p className="text-sm text-muted-foreground">
+            {signatureRequestTemplate
+              ? `Create a new signing link for "${signatureRequestTemplate.template.name}" and notify ${loan?.client.name ?? 'the client'}.`
+              : 'Create a new signing link and notify the client.'}
+          </p>
+        </Modal>
+      </Can>
 
       <Can I={PermissionAction.DELETE} a={PermissionModule.LOANS}>
         <ConfirmDeleteDialog

@@ -12,6 +12,17 @@ export interface NotificationJobTrace {
   testSend: boolean;
 }
 
+export interface NotificationEmailAttachment {
+  contentBase64: string;
+  name: string;
+}
+
+export interface LoanDocumentPdfAttachmentSource {
+  kind: 'loan_document_pdf';
+  loanId: string;
+  templateId: string;
+}
+
 export interface EmailNotificationJob {
   notificationLogId: string;
   channel: NotificationChannel.EMAIL;
@@ -22,6 +33,8 @@ export interface EmailNotificationJob {
   };
   subject: string;
   html: string;
+  attachments?: Array<NotificationEmailAttachment>;
+  attachmentSources?: Array<LoanDocumentPdfAttachmentSource>;
   trace: NotificationJobTrace;
 }
 
