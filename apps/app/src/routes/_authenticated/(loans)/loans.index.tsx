@@ -184,34 +184,7 @@ function LoansPage() {
         />
       )}
     >
-      <div className="grid gap-4 p-4 sm:p-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <div className="min-w-0">
-          <DataTable
-              columns={columns}
-              data={loans}
-              isLoading={isLoading}
-              variant="card"
-              toolbar={(
-                <div className="flex w-full items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">All Loans</span>
-                    <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                      {totalLoans}
-                    </Badge>
-                  </div>
-                </div>
-              )}
-              footer={(
-                <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
-                    isLoading={isLoading}
-                />
-              )}
-          />
-        </div>
-
+      <div className="grid gap-4 p-4 sm:p-5">
         <div className="min-w-0">
           <DataTable
               columns={attentionColumns}
@@ -235,6 +208,33 @@ function LoansPage() {
                     totalPages={attentionTotalPages}
                     onPageChange={setAttentionPage}
                     isLoading={isAttentionLoading}
+                />
+              )}
+          />
+        </div>
+
+        <div className="min-w-0">
+          <DataTable
+              columns={columns}
+              data={loans}
+              isLoading={isLoading}
+              variant="card"
+              toolbar={(
+                <div className="flex w-full items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold">All Loans</span>
+                    <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                      {totalLoans}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+              footer={(
+                <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    onPageChange={setPage}
+                    isLoading={isLoading}
                 />
               )}
           />
