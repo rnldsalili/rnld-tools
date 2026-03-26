@@ -78,12 +78,14 @@ export function NotificationTemplateLibrary({
                       : 'border-border hover:border-primary/40 hover:bg-accent/50'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium">{template.name}</span>
-                    <Badge variant="secondary">{getNotificationChannelLabel(template.channel)}</Badge>
+                  <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <span className="break-words font-medium">{template.name}</span>
+                    <Badge variant="secondary" className="shrink-0">
+                      {getNotificationChannelLabel(template.channel)}
+                    </Badge>
                   </div>
                   {template.description ? (
-                    <p className="text-xs text-muted-foreground">{template.description}</p>
+                    <p className="break-words text-xs text-muted-foreground">{template.description}</p>
                   ) : null}
                 </button>
               );

@@ -110,16 +110,16 @@ export function NotificationTemplateEditorForm({
           <div className="flex min-w-0 flex-1 flex-col gap-4">
             <SectionCard>
               <SectionCardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span className="text-sm font-semibold">Template Details</span>
                   <Badge variant="secondary">{getNotificationChannelLabel(template.channel)}</Badge>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                   <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
                     <Button
                         type="button"
                         variant="outline"
-                        className="gap-2"
+                        className="w-full gap-2 sm:w-auto"
                         onClick={() => setIsTestSendOpen(true)}
                     >
                       <SendHorizontalIcon className="size-3.5" />
@@ -127,7 +127,7 @@ export function NotificationTemplateEditorForm({
                     </Button>
                   </Can>
                   <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
-                    <Button type="submit" disabled={isSaving} className="gap-2">
+                    <Button type="submit" disabled={isSaving} className="w-full gap-2 sm:w-auto">
                       {isSaving ? <Loader2Icon className="size-3.5 animate-spin" /> : <SaveIcon className="size-3.5" />}
                       Save
                     </Button>
@@ -136,7 +136,7 @@ export function NotificationTemplateEditorForm({
                     <Button
                         type="button"
                         variant="destructive"
-                        className="gap-2"
+                        className="w-full gap-2 sm:w-auto"
                         onClick={onDelete}
                         disabled={isDeleting}
                     >
@@ -251,7 +251,7 @@ export function NotificationTemplateEditorForm({
             </SectionCard>
           </div>
 
-          <div className="xl:w-80 xl:shrink-0">
+          <div className="w-full xl:w-80 xl:shrink-0">
             <NotificationPlaceholderPanel />
           </div>
         </div>

@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import {
   Button,
   Field,
+  FieldError,
   FieldLabel,
   Input,
   Modal,
@@ -31,6 +32,7 @@ import {
 } from '@/app/components/settings/notifications/utils';
 import { useTestNotification } from '@/app/hooks/use-notifications';
 import { DEFAULT_SMS_NOTIFICATION_PROVIDER } from '@/app/lib/notifications';
+import { toFieldErrors } from '@/app/lib/form';
 import { isPlainRecord } from '@/app/lib/value-guards';
 
 const TEST_SEND_FORM_ID = 'notification-test-send-form';
@@ -112,6 +114,10 @@ export function NotificationTestSendModal({
     onOpenChange(nextOpen);
   }
 
+  function validateRequiredValue(value: string, message: string) {
+    return value.trim() ? undefined : message;
+  }
+
   return (
     <Modal
         open={open}
@@ -138,10 +144,17 @@ export function NotificationTestSendModal({
           form.handleSubmit();
         }}
       >
-        <form.Field name="event">
+        <form.Field
+            name="event"
+            validators={{
+            onChange: ({ value }) => validateRequiredValue(value, 'Event context is required'),
+          }}
+        >
           {(field) => (
-            <Field>
-              <FieldLabel htmlFor={field.name}>Event Context</FieldLabel>
+            <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+              <FieldLabel htmlFor={field.name}>
+                Event Context <span className="text-destructive">*</span>
+              </FieldLabel>
               <Select
                   value={field.state.value}
                   onValueChange={(value) => {
@@ -150,7 +163,7 @@ export function NotificationTestSendModal({
                     }
                   }}
               >
-                <SelectTrigger id={field.name} className="w-full">
+                <SelectTrigger id={field.name} className="w-full" aria-required="true">
                   <SelectValue placeholder="Select event" />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,16 +174,24 @@ export function NotificationTestSendModal({
                   ))}
                 </SelectContent>
               </Select>
+              <FieldError errors={toFieldErrors(field.state.meta.errors)} />
             </Field>
           )}
         </form.Field>
 
         {channel === NotificationChannel.EMAIL ? (
           <>
-            <form.Field name="emailProvider">
+            <form.Field
+                name="emailProvider"
+                validators={{
+                onChange: ({ value }) => validateRequiredValue(value, 'Provider is required'),
+              }}
+            >
               {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Provider</FieldLabel>
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+                  <FieldLabel htmlFor={field.name}>
+                    Provider <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Select
                       value={field.state.value}
                       onValueChange={(value) => {
@@ -179,7 +200,7 @@ export function NotificationTestSendModal({
                         }
                       }}
                   >
-                    <SelectTrigger id={field.name} className="w-full">
+                    <SelectTrigger id={field.name} className="w-full" aria-required="true">
                       <SelectValue placeholder="Select provider" />
                     </SelectTrigger>
                     <SelectContent>
@@ -187,48 +208,84 @@ export function NotificationTestSendModal({
                         <SelectItem key={provider} value={provider}>
                           {NOTIFICATION_EMAIL_PROVIDER_LABELS[provider]}
                         </SelectItem>
-                      ))}
+                        ))}
                     </SelectContent>
                   </Select>
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
               )}
             </form.Field>
 
-            <form.Field name="recipientEmail">
+            <form.Field
+                name="recipientEmail"
+                validators={{
+                onChange: ({ value }) => {
+                  if (!value.trim()) {
+                    return 'Recipient email is required';
+                  }
+
+                  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+                    ? undefined
+                    : 'Invalid email address';
+                },
+              }}
+            >
               {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Recipient Email</FieldLabel>
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+                  <FieldLabel htmlFor={field.name}>
+                    Recipient Email <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Input
                       id={field.name}
                       type="email"
                       value={field.state.value}
+                      onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
                       placeholder="name@example.com"
+                      required
                   />
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
               )}
             </form.Field>
 
-            <form.Field name="recipientName">
+            <form.Field
+                name="recipientName"
+                validators={{
+                onChange: ({ value }) => validateRequiredValue(value, 'Recipient name is required'),
+              }}
+            >
               {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Recipient Name</FieldLabel>
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+                  <FieldLabel htmlFor={field.name}>
+                    Recipient Name <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Input
                       id={field.name}
                       value={field.state.value}
+                      onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
-                      placeholder="Optional"
+                      placeholder="Jane Doe"
+                      required
                   />
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
               )}
             </form.Field>
           </>
         ) : (
           <>
-            <form.Field name="smsProvider">
+            <form.Field
+                name="smsProvider"
+                validators={{
+                onChange: ({ value }) => validateRequiredValue(value, 'Provider is required'),
+              }}
+            >
               {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Provider</FieldLabel>
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+                  <FieldLabel htmlFor={field.name}>
+                    Provider <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Select
                       value={field.state.value}
                       onValueChange={(value) => {
@@ -237,7 +294,7 @@ export function NotificationTestSendModal({
                         }
                       }}
                   >
-                    <SelectTrigger id={field.name} className="w-full">
+                    <SelectTrigger id={field.name} className="w-full" aria-required="true">
                       <SelectValue placeholder="Select provider" />
                     </SelectTrigger>
                     <SelectContent>
@@ -245,23 +302,34 @@ export function NotificationTestSendModal({
                         <SelectItem key={provider} value={provider}>
                           {NOTIFICATION_SMS_PROVIDER_LABELS[provider]}
                         </SelectItem>
-                      ))}
+                        ))}
                     </SelectContent>
                   </Select>
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
               )}
             </form.Field>
 
-            <form.Field name="recipientPhone">
+            <form.Field
+                name="recipientPhone"
+                validators={{
+                onChange: ({ value }) => validateRequiredValue(value, 'Recipient phone is required'),
+              }}
+            >
               {(field) => (
-                <Field>
-                  <FieldLabel htmlFor={field.name}>Recipient Phone</FieldLabel>
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
+                  <FieldLabel htmlFor={field.name}>
+                    Recipient Phone <span className="text-destructive">*</span>
+                  </FieldLabel>
                   <Input
                       id={field.name}
                       value={field.state.value}
+                      onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
                       placeholder="09171234567"
+                      required
                   />
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
               )}
             </form.Field>

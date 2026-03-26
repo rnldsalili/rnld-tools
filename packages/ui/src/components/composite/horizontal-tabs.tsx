@@ -15,6 +15,8 @@ interface HorizontalTabsProps {
   value?: string;
   onValueChange?: (value: string) => void;
   className?: string;
+  listClassName?: string;
+  contentClassName?: string;
 }
 
 export function HorizontalTabs({
@@ -23,6 +25,8 @@ export function HorizontalTabs({
   value,
   onValueChange,
   className,
+  listClassName,
+  contentClassName,
 }: HorizontalTabsProps) {
   const rootProps = value !== undefined
     ? { value, onValueChange }
@@ -30,19 +34,24 @@ export function HorizontalTabs({
 
   return (
     <Tabs {...rootProps} className={cn('w-full', className)}>
-      <TabsList className="w-full justify-start overflow-x-auto sm:w-fit sm:justify-center">
+      <TabsList
+          className={cn(
+          'flex w-full max-w-full justify-start gap-1 overflow-x-auto overscroll-x-contain sm:w-fit sm:justify-center',
+          listClassName,
+        )}
+      >
         {items.map((item) => (
           <TabsTrigger
               key={item.value}
               value={item.value}
-              className="text-sm px-3"
+              className="shrink-0 px-3 py-1.5 text-sm"
           >
             {item.label}
           </TabsTrigger>
         ))}
       </TabsList>
       {items.map((item) => (
-        <TabsContent key={item.value} value={item.value}>
+        <TabsContent key={item.value} value={item.value} className={cn('min-w-0', contentClassName)}>
           {item.content}
         </TabsContent>
       ))}

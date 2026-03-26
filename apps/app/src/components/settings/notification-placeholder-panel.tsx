@@ -40,8 +40,8 @@ export function NotificationPlaceholderPanel() {
                       onClick={() => void handleCopyPlaceholder(item.key)}
                   >
                     <div className="flex min-w-0 flex-col gap-1">
-                      <span className="truncate font-mono text-[11px]">{item.key}</span>
-                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                      <span className="break-all font-mono text-[11px]">{item.key}</span>
+                      <span className="break-words text-xs text-muted-foreground">{item.description}</span>
                     </div>
                     <CopyIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                   </Button>

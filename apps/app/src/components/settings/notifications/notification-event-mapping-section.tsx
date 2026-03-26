@@ -103,7 +103,7 @@ function NotificationEventMappingChannelCard({
   return (
     <div className="rounded-2xl border border-border/70 bg-background/70 p-5">
       <div className="flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
           <Badge variant="secondary">{getNotificationChannelLabel(item.channel)}</Badge>
           <span className="text-sm text-muted-foreground">
             {item.channel === NotificationChannel.EMAIL
@@ -112,9 +112,9 @@ function NotificationEventMappingChannelCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           {canManageNotifications ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 sm:justify-start">
               <span className="text-xs text-muted-foreground">Enabled</span>
               <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
             </div>
@@ -126,7 +126,7 @@ function NotificationEventMappingChannelCard({
           <Can I={PermissionAction.MANAGE} a={PermissionModule.NOTIFICATIONS}>
             <Button
                 type="button"
-                className="gap-2"
+                className="w-full gap-2 sm:w-auto"
                 disabled={isPending || !selectedTemplateId || !isProviderConfigured}
                 onClick={() => void handleSaveConfig()}
             >
@@ -246,11 +246,11 @@ function NotificationEventMappingGroup({
   return (
     <SectionCard>
       <SectionCardHeader className="border-b border-border/70 pb-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3">
           <div className="rounded-full bg-primary/10 p-2 text-primary">
             <BellRingIcon className="size-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-base font-semibold text-foreground">{eventLabel}</p>
             <p className="text-sm text-muted-foreground">
               Configure the available delivery channels for this lifecycle event.

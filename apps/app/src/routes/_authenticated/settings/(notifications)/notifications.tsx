@@ -57,41 +57,48 @@ function NotificationSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <BellRingIcon className="size-4.5" />
-          </span>
-          <div>
-            <h1 className="text-lg font-semibold">Notifications</h1>
-            <p className="text-sm text-muted-foreground">
-              Configure reusable Email and SMS templates, then map them to loan lifecycle events.
-            </p>
-          </div>
-        </div>
+    <div className="min-h-full bg-muted/[0.18]">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col px-4 py-4 sm:px-6 sm:py-5">
+        <section className="overflow-hidden rounded-xl border border-border/80 bg-background/95 shadow-sm shadow-black/[0.03]">
+          <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-primary/10 bg-primary/10 text-primary shadow-sm shadow-primary/5">
+                <BellRingIcon className="size-4.5" />
+              </span>
+              <div className="min-w-0">
+                <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Notifications</h1>
+                <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+                  Configure reusable Email and SMS templates, then map them to loan lifecycle events.
+                </p>
+              </div>
+            </div>
 
-        <HorizontalTabs
-            value={tab}
-            onValueChange={handleTabChange}
-            items={[
-              {
-                value: 'templates',
-                label: 'Templates',
-                content: <NotificationTemplatesSection />,
-              },
-              {
-                value: 'event-mapping',
-                label: 'Event Mapping',
-                content: <NotificationEventMappingSection />,
-              },
-              {
-                value: 'history',
-                label: 'History',
-                content: <NotificationHistorySection />,
-              },
-            ]}
-        />
+            <HorizontalTabs
+                value={tab}
+                onValueChange={handleTabChange}
+                className="min-w-0"
+                listClassName="-mx-1 px-1 sm:mx-0 sm:px-0"
+                contentClassName="border-t border-border/70 pt-4 sm:pt-5"
+                items={[
+                {
+                  value: 'templates',
+                  label: 'Templates',
+                  content: <NotificationTemplatesSection />,
+                },
+                {
+                  value: 'event-mapping',
+                  label: 'Event Mapping',
+                  content: <NotificationEventMappingSection />,
+                },
+                {
+                  value: 'history',
+                  label: 'History',
+                  content: <NotificationHistorySection />,
+                },
+              ]}
+            />
+          </div>
+        </section>
       </div>
     </div>
   );

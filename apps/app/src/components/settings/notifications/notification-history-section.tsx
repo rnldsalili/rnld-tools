@@ -265,23 +265,32 @@ export function NotificationHistorySection() {
                 </SelectContent>
               </Select>
 
-              <Button type="button" variant="outline" onClick={resetFilters}>
+              <Button type="button" variant="outline" className="w-full xl:w-auto" onClick={resetFilters}>
                 Reset
               </Button>
             </div>
 
-            <DataTable
-                columns={notificationLogColumns}
-                data={notificationLogs}
+            <div className="md:hidden">
+              <NotificationHistoryMobileList
+                  notificationLogs={notificationLogs}
+                  isLoading={isNotificationLogsLoading}
+                  onViewDetails={setSelectedNotificationLogId}
+              />
+            </div>
+
+            <div className="hidden md:block">
+              <DataTable
+                  columns={notificationLogColumns}
+                  data={notificationLogs}
+                  isLoading={isNotificationLogsLoading}
+              />
+            </div>
+
+            <Pagination
+                page={historyPage}
+                totalPages={notificationLogsTotalPages}
+                onPageChange={setHistoryPage}
                 isLoading={isNotificationLogsLoading}
-                footer={(
-                <Pagination
-                    page={historyPage}
-                    totalPages={notificationLogsTotalPages}
-                    onPageChange={setHistoryPage}
-                    isLoading={isNotificationLogsLoading}
-                />
-              )}
             />
           </CardContent>
         </Card>
@@ -297,5 +306,107 @@ export function NotificationHistorySection() {
           notificationLogId={selectedNotificationLogId}
       />
     </>
+  );
+}
+
+function NotificationHistoryMobileList({
+  notificationLogs,
+  isLoading,
+  onViewDetails,
+}: {
+  notificationLogs: Array<NotificationLogListItem>;
+  isLoading: boolean;
+  onViewDetails: (notificationLogId: string) => void;
+}) {
+  if (isLoading) {
+    return (
+      <div className="grid gap-3">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+              key={index}
+              className="rounded-xl border border-border/70 bg-muted/10 px-4 py-4"
+          >
+            <div className="h-4 w-2/5 animate-pulse rounded-sm bg-muted" />
+            <div className="mt-3 h-3 w-3/4 animate-pulse rounded-sm bg-muted" />
+            <div className="mt-2 h-3 w-full animate-pulse rounded-sm bg-muted" />
+            <div className="mt-4 h-9 w-full animate-pulse rounded-md bg-muted" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (notificationLogs.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
+        No results.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-3">
+      {notificationLogs.map((notificationLog) => (
+        <div
+            key={notificationLog.id}
+            className="rounded-xl border border-border/80 bg-card/95 p-4 shadow-sm shadow-black/[0.03]"
+        >
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                  Queued
+                </p>
+                <p className="mt-1 text-sm font-medium text-foreground">
+                  {formatNotificationDate(notificationLog.queuedAt)}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">{getNotificationChannelLabel(notificationLog.channel)}</Badge>
+                <Badge variant={notificationLog.status === NotificationLogStatus.FAILED ? 'destructive' : 'outline'}>
+                  {getNotificationLogStatusLabel(notificationLog.status)}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <HistoryDetailItem label="Event" value={getNotificationLogEventLabel(notificationLog.event)} />
+              <HistoryDetailItem label="Recipient" value={getNotificationLogRecipient(notificationLog)} />
+              <HistoryDetailItem label="Provider" value={getNotificationProviderLabel(notificationLog)} />
+              <HistoryDetailItem label="Attempts" value={String(notificationLog.attemptCount)} />
+            </div>
+
+            <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2"
+                onClick={() => onViewDetails(notificationLog.id)}
+            >
+              <EyeIcon className="size-3.5" />
+              View Details
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HistoryDetailItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border/70 bg-muted/15 px-3 py-2.5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm text-foreground">
+        {value}
+      </p>
+    </div>
   );
 }

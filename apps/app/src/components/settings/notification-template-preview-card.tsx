@@ -71,7 +71,7 @@ export function NotificationTemplatePreviewCard(props: NotificationTemplatePrevi
           </div>
         ) : isEmailPreview ? (
           <>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-muted/20 px-4 py-3">
+            <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-border/70 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center">
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Subject
@@ -89,7 +89,7 @@ export function NotificationTemplatePreviewCard(props: NotificationTemplatePrevi
             <iframe
                 title="Rendered notification email preview"
                 srcDoc={emailPreview?.html ?? ''}
-                className="h-144 w-full rounded-xl border border-border/70 bg-white"
+                className="h-96 w-full rounded-xl border border-border/70 bg-white sm:h-[32rem] xl:h-144"
                 sandbox=""
             />
           </>
@@ -110,7 +110,7 @@ export function NotificationTemplatePreviewCard(props: NotificationTemplatePrevi
               ) : null}
             </div>
             <div className="flex min-h-36 items-start bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.06),transparent_55%)]">
-              <div className="ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm">
+              <div className="ml-auto max-w-full whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm sm:max-w-[85%]">
                 {smsPreview?.text ?? smsContent}
               </div>
             </div>
