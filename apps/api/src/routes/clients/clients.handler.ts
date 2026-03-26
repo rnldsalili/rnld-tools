@@ -1,4 +1,4 @@
-import { getPhilippineMobileNumberSearchTerms } from '@workspace/constants';
+import { InstallmentStatus, getPhilippineMobileNumberSearchTerms } from '@workspace/constants';
 import {
   clientCreateSchema,
   clientIdParamSchema,
@@ -8,6 +8,7 @@ import {
 import { Prisma } from '@/prisma/client';
 import { createHandlers } from '@/api/app';
 import { initializePrisma } from '@/api/lib/db';
+import { getAccessibleLoanFilter } from '@/api/lib/loans/access';
 import { validate } from '@/api/lib/validator';
 
 export const getClients = createHandlers(
@@ -93,6 +94,61 @@ export const getClient = createHandlers(
       meta: { code: 200, message: 'Client retrieved successfully' },
       data: {
         client: clientFound,
+      },
+    }, 200);
+  },
+);
+
+export const getClientLoans = createHandlers(
+  validate('param', clientIdParamSchema),
+  async (c) => {
+    const { id } = c.req.valid('param');
+    const prisma = initializePrisma(c.env);
+    const authenticatedUser = c.get('user');
+
+    const clientFound = await prisma.client.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!clientFound) {
+      return c.json({ meta: { code: 404, message: 'Client not found' } }, 404);
+    }
+
+    const accessibleLoanFilter = await getAccessibleLoanFilter(prisma, authenticatedUser);
+    const clientLoanFilter: Prisma.LoanWhereInput = {
+      AND: [
+        accessibleLoanFilter,
+        { clientId: id },
+      ],
+    };
+
+    const loans = await prisma.loan.findMany({
+      where: clientLoanFilter,
+      orderBy: [
+        { loanDate: 'desc' },
+        { id: 'desc' },
+      ],
+      include: {
+        client: true,
+        _count: { select: { installments: true } },
+        installments: {
+          select: {
+            status: true,
+          },
+        },
+      },
+    });
+
+    const formattedLoans = loans.map(({ installments, ...loan }) => ({
+      ...loan,
+      paidInstallmentsCount: installments.filter((installment) => installment.status === InstallmentStatus.PAID).length,
+    }));
+
+    return c.json({
+      meta: { code: 200, message: 'Client loans retrieved successfully' },
+      data: {
+        loans: formattedLoans,
       },
     }, 200);
   },

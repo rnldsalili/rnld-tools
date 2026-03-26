@@ -1,14 +1,17 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { Link, createFileRoute } from '@tanstack/react-router';
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import { Can, useCan } from '@workspace/permissions/react';
-import { Button, SectionCard, SectionCardContent, SectionCardHeader } from '@workspace/ui';
+import { Badge, Button, DataTable, SectionCard, SectionCardContent, SectionCardHeader } from '@workspace/ui';
 import { format } from 'date-fns';
 import { PencilIcon } from 'lucide-react';
 import { useState } from 'react';
+import type { ColumnDef } from '@tanstack/react-table';
+import type { ClientLoanListItem } from '@/app/hooks/use-client';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
 import { EditClientDialog } from '@/app/components/clients/edit-client-dialog';
-import { useClient } from '@/app/hooks/use-client';
+import { useClient, useClientLoans } from '@/app/hooks/use-client';
+import { formatCurrency } from '@/app/lib/format';
 
 export const Route = createFileRoute('/_authenticated/(clients)/clients/$clientId')({
   head: () => ({ meta: [{ title: 'RTools - Client Detail' }] }),
@@ -19,10 +22,15 @@ export const Route = createFileRoute('/_authenticated/(clients)/clients/$clientI
 function ClientDetailPage() {
   const { clientId } = Route.useParams();
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const { data, isLoading } = useClient({ clientId });
-
-  const client = data?.data.client;
   const canViewClients = useCan(PermissionModule.CLIENTS, PermissionAction.VIEW);
+  const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
+  const { data, isLoading } = useClient({ clientId });
+  const client = data?.data.client;
+  const { data: clientLoansData, isLoading: isClientLoansLoading } = useClientLoans({
+    clientId,
+    enabled: canViewLoans,
+  });
+  const clientLoans = clientLoansData?.data.loans ?? [];
 
   if (!canViewClients) {
     return (
@@ -32,6 +40,58 @@ function ClientDetailPage() {
       />
     );
   }
+
+  const loanColumns: Array<ColumnDef<ClientLoanListItem>> = [
+    {
+      id: 'amount',
+      header: 'Amount',
+      cell: ({ row }) => (
+        <span className="font-mono text-sm">
+          {formatCurrency(row.original.amount, row.original.currency)}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: 'Description',
+      cell: ({ row }) => row.original.description?.trim() || '—',
+    },
+    {
+      accessorKey: 'interestRate',
+      header: 'Interest Rate',
+      cell: ({ row }) =>
+        row.original.interestRate != null ? `${row.original.interestRate}%` : '—',
+    },
+    {
+      id: 'installments',
+      header: 'Installments',
+      cell: ({ row }) => (
+        <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
+          {row.original.paidInstallmentsCount}/{row.original._count.installments}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'loanDate',
+      header: 'Loan Date',
+      cell: ({ row }) => format(new Date(row.original.loanDate), 'MMM d, yyyy'),
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end text-sm">
+          <Link
+              to="/loans/$loanId"
+              params={{ loanId: row.original.id }}
+              className="font-medium text-foreground transition-colors hover:text-primary"
+          >
+            View
+          </Link>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background px-4 py-4 sm:px-6">
@@ -81,9 +141,31 @@ function ClientDetailPage() {
         </SectionCardContent>
       </SectionCard>
 
+      {canViewLoans ? (
+        <div className="mt-4">
+          <DataTable
+              columns={loanColumns}
+              data={clientLoans}
+              isLoading={isClientLoansLoading}
+              toolbar={(
+                <div className="flex w-full items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold">Loans</span>
+                    {!isClientLoansLoading ? (
+                      <Badge className="border-0 bg-muted text-xs text-muted-foreground">
+                        {clientLoans.length}
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+          />
+        </div>
+      ) : null}
+
       {isEditOpen && client ? (
         <Can I={PermissionAction.UPDATE} a={PermissionModule.CLIENTS}>
-        <EditClientDialog client={client} onClose={() => setIsEditOpen(false)} />
+          <EditClientDialog client={client} onClose={() => setIsEditOpen(false)} />
         </Can>
       ) : null}
     </div>

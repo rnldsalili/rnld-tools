@@ -164,9 +164,6 @@ function LoanDetailPage() {
   const loanLogs = loanLogsData?.data.logs ?? [];
   const loanLogsPagination = loanLogsData?.data.pagination;
   const templateEntries: Array<DocumentLinkTemplateEntry> = documentLinksData?.data.templates ?? [];
-  const activeDownloadTemplateId = downloadLoanDocumentPdfMutation.isPending
-    ? downloadLoanDocumentPdfMutation.variables.templateId
-    : null;
   const activePreviewTemplateId = previewState.isLoading && previewState.source?.kind === 'loan-document-pdf'
     ? previewState.source.id
     : null;

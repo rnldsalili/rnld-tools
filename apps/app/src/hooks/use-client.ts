@@ -6,6 +6,7 @@ import { parseOkResponseOrThrow } from '@/app/lib/api-response';
 
 const CLIENTS_QUERY_KEY = 'clients';
 const CLIENT_QUERY_KEY = 'client';
+const CLIENT_LOANS_QUERY_KEY = 'client-loans';
 const ENABLED_CLIENTS_QUERY_KEY = 'enabled-clients';
 
 export type ClientsListResponse = InferResponseType<typeof apiClient.clients.$get, 200>;
@@ -13,6 +14,9 @@ export type ClientListItem = ClientsListResponse['data']['clients'][number];
 
 export type ClientDetailResponse = InferResponseType<typeof apiClient.clients[':id']['$get'], 200>;
 export type ClientDetail = ClientDetailResponse['data']['client'];
+type ClientLoansGetRoute = (typeof apiClient.clients)[':id']['loans']['$get'];
+export type ClientLoansResponse = InferResponseType<ClientLoansGetRoute, 200>;
+export type ClientLoanListItem = ClientLoansResponse['data']['loans'][number];
 
 type CreateClientBody = InferRequestType<typeof apiClient.clients.$post>['json'];
 type UpdateClientBody = InferRequestType<typeof apiClient.clients[':id']['$put']>['json'];
@@ -26,6 +30,11 @@ interface ClientsQueryParams {
 
 interface ClientQueryParams {
   clientId: string;
+}
+
+interface ClientLoansQueryParams {
+  clientId: string;
+  enabled?: boolean;
 }
 
 export function clientsQueryOptions(params: ClientsQueryParams) {
@@ -58,6 +67,19 @@ export function clientQueryOptions(params: ClientQueryParams) {
   });
 }
 
+export function clientLoansQueryOptions(params: ClientLoansQueryParams) {
+  return queryOptions({
+    queryKey: [CLIENT_LOANS_QUERY_KEY, params.clientId],
+    queryFn: async () => {
+      const response = await apiClient.clients[':id'].loans.$get({
+        param: { id: params.clientId },
+      });
+      return parseOkResponseOrThrow(response, 'Failed to load client loans.');
+    },
+    enabled: Boolean(params.clientId) && (params.enabled ?? true),
+  });
+}
+
 export function enabledClientsQueryOptions() {
   return queryOptions({
     queryKey: [ENABLED_CLIENTS_QUERY_KEY],
@@ -80,6 +102,10 @@ export function useClients(params: ClientsQueryParams) {
 
 export function useClient(params: ClientQueryParams) {
   return useQuery(clientQueryOptions(params));
+}
+
+export function useClientLoans(params: ClientLoansQueryParams) {
+  return useQuery(clientLoansQueryOptions(params));
 }
 
 export function useEnabledClients() {
