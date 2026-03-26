@@ -1,3 +1,4 @@
+import { getPhilippineMobileNumberSearchTerms } from '@workspace/constants';
 import {
   clientCreateSchema,
   clientIdParamSchema,
@@ -17,13 +18,17 @@ export const getClients = createHandlers(
 
     const skipCount = (page - 1) * limit;
     const normalizedSearch = search?.trim();
+    const phoneSearchTerms = normalizedSearch ? getPhilippineMobileNumberSearchTerms(normalizedSearch) : [];
+    const phoneFilter = phoneSearchTerms.length > 0
+      ? phoneSearchTerms.map((phoneSearchTerm) => ({ phone: { contains: phoneSearchTerm } }))
+      : [];
     const clientFilter: Prisma.ClientWhereInput = {
       ...(status ? { status } : {}),
       ...(normalizedSearch
         ? {
           OR: [
             { name: { contains: normalizedSearch } },
-            { phone: { contains: normalizedSearch } },
+            ...phoneFilter,
             { email: { contains: normalizedSearch } },
             { address: { contains: normalizedSearch } },
           ],
@@ -103,7 +108,7 @@ export const createClient = createHandlers(
     const createdClient = await prisma.client.create({
       data: {
         name: clientPayload.name.trim(),
-        phone: clientPayload.phone?.trim() || null,
+        phone: clientPayload.phone || null,
         email: clientPayload.email?.trim() || null,
         address: clientPayload.address?.trim() || null,
         status: clientPayload.status,
@@ -140,7 +145,7 @@ export const updateClient = createHandlers(
         where: { id },
         data: {
           ...(clientPayload.name !== undefined && { name: clientPayload.name.trim() }),
-          ...(clientPayload.phone !== undefined && { phone: clientPayload.phone?.trim() || null }),
+          ...(clientPayload.phone !== undefined && { phone: clientPayload.phone || null }),
           ...(clientPayload.email !== undefined && { email: clientPayload.email?.trim() || null }),
           ...(clientPayload.address !== undefined && { address: clientPayload.address?.trim() || null }),
           ...(clientPayload.status !== undefined && { status: clientPayload.status }),

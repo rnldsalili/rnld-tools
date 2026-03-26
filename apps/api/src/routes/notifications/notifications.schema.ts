@@ -8,6 +8,7 @@ import {
   NotificationChannel,
   limitValidator,
   pageValidator,
+  philippineMobileNumberSchema,
 } from '@workspace/constants';
 import { z } from 'zod';
 
@@ -105,7 +106,7 @@ export const notificationTestSendSchema = z.discriminatedUnion('channel', [
     event: z.enum(NOTIFICATION_EVENTS),
     templateId: z.string().trim().length(25).optional().nullable(),
     templateName: z.string().trim().min(1),
-    recipientPhone: z.string().trim().min(1),
+    recipientPhone: philippineMobileNumberSchema,
     smsProvider: z.enum(NOTIFICATION_SMS_PROVIDERS),
     content: z.string().trim().min(1),
   }),

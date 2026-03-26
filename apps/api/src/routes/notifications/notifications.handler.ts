@@ -8,6 +8,7 @@ import {
   NotificationChannel,
   NotificationContentFormat,
   NotificationEvent,
+  getPhilippineMobileNumberSearchTerms,
 } from '@workspace/constants';
 import {
   createNotificationTemplateSchema,
@@ -306,6 +307,10 @@ export const getNotificationLogs = createHandlers(
     const prisma = initializePrisma(c.env);
     const skipCount = (page - 1) * limit;
     const normalizedSearch = search?.trim();
+    const phoneSearchTerms = normalizedSearch ? getPhilippineMobileNumberSearchTerms(normalizedSearch) : [];
+    const phoneFilter = phoneSearchTerms.length > 0
+      ? phoneSearchTerms.map((phoneSearchTerm) => ({ recipientPhone: { contains: phoneSearchTerm } }))
+      : [];
     const notificationLogFilter: Prisma.NotificationLogWhereInput = {
       ...(channel ? { channel } : {}),
       ...(event ? { event } : {}),
@@ -316,7 +321,7 @@ export const getNotificationLogs = createHandlers(
           OR: [
             { recipientEmail: { contains: normalizedSearch } },
             { recipientName: { contains: normalizedSearch } },
-            { recipientPhone: { contains: normalizedSearch } },
+            ...phoneFilter,
             { subject: { contains: normalizedSearch } },
             { messageContent: { contains: normalizedSearch } },
             { lastErrorMessage: { contains: normalizedSearch } },

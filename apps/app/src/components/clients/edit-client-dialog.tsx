@@ -1,5 +1,11 @@
 import { useForm } from '@tanstack/react-form';
-import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from '@workspace/constants';
+import {
+  CLIENT_STATUSES,
+  CLIENT_STATUS_LABELS,
+  PHILIPPINE_MOBILE_NUMBER_ERROR_MESSAGE,
+  isPhilippineMobileNumber,
+  normalizePhilippineMobileNumber,
+} from '@workspace/constants';
 import {
   Button,
   Field,
@@ -18,7 +24,7 @@ import {
 } from '@workspace/ui';
 import { toast } from 'sonner';
 import type { ClientDetail } from '@/app/hooks/use-client';
-import {  useUpdateClient } from '@/app/hooks/use-client';
+import { useUpdateClient } from '@/app/hooks/use-client';
 import { toFieldErrors } from '@/app/lib/form';
 import { isOneOf } from '@/app/lib/value-guards';
 
@@ -48,7 +54,9 @@ export function EditClientDialog({ client, onClose }: EditClientDialogProps) {
             address: value.address.trim() || null,
             email: value.email.trim() || null,
             name: value.name.trim(),
-            phone: value.phone.trim() || null,
+            phone: value.phone.trim()
+              ? normalizePhilippineMobileNumber(value.phone)
+              : null,
             status: value.status,
           },
         });
@@ -59,6 +67,18 @@ export function EditClientDialog({ client, onClose }: EditClientDialogProps) {
       }
     },
   });
+
+  function validateOptionalPhoneNumber(value: string) {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return undefined;
+    }
+
+    return isPhilippineMobileNumber(trimmedValue)
+      ? undefined
+      : PHILIPPINE_MOBILE_NUMBER_ERROR_MESSAGE;
+  }
 
   return (
     <Modal
@@ -112,15 +132,25 @@ export function EditClientDialog({ client, onClose }: EditClientDialogProps) {
           </form.Field>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <form.Field name="phone">
+            <form.Field
+                name="phone"
+                validators={{
+                onChange: ({ value }) => validateOptionalPhoneNumber(value),
+              }}
+            >
               {(field) => (
-                <Field>
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
                   <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
                   <Input
                       id={field.name}
+                      type="tel"
+                      inputMode="tel"
                       value={field.state.value}
+                      onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
+                      placeholder="09171234567 or +639171234567"
                   />
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
               )}
             </form.Field>

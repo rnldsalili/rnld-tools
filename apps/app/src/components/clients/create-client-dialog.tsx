@@ -1,5 +1,12 @@
 import { useForm } from '@tanstack/react-form';
-import { CLIENT_STATUSES, CLIENT_STATUS_LABELS, ClientStatus } from '@workspace/constants';
+import {
+  CLIENT_STATUSES,
+  CLIENT_STATUS_LABELS,
+  ClientStatus,
+  PHILIPPINE_MOBILE_NUMBER_ERROR_MESSAGE,
+  isPhilippineMobileNumber,
+  normalizePhilippineMobileNumber,
+} from '@workspace/constants';
 import {
   Button,
   Field,
@@ -47,7 +54,9 @@ export function CreateClientDialog({ onOpenChange, open }: CreateClientDialogPro
           address: value.address.trim() || undefined,
           email: value.email.trim() || undefined,
           name: value.name.trim(),
-          phone: value.phone.trim() || undefined,
+          phone: value.phone.trim()
+            ? normalizePhilippineMobileNumber(value.phone)
+            : undefined,
           status: value.status,
         });
         toast.success('Client created successfully.');
@@ -65,6 +74,18 @@ export function CreateClientDialog({ onOpenChange, open }: CreateClientDialogPro
     }
 
     onOpenChange(nextOpen);
+  }
+
+  function validateOptionalPhoneNumber(value: string) {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return undefined;
+    }
+
+    return isPhilippineMobileNumber(trimmedValue)
+      ? undefined
+      : PHILIPPINE_MOBILE_NUMBER_ERROR_MESSAGE;
   }
 
   return (
@@ -117,16 +138,25 @@ export function CreateClientDialog({ onOpenChange, open }: CreateClientDialogPro
           </form.Field>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <form.Field name="phone">
+            <form.Field
+                name="phone"
+                validators={{
+                onChange: ({ value }) => validateOptionalPhoneNumber(value),
+              }}
+            >
               {(field) => (
-                <Field>
+                <Field data-invalid={field.state.meta.errors.length > 0 || undefined}>
                   <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
                   <Input
                       id={field.name}
+                      type="tel"
+                      inputMode="tel"
                       value={field.state.value}
+                      onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
-                      placeholder="+63 9XX XXX XXXX"
+                      placeholder="09171234567 or +639171234567"
                   />
+                  <FieldError errors={toFieldErrors(field.state.meta.errors)} />
                 </Field>
               )}
             </form.Field>

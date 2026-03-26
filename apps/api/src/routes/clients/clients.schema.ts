@@ -1,6 +1,8 @@
 import {
   CLIENT_STATUSES,
   ClientStatus,
+  nullableOptionalPhilippineMobileNumberSchema,
+  optionalPhilippineMobileNumberSchema,
   pageValidator,
   searchValidator,
 } from '@workspace/constants';
@@ -21,7 +23,7 @@ export const clientListQuerySchema = z.object({
 
 export const clientCreateSchema = z.object({
   name: z.string().trim().min(1),
-  phone: z.string().trim().optional(),
+  phone: optionalPhilippineMobileNumberSchema,
   email: z.string().trim().pipe(z.email()).optional(),
   address: z.string().trim().optional(),
   status: z.enum(CLIENT_STATUSES).default(ClientStatus.ENABLED),
@@ -29,7 +31,7 @@ export const clientCreateSchema = z.object({
 
 export const clientUpdateSchema = z.object({
   name: z.string().trim().min(1).optional(),
-  phone: z.string().trim().optional().nullable(),
+  phone: nullableOptionalPhilippineMobileNumberSchema,
   email: z.string().trim().pipe(z.email()).optional().nullable(),
   address: z.string().trim().optional().nullable(),
   status: z.enum(CLIENT_STATUSES).optional(),

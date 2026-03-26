@@ -8,6 +8,9 @@ import {
   NotificationChannel,
   NotificationEmailProvider,
   NotificationEvent,
+  PHILIPPINE_MOBILE_NUMBER_ERROR_MESSAGE,
+  isPhilippineMobileNumber,
+  normalizePhilippineMobileNumber,
 } from '@workspace/constants';
 import { Loader2Icon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -93,7 +96,7 @@ export function NotificationTestSendModal({
             event: value.event,
             templateId: templateId ?? null,
             templateName,
-            recipientPhone: value.recipientPhone.trim(),
+            recipientPhone: normalizePhilippineMobileNumber(value.recipientPhone),
             smsProvider: value.smsProvider,
             content: String(content),
           });
@@ -116,6 +119,18 @@ export function NotificationTestSendModal({
 
   function validateRequiredValue(value: string, message: string) {
     return value.trim() ? undefined : message;
+  }
+
+  function validateRequiredPhoneNumber(value: string, message: string) {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return message;
+    }
+
+    return isPhilippineMobileNumber(trimmedValue)
+      ? undefined
+      : PHILIPPINE_MOBILE_NUMBER_ERROR_MESSAGE;
   }
 
   return (
@@ -313,7 +328,7 @@ export function NotificationTestSendModal({
             <form.Field
                 name="recipientPhone"
                 validators={{
-                onChange: ({ value }) => validateRequiredValue(value, 'Recipient phone is required'),
+                onChange: ({ value }) => validateRequiredPhoneNumber(value, 'Recipient phone is required'),
               }}
             >
               {(field) => (
@@ -323,10 +338,12 @@ export function NotificationTestSendModal({
                   </FieldLabel>
                   <Input
                       id={field.name}
+                      type="tel"
+                      inputMode="tel"
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(event) => field.handleChange(event.target.value)}
-                      placeholder="09171234567"
+                      placeholder="09171234567 or +639171234567"
                       required
                   />
                   <FieldError errors={toFieldErrors(field.state.meta.errors)} />
