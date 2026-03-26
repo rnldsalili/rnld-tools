@@ -9,7 +9,6 @@ import {
   ShieldCheckIcon,
   UsersIcon,
 } from 'lucide-react';
-import { useSession } from '@workspace/auth-client';
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import { useCan } from '@workspace/permissions/react';
 import {
@@ -55,7 +54,6 @@ const OVERVIEW_CARD_STYLES: Record<string, {
 };
 
 function DashboardPage() {
-  const { data: session } = useSession();
   const { authorization } = useAppAuthorization();
   const canViewDashboard = useCan(PermissionModule.DASHBOARD, PermissionAction.VIEW);
   const { data, isLoading, isError } = useDashboard(canViewDashboard);
@@ -105,7 +103,7 @@ function DashboardPage() {
   }
 
   const summary = data.data;
-  const userName = session?.user.name || session?.user.email || 'Operator';
+  const userName = authorization?.user.name || authorization?.user.email || 'Operator';
   const roleBadges = authorization?.roles ?? [];
   const highlightedCards = summary.overviewCards.filter(
     (card) => card.id === 'clients' || card.id === 'loans',

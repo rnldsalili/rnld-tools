@@ -10,6 +10,7 @@ import {
 import {
   changePasswordSchema,
   createUserSchema,
+  updateCurrentUserSchema,
   updateUserSchema,
   userIdParamSchema,
   userRolesUpdateSchema,
@@ -118,6 +119,38 @@ export const getCurrentUser = createHandlers(
         },
         roles: toRoleSummaries(assignedRoleSlugs),
         permissions: toPermissionGrants(rolePermissions),
+      },
+    }, 200);
+  },
+);
+
+export const updateCurrentUser = createHandlers(
+  validate('json', updateCurrentUserSchema),
+  async (c) => {
+    const authenticatedUser = c.get('user');
+    const { name } = c.req.valid('json');
+    const prisma = initializePrisma(c.env);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: authenticatedUser.id },
+      data: {
+        name: name.trim(),
+      },
+    });
+
+    return c.json({
+      meta: { code: 200, message: 'Profile updated successfully' },
+      data: {
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          emailVerified: updatedUser.emailVerified,
+          mustChangePassword: updatedUser.mustChangePassword,
+          image: updatedUser.image,
+          createdAt: updatedUser.createdAt,
+          updatedAt: updatedUser.updatedAt,
+        },
       },
     }, 200);
   },
@@ -575,7 +608,11 @@ export const changeMyPassword = createHandlers(
   validate('json', changePasswordSchema),
   async (c) => {
     const authenticatedUser = c.get('user');
-    const { currentPassword, newPassword } = c.req.valid('json');
+    const {
+      confirmPassword,
+      currentPassword,
+      newPassword,
+    } = c.req.valid('json');
     const prisma = initializePrisma(c.env);
     const authContext = await auth(c.env).$context;
     const credentialAccount = await prisma.account.findFirst({
@@ -590,6 +627,15 @@ export const changeMyPassword = createHandlers(
         meta: {
           code: 400,
           message: 'Credential account not found.',
+        },
+      }, 400);
+    }
+
+    if (confirmPassword !== newPassword) {
+      return c.json({
+        meta: {
+          code: 400,
+          message: 'Passwords do not match.',
         },
       }, 400);
     }

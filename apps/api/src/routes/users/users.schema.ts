@@ -31,7 +31,12 @@ export const updateUserSchema = z.object({
   roleSlugs: z.array(roleSlugSchema).max(50),
 });
 
+export const updateCurrentUserSchema = z.object({
+  name: z.string().trim().min(1),
+});
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(1),
+  confirmPassword: z.string().min(1),
 });

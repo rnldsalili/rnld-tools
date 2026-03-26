@@ -9,6 +9,7 @@ export type UsersListResponse = InferResponseType<typeof apiClient.users.$get, 2
 export type UserListItem = UsersListResponse['data']['users'][number];
 
 type CreateUserBody = InferRequestType<typeof apiClient.users.$post>['json'];
+type UpdateCurrentUserBody = InferRequestType<typeof apiClient.users.me.$put>['json'];
 type UpdateUserBody = InferRequestType<(typeof apiClient.users)[':id']['$put']>['json'];
 type UpdateUserRolesBody = InferRequestType<(typeof apiClient.users)[':id']['roles']['$put']>['json'];
 type ChangeMyPasswordBody = InferRequestType<(typeof apiClient.users.me)['change-password']['$post']>['json'];
@@ -98,6 +99,21 @@ export function useCreateUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
       queryClient.invalidateQueries({ queryKey: ['authorization'] });
+    },
+  });
+}
+
+export function useUpdateCurrentUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: UpdateCurrentUserBody) => {
+      const response = await apiClient.users.me.$put({ json: body });
+      return parseOkResponseOrThrow(response, 'Failed to update profile.');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['authorization'] });
+      queryClient.invalidateQueries({ queryKey: [USERS_QUERY_KEY] });
     },
   });
 }

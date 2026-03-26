@@ -4,6 +4,7 @@ import {
   createUser,
   getCurrentUser,
   getUsers,
+  updateCurrentUser,
   updateUser,
   updateUserRoles,
 } from './users.handler';
@@ -14,6 +15,7 @@ import { authorize } from '@/api/middlewares/authorization.middleware';
 const usersRoute = createRouter()
   .use('*', requireAuth)
   .get('/me', ...getCurrentUser)
+  .put('/me', ...updateCurrentUser)
   .post('/me/change-password', ...changeMyPassword)
   .get('/', authorize(PermissionModule.USERS, PermissionAction.VIEW), ...getUsers)
   .post('/', authorize(PermissionModule.USERS, PermissionAction.CREATE), ...createUser)

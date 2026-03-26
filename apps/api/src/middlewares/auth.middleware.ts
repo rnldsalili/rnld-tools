@@ -3,9 +3,9 @@ import { getAuthenticatedUser } from '@/api/lib/authorization';
 import { initializePrisma } from '@/api/lib/db';
 import { createMiddleware } from '@/api/app';
 
-const PASSWORD_CHANGE_ALLOWED_PATHS = new Set([
-  '/api/users/me',
-  '/api/users/me/change-password',
+const PASSWORD_CHANGE_ALLOWED_REQUESTS = new Set([
+  'GET /api/users/me',
+  'POST /api/users/me/change-password',
 ]);
 
 export const requireAuth = createMiddleware(async (c, next) => {
@@ -36,9 +36,11 @@ export const requireAuth = createMiddleware(async (c, next) => {
 
   c.set('user', authenticatedUser);
 
+  const requestIdentifier = `${c.req.method.toUpperCase()} ${c.req.path}`;
+
   if (
     authenticatedUser.mustChangePassword
-    && !PASSWORD_CHANGE_ALLOWED_PATHS.has(c.req.path)
+    && !PASSWORD_CHANGE_ALLOWED_REQUESTS.has(requestIdentifier)
   ) {
     return c.json({
       meta: {

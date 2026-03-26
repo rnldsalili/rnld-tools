@@ -14,6 +14,7 @@ import {
   ScrollTextIcon,
   ShieldCheckIcon,
   SunIcon,
+  UserRoundIcon,
   UsersIcon,
 } from 'lucide-react';
 import { signOut, useSession } from '@workspace/auth-client';
@@ -461,13 +462,17 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
     (item) => item.isVisible?.(hasPermission) ?? true,
   );
 
-  const userInitial =
-    session.user.name.charAt(0).toUpperCase() ||
-    session.user.email.charAt(0).toUpperCase() ||
-    '?';
-
-  const userDisplayName = session.user.name || session.user.email;
+  const authorizationUser = authorization?.user;
+  const userEmail = authorizationUser ? authorizationUser.email : session.user.email;
+  const userDisplayName = authorizationUser?.name.trim()
+    || session.user.name.trim()
+    || userEmail;
+  const userInitial = (userDisplayName.charAt(0) || userEmail.charAt(0) || '?').toUpperCase();
   const userRoles = authorization?.roles ?? [];
+
+  async function handleProfileNavigation() {
+    await router.navigate({ to: '/profile' });
+  }
 
   async function handleSignOut() {
     await signOut();
@@ -559,7 +564,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
                         {userDisplayName}
                       </span>
                       <span className="block max-w-36 truncate text-[0.6875rem] text-muted-foreground">
-                        {session.user.email}
+                        {userEmail}
                       </span>
                     </span>
                   </Button>
@@ -579,7 +584,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
                             {userDisplayName}
                           </p>
                           <p className="truncate text-xs text-muted-foreground">
-                            {session.user.email}
+                            {userEmail}
                           </p>
                         </div>
                       </div>
@@ -596,6 +601,24 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
                     </div>
                   </div>
 
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                      onSelect={() => {
+                        void handleProfileNavigation();
+                      }}
+                      disabled={currentPath === '/profile'}
+                      className="mx-2 min-h-11 cursor-pointer rounded-2xl px-3 text-sm font-medium"
+                  >
+                    <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <UserRoundIcon className="size-4" />
+                    </span>
+                    <span className="flex flex-col">
+                      <span>Profile</span>
+                      <span className="text-[0.6875rem] font-normal text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground">
+                        Update your name and password
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                       onClick={handleSignOut}

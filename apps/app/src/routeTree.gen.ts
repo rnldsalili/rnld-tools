@@ -15,6 +15,7 @@ import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as toolsRouteRouteImport } from './routes/(tools)/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedChangePasswordRouteImport } from './routes/_authenticated/change-password'
 import { Route as toolsUuidGeneratorRouteImport } from './routes/(tools)/uuid-generator'
@@ -65,6 +66,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/uuid-generator': typeof toolsUuidGeneratorRoute
   '/change-password': typeof AuthenticatedChangePasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/loans': typeof AuthenticatedloansLoansRouteWithChildren
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/uuid-generator': typeof toolsUuidGeneratorRoute
   '/change-password': typeof AuthenticatedChangePasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/settings/access': typeof AuthenticatedSettingsAccessRoute
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/(tools)/uuid-generator': typeof toolsUuidGeneratorRoute
   '/_authenticated/change-password': typeof AuthenticatedChangePasswordRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/(clients)/clients': typeof AuthenticatedclientsClientsRouteWithChildren
   '/_authenticated/(loans)/loans': typeof AuthenticatedloansLoansRouteWithChildren
   '/_authenticated/settings/access': typeof AuthenticatedSettingsAccessRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/uuid-generator'
     | '/change-password'
     | '/dashboard'
+    | '/profile'
     | '/clients'
     | '/loans'
     | '/settings/access'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/uuid-generator'
     | '/change-password'
     | '/dashboard'
+    | '/profile'
     | '/settings/access'
     | '/settings/users'
     | '/documents/$token'
@@ -350,6 +361,7 @@ export interface FileRouteTypes {
     | '/(tools)/uuid-generator'
     | '/_authenticated/change-password'
     | '/_authenticated/dashboard'
+    | '/_authenticated/profile'
     | '/_authenticated/(clients)/clients'
     | '/_authenticated/(loans)/loans'
     | '/_authenticated/settings/access'
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -701,6 +720,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedChangePasswordRoute: typeof AuthenticatedChangePasswordRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedclientsClientsRoute: typeof AuthenticatedclientsClientsRouteWithChildren
   AuthenticatedloansLoansRoute: typeof AuthenticatedloansLoansRouteWithChildren
 }
@@ -709,6 +729,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedChangePasswordRoute: AuthenticatedChangePasswordRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedclientsClientsRoute:
     AuthenticatedclientsClientsRouteWithChildren,
   AuthenticatedloansLoansRoute: AuthenticatedloansLoansRouteWithChildren,
