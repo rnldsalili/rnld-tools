@@ -332,13 +332,11 @@ function Breadcrumb() {
     .map((match) => ({
       title: getMatchTitle(match.staticData),
       pathname: match.pathname,
+      routeIdentifier: getMatchRouteIdentifier(match),
     }))
-    .filter((match): match is { title: string; pathname: string } => Boolean(match.title))
+    .filter((match): match is { title: string; pathname: string; routeIdentifier: string | null } => Boolean(match.title))
     .filter((crumb) => {
-      if (
-        currentPath.startsWith('/settings/')
-        && crumb.pathname === '/settings'
-      ) {
+      if (isNestedSettingsPath(currentPath) && isSettingsRouteIdentifier(crumb.routeIdentifier)) {
         return false;
       }
 
@@ -379,6 +377,48 @@ function getMatchTitle(staticData: unknown) {
 
   const title = Reflect.get(staticData, 'title');
   return typeof title === 'string' ? title : null;
+}
+
+function getMatchRouteIdentifier(match: unknown) {
+  if (!match || typeof match !== 'object') {
+    return null;
+  }
+
+  const possibleIdentifiers = [
+    Reflect.get(match, 'routeId'),
+    Reflect.get(match, 'id'),
+    Reflect.get(match, 'fullPath'),
+  ];
+
+  for (const identifier of possibleIdentifiers) {
+    const normalizedIdentifier = normalizeRouteIdentifier(identifier);
+
+    if (normalizedIdentifier) {
+      return normalizedIdentifier;
+    }
+  }
+
+  return null;
+}
+
+function normalizeRouteIdentifier(identifier: unknown) {
+  if (typeof identifier !== 'string') {
+    return null;
+  }
+
+  if (identifier === '/') {
+    return identifier;
+  }
+
+  return identifier.replace(/\/+$/, '');
+}
+
+function isNestedSettingsPath(pathname: string) {
+  return pathname.startsWith('/settings/');
+}
+
+function isSettingsRouteIdentifier(routeIdentifier: string | null) {
+  return routeIdentifier === '/settings' || routeIdentifier === '/_authenticated/settings';
 }
 
 interface NavigationLayoutProps {
