@@ -1,6 +1,6 @@
 import { Link, createFileRoute, useRouter } from '@tanstack/react-router';
 import { format } from 'date-fns';
-import { HandCoinsIcon, PlusIcon } from 'lucide-react';
+import { BarChart3Icon, HandCoinsIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
 import { LOANS_LIMIT } from '@workspace/constants';
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
@@ -269,12 +269,20 @@ function LoansPage() {
         title="Loans"
         description="Manage client loans and installments."
         action={(
-        <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
-          <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
-            <PlusIcon className="size-3.5" />
-            New Loan
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="outline">
+            <Link to="/loans/analytics">
+              <BarChart3Icon data-icon="inline-start" />
+              Analytics
+            </Link>
           </Button>
-        </Can>
+          <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <PlusIcon data-icon="inline-start" />
+              New Loan
+            </Button>
+          </Can>
+        </div>
       )}
         controls={(
         <Input

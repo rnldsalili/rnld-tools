@@ -22,6 +22,15 @@ export {
   CardContent,
 } from '@workspace/ui/components/card';
 export {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartStyle,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@workspace/ui/components/chart';
+export {
   Field,
   FieldLabel,
   FieldDescription,

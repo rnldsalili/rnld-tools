@@ -10,6 +10,7 @@ import {
   getInstallmentAttention,
   getLatestPaidInstallments,
   getLoan,
+  getLoanAnalytics,
   getLoans,
   updateLoan,
 } from './loans.handler';
@@ -22,6 +23,7 @@ import { authorize } from '@/api/middlewares/authorization.middleware';
 const loansRoute = createRouter()
   .use('*', requireAuth)
   .get('/', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoans)
+  .get('/analytics', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoanAnalytics)
   .get('/installments/attention', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getInstallmentAttention)
   .get('/installments/latest-payments', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLatestPaidInstallments)
   .get('/:id', authorize(PermissionModule.LOANS, PermissionAction.VIEW), ...getLoan)

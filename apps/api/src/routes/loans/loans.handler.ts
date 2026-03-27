@@ -1,5 +1,6 @@
 import {
   ClientStatus,
+  Currency,
   InstallmentInterval,
   InstallmentStatus,
   InstallmentType,
@@ -31,6 +32,28 @@ import { deleteStoredObject } from '@/api/lib/storage/storage';
 import { validate } from '@/api/lib/validator';
 
 type InstallmentAttentionCategory = 'overdue' | 'near_due';
+type AgingBucketLabel = 'Current' | '1-30' | '31-60' | '61-90' | '91+';
+
+const LOAN_ANALYTICS_CURRENCY = Currency.PHP;
+const LOAN_ANALYTICS_TREND_MONTHS = 12;
+const LOAN_ANALYTICS_UPCOMING_MONTHS = 6;
+const MANILA_TIME_ZONE = 'Asia/Manila';
+const MANILA_UTC_OFFSET_HOURS = 8;
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const AGING_BUCKET_LABELS: Array<AgingBucketLabel> = ['Current', '1-30', '31-60', '61-90', '91+'];
+
+const manilaDateFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: MANILA_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const manilaMonthFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: MANILA_TIME_ZONE,
+  month: 'short',
+  year: 'numeric',
+});
 
 const addInterval = (startDate: Date, interval: InstallmentInterval, step: number): Date => {
   const originalDay = startDate.getDate();
@@ -104,6 +127,81 @@ function getInstallmentAttentionCategory(params: {
   return null;
 }
 
+function getManilaDateParts(date: Date) {
+  const parts = manilaDateFormatter.formatToParts(date);
+  const year = Number(parts.find((part) => part.type === 'year')?.value);
+  const month = Number(parts.find((part) => part.type === 'month')?.value);
+  const day = Number(parts.find((part) => part.type === 'day')?.value);
+
+  return { year, month, day };
+}
+
+function getManilaMonthStart(date: Date) {
+  const { year, month } = getManilaDateParts(date);
+
+  return new Date(Date.UTC(year, month - 1, 1, -MANILA_UTC_OFFSET_HOURS));
+}
+
+function addManilaMonths(date: Date, offset: number) {
+  const { year, month } = getManilaDateParts(date);
+
+  return new Date(Date.UTC(year, month - 1 + offset, 1, -MANILA_UTC_OFFSET_HOURS));
+}
+
+function getManilaMonthKey(date: Date) {
+  const { year, month } = getManilaDateParts(date);
+
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+function createMonthSeries(params: {
+  months: number;
+  referenceDate?: Date;
+  startOffset: number;
+}) {
+  const referenceDate = params.referenceDate ?? new Date();
+  const currentMonthStart = getManilaMonthStart(referenceDate);
+
+  return Array.from({ length: params.months }, (_, index) => {
+    const monthStart = addManilaMonths(currentMonthStart, params.startOffset + index);
+
+    return {
+      label: manilaMonthFormatter.format(monthStart),
+      monthKey: getManilaMonthKey(monthStart),
+    };
+  });
+}
+
+function getAgingBucketLabel(params: {
+  currentManilaDayStart: Date;
+  dueDate: Date;
+  status: string;
+}): AgingBucketLabel {
+  if (params.status !== InstallmentStatus.OVERDUE) {
+    return 'Current';
+  }
+
+  const dueDayStart = getManilaDayRange(params.dueDate).start;
+  const overdueDays = Math.max(
+    1,
+    Math.floor((params.currentManilaDayStart.getTime() - dueDayStart.getTime()) / DAY_IN_MS),
+  );
+
+  if (overdueDays <= 30) {
+    return '1-30';
+  }
+
+  if (overdueDays <= 60) {
+    return '31-60';
+  }
+
+  if (overdueDays <= 90) {
+    return '61-90';
+  }
+
+  return '91+';
+}
+
 export const getLoans = createHandlers(
   validate('query', loanListQuerySchema),
   async (c) => {
@@ -151,6 +249,224 @@ export const getLoans = createHandlers(
           total: totalLoans,
           totalPages: Math.ceil(totalLoans / limit),
         },
+      },
+    }, 200);
+  },
+);
+
+export const getLoanAnalytics = createHandlers(
+  async (c) => {
+    const prisma = initializePrisma(c.env);
+    const authenticatedUser = c.get('user');
+    const referenceDate = new Date();
+    const currentManilaDayStart = getManilaDayRange(referenceDate).start;
+    const nearDueWindowEnd = getManilaDayRange(referenceDate, 3).start;
+    const accessibleLoanFilter = await getAccessibleLoanFilter(prisma, authenticatedUser);
+    const phpLoanFilter: Prisma.LoanWhereInput = {
+      ...accessibleLoanFilter,
+      currency: LOAN_ANALYTICS_CURRENCY,
+    };
+
+    const [phpLoans, phpInstallments, phpPayments] = await Promise.all([
+      prisma.loan.findMany({
+        where: phpLoanFilter,
+        select: {
+          id: true,
+          amount: true,
+          excessBalance: true,
+          loanDate: true,
+          _count: {
+            select: {
+              installments: true,
+            },
+          },
+        },
+      }),
+      prisma.loanInstallment.findMany({
+        where: {
+          loan: {
+            is: phpLoanFilter,
+          },
+        },
+        select: {
+          loanId: true,
+          dueDate: true,
+          amount: true,
+          paidAmount: true,
+          status: true,
+        },
+      }),
+      prisma.loanInstallmentPayment.findMany({
+        where: {
+          loan: {
+            is: phpLoanFilter,
+          },
+          voidedAt: null,
+        },
+        select: {
+          paymentDate: true,
+          appliedAmount: true,
+        },
+      }),
+    ]);
+
+    const monthlyTrend = createMonthSeries({
+      months: LOAN_ANALYTICS_TREND_MONTHS,
+      referenceDate,
+      startOffset: -(LOAN_ANALYTICS_TREND_MONTHS - 1),
+    }).map((entry) => ({
+      ...entry,
+      originatedAmount: 0,
+      collectedAmount: 0,
+    }));
+    const monthlyTrendByKey = new Map(
+      monthlyTrend.map((entry) => [entry.monthKey, entry]),
+    );
+
+    const upcomingDue = createMonthSeries({
+      months: LOAN_ANALYTICS_UPCOMING_MONTHS,
+      referenceDate,
+      startOffset: 0,
+    }).map((entry) => ({
+      ...entry,
+      dueAmount: 0,
+      installmentsCount: 0,
+    }));
+    const upcomingDueByKey = new Map(
+      upcomingDue.map((entry) => [entry.monthKey, entry]),
+    );
+
+    const agingBucketTotals = new Map(
+      AGING_BUCKET_LABELS.map((label) => [
+        label,
+        {
+          label,
+          outstandingAmount: 0,
+          installmentsCount: 0,
+        },
+      ]),
+    );
+
+    let totalPrincipalLoaned = 0;
+    let totalAppliedCollections = 0;
+    let scheduledOutstanding = 0;
+    let overdueOutstanding = 0;
+    let activeExcessBalance = 0;
+    let unscheduledLoansCount = 0;
+    let unscheduledLoanAmount = 0;
+
+    for (const loan of phpLoans) {
+      totalPrincipalLoaned += loan.amount;
+      activeExcessBalance += loan.excessBalance;
+
+      if (loan._count.installments === 0) {
+        unscheduledLoansCount += 1;
+        unscheduledLoanAmount += loan.amount;
+      }
+
+      const monthlyTrendEntry = monthlyTrendByKey.get(getManilaMonthKey(loan.loanDate));
+      if (monthlyTrendEntry) {
+        monthlyTrendEntry.originatedAmount += loan.amount;
+      }
+    }
+
+    for (const payment of phpPayments) {
+      totalAppliedCollections += payment.appliedAmount;
+
+      const monthlyTrendEntry = monthlyTrendByKey.get(getManilaMonthKey(payment.paymentDate));
+      if (monthlyTrendEntry) {
+        monthlyTrendEntry.collectedAmount += payment.appliedAmount;
+      }
+    }
+
+    const loansRequiringReview = new Set<string>();
+
+    for (const installment of phpInstallments) {
+      const remainingAmount = getInstallmentRemainingAmount(
+        installment.amount,
+        installment.paidAmount,
+      );
+      const normalizedStatus = getInstallmentStatus({
+        amount: installment.amount,
+        paidAmount: installment.paidAmount,
+        dueDate: installment.dueDate,
+        currentStatus: installment.status,
+        referenceDate,
+      });
+
+      scheduledOutstanding += remainingAmount;
+
+      if (normalizedStatus === InstallmentStatus.OVERDUE) {
+        overdueOutstanding += remainingAmount;
+      }
+
+      if (remainingAmount <= 0) {
+        continue;
+      }
+
+      const attentionCategory = getInstallmentAttentionCategory({
+        dueDate: installment.dueDate,
+        currentManilaDayStart,
+        nearDueWindowEnd,
+      });
+
+      if (attentionCategory) {
+        loansRequiringReview.add(installment.loanId);
+      }
+
+      const agingBucketLabel = getAgingBucketLabel({
+        currentManilaDayStart,
+        dueDate: installment.dueDate,
+        status: normalizedStatus,
+      });
+      const agingBucket = agingBucketTotals.get(agingBucketLabel);
+
+      if (agingBucket) {
+        agingBucket.outstandingAmount += remainingAmount;
+        agingBucket.installmentsCount += 1;
+      }
+
+      const upcomingDueEntry = upcomingDueByKey.get(getManilaMonthKey(installment.dueDate));
+      if (upcomingDueEntry) {
+        upcomingDueEntry.dueAmount += remainingAmount;
+        upcomingDueEntry.installmentsCount += 1;
+      }
+    }
+
+    return c.json({
+      meta: { code: 200, message: 'Loan analytics retrieved successfully' },
+      data: {
+        currency: LOAN_ANALYTICS_CURRENCY,
+        summary: {
+          totalLoans: phpLoans.length,
+          totalPrincipalLoaned: roundCurrencyAmount(totalPrincipalLoaned),
+          totalAppliedCollections: roundCurrencyAmount(totalAppliedCollections),
+          scheduledOutstanding: roundCurrencyAmount(scheduledOutstanding),
+          overdueOutstanding: roundCurrencyAmount(overdueOutstanding),
+          activeExcessBalance: roundCurrencyAmount(activeExcessBalance),
+          loansRequiringReview: loansRequiringReview.size,
+          unscheduledLoansCount,
+          unscheduledLoanAmount: roundCurrencyAmount(unscheduledLoanAmount),
+        },
+        monthlyTrend: monthlyTrend.map((entry) => ({
+          ...entry,
+          originatedAmount: roundCurrencyAmount(entry.originatedAmount),
+          collectedAmount: roundCurrencyAmount(entry.collectedAmount),
+        })),
+        agingBuckets: AGING_BUCKET_LABELS.map((label) => {
+          const bucket = agingBucketTotals.get(label);
+
+          return {
+            label,
+            outstandingAmount: roundCurrencyAmount(bucket?.outstandingAmount ?? 0),
+            installmentsCount: bucket?.installmentsCount ?? 0,
+          };
+        }),
+        upcomingDue: upcomingDue.map((entry) => ({
+          ...entry,
+          dueAmount: roundCurrencyAmount(entry.dueAmount),
+          installmentsCount: entry.installmentsCount,
+        })),
       },
     }, 200);
   },
