@@ -285,10 +285,13 @@ function LoansPage() {
         />
       )}
     >
-      <div className="grid gap-4 p-4 sm:p-5">
+      <div className="grid min-w-0 gap-4 p-4 sm:p-5">
         <HorizontalTabs
             value={activeTab}
             onValueChange={handleTabChange}
+            className="min-w-0"
+            listClassName="-mx-1 px-1 sm:mx-0 sm:px-0"
+            contentClassName="min-w-0"
             items={[
               {
                 value: 'all',
@@ -301,8 +304,8 @@ function LoansPage() {
                         isLoading={isLoading}
                         variant="card"
                         toolbar={(
-                          <div className="flex w-full items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex w-full flex-wrap items-center gap-2">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
                               <span className="text-sm font-semibold">All Loans</span>
                               <Badge className="border-0 bg-muted text-xs text-muted-foreground">
                                 {totalLoans}
@@ -334,8 +337,8 @@ function LoansPage() {
                         variant="card"
                         getRowClassName={(row) => getAttentionRowClassName(row.attentionCategory)}
                         toolbar={(
-                          <div className="flex w-full items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex w-full flex-wrap items-center gap-2">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
                               <span className="text-sm font-semibold">Items Requiring Review</span>
                               <Badge className="border-0 bg-muted text-xs text-muted-foreground">
                                 {totalAttentionInstallments}
@@ -366,8 +369,8 @@ function LoansPage() {
                         isLoading={isLatestPaymentsLoading}
                         variant="card"
                         toolbar={(
-                          <div className="flex w-full items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex w-full flex-wrap items-center gap-2">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
                               <span className="text-sm font-semibold">Latest Payments</span>
                               <Badge className="border-0 bg-muted text-xs text-muted-foreground">
                                 {totalLatestPayments}
