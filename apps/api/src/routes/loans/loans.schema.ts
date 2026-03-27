@@ -33,6 +33,17 @@ export const loanLatestPaymentsQuerySchema = z.object({
   limit: limitValidator,
 });
 
+export const loanAnalyticsQuerySchema = z.object({
+  startDate: dateStringValidator.optional(),
+  endDate: dateStringValidator.optional(),
+}).refine(
+  ({ startDate, endDate }) => !startDate || !endDate || new Date(startDate).getTime() <= new Date(endDate).getTime(),
+  {
+    message: 'startDate must be before or equal to endDate',
+    path: ['endDate'],
+  },
+);
+
 export const loanGetQuerySchema = z.object({
   page: pageValidator,
   limit: limitValidator,

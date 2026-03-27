@@ -8,6 +8,7 @@ import {
   NotificationEvent,
 } from '@workspace/constants';
 import {
+  loanAnalyticsQuerySchema,
   loanCreateSchema,
   loanGetQuerySchema,
   loanIdParamSchema,
@@ -37,6 +38,7 @@ type AgingBucketLabel = 'Current' | '1-30' | '31-60' | '61-90' | '91+';
 const LOAN_ANALYTICS_CURRENCY = Currency.PHP;
 const LOAN_ANALYTICS_TREND_MONTHS = 12;
 const LOAN_ANALYTICS_UPCOMING_MONTHS = 6;
+const LOAN_ANALYTICS_DEFAULT_EARNINGS_DAYS = 90;
 const MANILA_TIME_ZONE = 'Asia/Manila';
 const MANILA_UTC_OFFSET_HOURS = 8;
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -154,6 +156,12 @@ function getManilaMonthKey(date: Date) {
   return `${year}-${String(month).padStart(2, '0')}`;
 }
 
+function getManilaDateString(date: Date) {
+  const { year, month, day } = getManilaDateParts(date);
+
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 function createMonthSeries(params: {
   months: number;
   referenceDate?: Date;
@@ -170,6 +178,64 @@ function createMonthSeries(params: {
       monthKey: getManilaMonthKey(monthStart),
     };
   });
+}
+
+function createMonthSeriesBetween(params: {
+  startDate: Date;
+  endDate: Date;
+}) {
+  const series = [];
+  const startMonth = getManilaMonthStart(params.startDate);
+  const endMonth = getManilaMonthStart(params.endDate);
+
+  for (
+    let monthOffset = 0;
+    addManilaMonths(startMonth, monthOffset).getTime() <= endMonth.getTime();
+    monthOffset += 1
+  ) {
+    const monthStart = addManilaMonths(startMonth, monthOffset);
+
+    series.push({
+      label: manilaMonthFormatter.format(monthStart),
+      monthKey: getManilaMonthKey(monthStart),
+    });
+  }
+
+  return series;
+}
+
+function isDateWithinRange(params: {
+  date: Date;
+  start: Date;
+  endExclusive: Date;
+}) {
+  return params.date.getTime() >= params.start.getTime()
+    && params.date.getTime() < params.endExclusive.getTime();
+}
+
+function resolveLoanAnalyticsDateRange(params: {
+  referenceDate: Date;
+  startDate?: string;
+  endDate?: string;
+}) {
+  const currentDateString = getManilaDateString(params.referenceDate);
+  const resolvedEndDate = params.endDate ?? currentDateString;
+  const resolvedEndReference = new Date(resolvedEndDate);
+  const resolvedStartDate = params.startDate ?? getManilaDateString(
+    getManilaDayRange(
+      resolvedEndReference,
+      -(LOAN_ANALYTICS_DEFAULT_EARNINGS_DAYS - 1),
+    ).start,
+  );
+  const start = getManilaDayRange(new Date(resolvedStartDate)).start;
+  const endRange = getManilaDayRange(new Date(resolvedEndDate));
+
+  return {
+    startDate: resolvedStartDate,
+    endDate: resolvedEndDate,
+    start,
+    endExclusive: endRange.end,
+  };
 }
 
 function getAgingBucketLabel(params: {
@@ -255,12 +321,19 @@ export const getLoans = createHandlers(
 );
 
 export const getLoanAnalytics = createHandlers(
+  validate('query', loanAnalyticsQuerySchema),
   async (c) => {
+    const { startDate, endDate } = c.req.valid('query');
     const prisma = initializePrisma(c.env);
     const authenticatedUser = c.get('user');
     const referenceDate = new Date();
     const currentManilaDayStart = getManilaDayRange(referenceDate).start;
     const nearDueWindowEnd = getManilaDayRange(referenceDate, 3).start;
+    const earningsRange = resolveLoanAnalyticsDateRange({
+      referenceDate,
+      startDate,
+      endDate,
+    });
     const accessibleLoanFilter = await getAccessibleLoanFilter(prisma, authenticatedUser);
     const phpLoanFilter: Prisma.LoanWhereInput = {
       ...accessibleLoanFilter,
@@ -325,6 +398,21 @@ export const getLoanAnalytics = createHandlers(
       monthlyTrend.map((entry) => [entry.monthKey, entry]),
     );
 
+    const earningsTrend = createMonthSeriesBetween({
+      startDate: earningsRange.start,
+      endDate: new Date(earningsRange.endExclusive.getTime() - 1),
+    }).map((entry) => ({
+      periodKey: entry.monthKey,
+      label: entry.label,
+      projectedReceivables: 0,
+      projectedEarnings: 0,
+      outstandingReceivables: 0,
+      collectedAmount: 0,
+    }));
+    const earningsTrendByKey = new Map(
+      earningsTrend.map((entry) => [entry.periodKey, entry]),
+    );
+
     const upcomingDue = createMonthSeries({
       months: LOAN_ANALYTICS_UPCOMING_MONTHS,
       referenceDate,
@@ -356,9 +444,18 @@ export const getLoanAnalytics = createHandlers(
     let activeExcessBalance = 0;
     let unscheduledLoansCount = 0;
     let unscheduledLoanAmount = 0;
+    let projectedReceivablesInRange = 0;
+    let projectedPrincipalInRange = 0;
+    let collectedInRange = 0;
+    let outstandingReceivablesInRange = 0;
+    let outstandingPrincipalInRange = 0;
     const loanIdsWithPaymentRecords = new Set(
       phpPayments.map((payment) => payment.loanId),
     );
+    const principalAmountByLoanId = new Map(
+      phpLoans.map((loan) => [loan.id, loan.amount]),
+    );
+    const scheduledInstallmentAmountByLoanId = new Map<string, number>();
 
     for (const loan of phpLoans) {
       totalPrincipalLoaned += loan.amount;
@@ -375,12 +472,33 @@ export const getLoanAnalytics = createHandlers(
       }
     }
 
+    for (const installment of phpInstallments) {
+      const currentScheduledAmount = scheduledInstallmentAmountByLoanId.get(installment.loanId) ?? 0;
+      scheduledInstallmentAmountByLoanId.set(
+        installment.loanId,
+        currentScheduledAmount + installment.amount,
+      );
+    }
+
     for (const payment of phpPayments) {
       totalAppliedCollections += payment.appliedAmount;
 
       const monthlyTrendEntry = monthlyTrendByKey.get(getManilaMonthKey(payment.paymentDate));
       if (monthlyTrendEntry) {
         monthlyTrendEntry.collectedAmount += payment.appliedAmount;
+      }
+
+      if (isDateWithinRange({
+        date: payment.paymentDate,
+        start: earningsRange.start,
+        endExclusive: earningsRange.endExclusive,
+      })) {
+        collectedInRange += payment.appliedAmount;
+
+        const earningsTrendEntry = earningsTrendByKey.get(getManilaMonthKey(payment.paymentDate));
+        if (earningsTrendEntry) {
+          earningsTrendEntry.collectedAmount += payment.appliedAmount;
+        }
       }
     }
 
@@ -398,6 +516,19 @@ export const getLoanAnalytics = createHandlers(
             monthKey,
             currentCollectedAmount + installment.paidAmount,
           );
+
+          if (isDateWithinRange({
+            date: installment.paidAt,
+            start: earningsRange.start,
+            endExclusive: earningsRange.endExclusive,
+          })) {
+            collectedInRange += installment.paidAmount;
+
+            const earningsTrendEntry = earningsTrendByKey.get(monthKey);
+            if (earningsTrendEntry) {
+              earningsTrendEntry.collectedAmount += installment.paidAmount;
+            }
+          }
         }
       }
 
@@ -405,6 +536,14 @@ export const getLoanAnalytics = createHandlers(
         installment.amount,
         installment.paidAmount,
       );
+      const totalScheduledInstallmentAmountForLoan = scheduledInstallmentAmountByLoanId.get(installment.loanId) ?? 0;
+      const loanPrincipalAmount = principalAmountByLoanId.get(installment.loanId) ?? 0;
+      const allocatedPrincipalAmount = totalScheduledInstallmentAmountForLoan > 0
+        ? loanPrincipalAmount * (installment.amount / totalScheduledInstallmentAmountForLoan)
+        : 0;
+      const remainingPrincipalAmount = installment.amount > 0
+        ? allocatedPrincipalAmount * (remainingAmount / installment.amount)
+        : 0;
       const normalizedStatus = getInstallmentStatus({
         amount: installment.amount,
         paidAmount: installment.paidAmount,
@@ -417,6 +556,24 @@ export const getLoanAnalytics = createHandlers(
 
       if (normalizedStatus === InstallmentStatus.OVERDUE) {
         overdueOutstanding += remainingAmount;
+      }
+
+      if (isDateWithinRange({
+        date: installment.dueDate,
+        start: earningsRange.start,
+        endExclusive: earningsRange.endExclusive,
+      }) && totalScheduledInstallmentAmountForLoan > 0) {
+        projectedReceivablesInRange += installment.amount;
+        projectedPrincipalInRange += allocatedPrincipalAmount;
+        outstandingReceivablesInRange += remainingAmount;
+        outstandingPrincipalInRange += remainingPrincipalAmount;
+
+        const earningsTrendEntry = earningsTrendByKey.get(getManilaMonthKey(installment.dueDate));
+        if (earningsTrendEntry) {
+          earningsTrendEntry.projectedReceivables += installment.amount;
+          earningsTrendEntry.projectedEarnings += installment.amount - allocatedPrincipalAmount;
+          earningsTrendEntry.outstandingReceivables += remainingAmount;
+        }
       }
 
       if (remainingAmount <= 0) {
@@ -493,6 +650,31 @@ export const getLoanAnalytics = createHandlers(
           dueAmount: roundCurrencyAmount(entry.dueAmount),
           installmentsCount: entry.installmentsCount,
         })),
+        earnings: {
+          range: {
+            startDate: earningsRange.startDate,
+            endDate: earningsRange.endDate,
+          },
+          summary: {
+            projectedReceivablesInRange: roundCurrencyAmount(projectedReceivablesInRange),
+            projectedPrincipalInRange: roundCurrencyAmount(projectedPrincipalInRange),
+            projectedEarningsInRange: roundCurrencyAmount(
+              projectedReceivablesInRange - projectedPrincipalInRange,
+            ),
+            collectedInRange: roundCurrencyAmount(collectedInRange),
+            outstandingReceivablesInRange: roundCurrencyAmount(outstandingReceivablesInRange),
+            outstandingProjectedEarningsInRange: roundCurrencyAmount(
+              outstandingReceivablesInRange - outstandingPrincipalInRange,
+            ),
+          },
+          trend: earningsTrend.map((entry) => ({
+            ...entry,
+            projectedReceivables: roundCurrencyAmount(entry.projectedReceivables),
+            projectedEarnings: roundCurrencyAmount(entry.projectedEarnings),
+            outstandingReceivables: roundCurrencyAmount(entry.outstandingReceivables),
+            collectedAmount: roundCurrencyAmount(entry.collectedAmount),
+          })),
+        },
       },
     }, 200);
   },
