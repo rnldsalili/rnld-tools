@@ -46,7 +46,6 @@ import {
   LOAN_CALCULATOR_PROCESSING_FEE_MAX,
   LOAN_CALCULATOR_PROCESSING_FEE_MIN,
 } from '@/app/constants/loan-calculator';
-import { formatCurrency } from '@/app/lib/format';
 import { calculateLoanSummary } from '@/app/lib/loan-calculator';
 import {
   createLoanCalculatorShareFile,
@@ -54,7 +53,7 @@ import {
 } from '@/app/lib/loan-calculator-share';
 import { isOneOf } from '@/app/lib/value-guards';
 
-const INTEREST_RATE_PRECISION = 4;
+const TWO_DECIMAL_PRECISION = 2;
 
 export const Route = createFileRoute('/(tools)/loan-calculator')({
   head: () => ({ meta: [{ title: 'RTools - Loan Calculator' }] }),
@@ -97,6 +96,7 @@ function LoanCalculatorPage() {
     rawValue: string,
     min: number,
     max: number,
+    shouldRoundUpToTwoDecimals = false,
   ) {
     const parsedValue = Number(rawValue);
 
@@ -104,7 +104,12 @@ function LoanCalculatorPage() {
       return;
     }
 
-    setField(key, Math.min(max, Math.max(min, parsedValue)) as LoanCalculatorValues[TKey]);
+    const boundedValue = Math.min(max, Math.max(min, parsedValue));
+    const normalizedValue = shouldRoundUpToTwoDecimals
+      ? roundUpToTwoDecimals(boundedValue)
+      : boundedValue;
+
+    setField(key, normalizedValue as LoanCalculatorValues[TKey]);
   }
 
   function setSynchronizedInterestRates(rawValue: string) {
@@ -118,20 +123,21 @@ function LoanCalculatorPage() {
       LOAN_CALCULATOR_INTEREST_RATE_MAX,
       Math.max(LOAN_CALCULATOR_INTEREST_RATE_MIN, parsedValue),
     );
+    const roundedInterestRate = roundUpToPrecision(boundedValue, TWO_DECIMAL_PRECISION);
 
     if (values.interestRateMode === 'monthly') {
       setValues((currentValues) => ({
         ...currentValues,
-        monthlyInterestRate: boundedValue,
-        annualInterestRate: roundTo(boundedValue * 12),
+        monthlyInterestRate: roundedInterestRate,
+        annualInterestRate: roundUpToPrecision(roundedInterestRate * 12, TWO_DECIMAL_PRECISION),
       }));
       return;
     }
 
     setValues((currentValues) => ({
       ...currentValues,
-      annualInterestRate: boundedValue,
-      monthlyInterestRate: roundTo(boundedValue / 12),
+      annualInterestRate: roundedInterestRate,
+      monthlyInterestRate: roundUpToPrecision(roundedInterestRate / 12, TWO_DECIMAL_PRECISION),
     }));
   }
 
@@ -146,12 +152,13 @@ function LoanCalculatorPage() {
       LOAN_CALCULATOR_PROCESSING_FEE_MAX,
       Math.max(LOAN_CALCULATOR_PROCESSING_FEE_MIN, parsedValue),
     );
+    const roundedFeeValue = roundUpToPrecision(boundedValue, TWO_DECIMAL_PRECISION);
 
     setValues((currentValues) => ({
       ...currentValues,
       processingFeeValues: {
         ...currentValues.processingFeeValues,
-        [currentValues.processingFeeMode]: boundedValue,
+        [currentValues.processingFeeMode]: roundedFeeValue,
       },
     }));
   }
@@ -229,8 +236,8 @@ function LoanCalculatorPage() {
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
         <ToolPageHeader
-          href="/loan-calculator"
-          description={`Estimate ${paymentLabel.toLowerCase()}, total interest, processing fees, and the amount the borrower actually receives after the deduction.`}
+            href="/loan-calculator"
+            description={`Estimate ${paymentLabel.toLowerCase()}, total interest, processing fees, and the amount the borrower actually receives after the deduction.`}
         />
 
         <Card className="w-full max-w-6xl">
@@ -246,18 +253,19 @@ function LoanCalculatorPage() {
             <div className="flex flex-col gap-6">
             <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
               <NumberField
-                id="loan-amount"
-                label="Loan Amount"
-                value={values.amount}
-                min={LOAN_CALCULATOR_AMOUNT_MIN}
-                max={LOAN_CALCULATOR_AMOUNT_MAX}
-                step="0.01"
-                onChange={(rawValue) =>
+                  id="loan-amount"
+                  label="Loan Amount"
+                  value={values.amount}
+                  min={LOAN_CALCULATOR_AMOUNT_MIN}
+                  max={LOAN_CALCULATOR_AMOUNT_MAX}
+                  step="0.01"
+                  onChange={(rawValue) =>
                   setBoundedNumber(
                     'amount',
                     rawValue,
                     LOAN_CALCULATOR_AMOUNT_MIN,
                     LOAN_CALCULATOR_AMOUNT_MAX,
+                    true,
                   )}
               />
 
@@ -266,8 +274,8 @@ function LoanCalculatorPage() {
                   Currency
                 </Label>
                 <Select
-                  value={values.currency}
-                  onValueChange={(nextCurrency) => {
+                    value={values.currency}
+                    onValueChange={(nextCurrency) => {
                     if (isOneOf(CURRENCIES, nextCurrency)) {
                       setField('currency', nextCurrency);
                     }
@@ -292,9 +300,9 @@ function LoanCalculatorPage() {
               <ToggleGroup>
                 {LOAN_CALCULATOR_MODE_VALUES.map((mode) => (
                   <ToggleButton
-                    key={mode}
-                    isActive={values.calculationMode === mode}
-                    onClick={() => setField('calculationMode', mode)}
+                      key={mode}
+                      isActive={values.calculationMode === mode}
+                      onClick={() => setField('calculationMode', mode)}
                   >
                     {LOAN_CALCULATOR_MODE_LABELS[mode]}
                   </ToggleButton>
@@ -307,9 +315,9 @@ function LoanCalculatorPage() {
               <ToggleGroup>
                 {LOAN_CALCULATOR_INTEREST_RATE_MODE_VALUES.map((interestMode) => (
                   <ToggleButton
-                    key={interestMode}
-                    isActive={values.interestRateMode === interestMode}
-                    onClick={() => setField('interestRateMode', interestMode)}
+                      key={interestMode}
+                      isActive={values.interestRateMode === interestMode}
+                      onClick={() => setField('interestRateMode', interestMode)}
                   >
                     {LOAN_CALCULATOR_INTEREST_RATE_MODE_LABELS[interestMode]}
                   </ToggleButton>
@@ -319,23 +327,23 @@ function LoanCalculatorPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <NumberField
-                id="interest-rate"
-                label={interestFieldLabel}
-                value={activeInterestRate}
-                min={LOAN_CALCULATOR_INTEREST_RATE_MIN}
-                max={LOAN_CALCULATOR_INTEREST_RATE_MAX}
-                step="0.01"
-                onChange={setSynchronizedInterestRates}
+                  id="interest-rate"
+                  label={interestFieldLabel}
+                  value={activeInterestRate}
+                  min={LOAN_CALCULATOR_INTEREST_RATE_MIN}
+                  max={LOAN_CALCULATOR_INTEREST_RATE_MAX}
+                  step="0.01"
+                  onChange={setSynchronizedInterestRates}
               />
 
               <NumberField
-                id="payment-count"
-                label="Number of Payments"
-                value={values.paymentCount}
-                min={LOAN_CALCULATOR_PAYMENT_COUNT_MIN}
-                max={LOAN_CALCULATOR_PAYMENT_COUNT_MAX}
-                step="1"
-                onChange={(rawValue) =>
+                  id="payment-count"
+                  label="Number of Payments"
+                  value={values.paymentCount}
+                  min={LOAN_CALCULATOR_PAYMENT_COUNT_MIN}
+                  max={LOAN_CALCULATOR_PAYMENT_COUNT_MAX}
+                  step="1"
+                  onChange={(rawValue) =>
                   setBoundedNumber(
                     'paymentCount',
                     rawValue,
@@ -360,9 +368,9 @@ function LoanCalculatorPage() {
               <ToggleGroup>
                 {INSTALLMENT_INTERVAL_VALUES.map((interval) => (
                   <ToggleButton
-                    key={interval}
-                    isActive={values.paymentInterval === interval}
-                    onClick={() => setField('paymentInterval', interval)}
+                      key={interval}
+                      isActive={values.paymentInterval === interval}
+                      onClick={() => setField('paymentInterval', interval)}
                   >
                     {INSTALLMENT_INTERVAL_LABELS[interval]}
                   </ToggleButton>
@@ -378,9 +386,9 @@ function LoanCalculatorPage() {
                 <ToggleGroup>
                   {LOAN_CALCULATOR_FEE_MODE_VALUES.map((feeMode) => (
                     <ToggleButton
-                      key={feeMode}
-                      isActive={values.processingFeeMode === feeMode}
-                      onClick={() => setField('processingFeeMode', feeMode)}
+                        key={feeMode}
+                        isActive={values.processingFeeMode === feeMode}
+                        onClick={() => setField('processingFeeMode', feeMode)}
                     >
                       {LOAN_CALCULATOR_FEE_MODE_LABELS[feeMode]}
                     </ToggleButton>
@@ -389,18 +397,18 @@ function LoanCalculatorPage() {
               </div>
 
               <NumberField
-                id="processing-fee"
-                label={processingFeeLabel}
-                value={processingFeeValue}
-                min={LOAN_CALCULATOR_PROCESSING_FEE_MIN}
-                max={LOAN_CALCULATOR_PROCESSING_FEE_MAX}
-                step="0.01"
-                onChange={setProcessingFeeValue}
+                  id="processing-fee"
+                  label={processingFeeLabel}
+                  value={processingFeeValue}
+                  min={LOAN_CALCULATOR_PROCESSING_FEE_MIN}
+                  max={LOAN_CALCULATOR_PROCESSING_FEE_MAX}
+                  step="0.01"
+                  onChange={setProcessingFeeValue}
               />
 
               <p className="text-xs leading-relaxed text-muted-foreground">{processingFeeHint}</p>
             </div>
-          </div>
+            </div>
 
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl border border-border bg-muted/40 p-4 sm:p-5">
@@ -416,10 +424,10 @@ function LoanCalculatorPage() {
 
                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                   <Button
-                    variant="outline"
-                    onClick={handleDownloadResult}
-                    disabled={isDownloading}
-                    className="w-full gap-2 sm:w-auto"
+                      variant="outline"
+                      onClick={handleDownloadResult}
+                      disabled={isDownloading}
+                      className="w-full gap-2 sm:w-auto"
                   >
                     {isDownloading ? (
                       <Loader2Icon className="size-4 animate-spin" />
@@ -429,10 +437,10 @@ function LoanCalculatorPage() {
                     {isDownloading ? 'Preparing...' : 'Download'}
                   </Button>
                   <Button
-                    variant="outline"
-                    onClick={handleShareResult}
-                    disabled={isSharing}
-                    className="w-full gap-2 sm:w-auto"
+                      variant="outline"
+                      onClick={handleShareResult}
+                      disabled={isSharing}
+                      className="w-full gap-2 sm:w-auto"
                   >
                     {isSharing ? (
                       <Loader2Icon className="size-4 animate-spin" />
@@ -451,21 +459,21 @@ function LoanCalculatorPage() {
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <SummaryCard
-                label="Total Interest"
-                value={formatCurrency(summary.totalInterest, values.currency)}
+                  label="Total Interest"
+                  value={formatCurrency(summary.totalInterest, values.currency)}
               />
               <SummaryCard
-                label="Total Repayment"
-                value={formatCurrency(summary.totalRepayment, values.currency)}
+                  label="Total Repayment"
+                  value={formatCurrency(summary.totalRepayment, values.currency)}
               />
               <SummaryCard
-                label="Processing Fee"
-                value={formatCurrency(summary.processingFeeAmount, values.currency)}
+                  label="Processing Fee"
+                  value={formatCurrency(summary.processingFeeAmount, values.currency)}
               />
               <SummaryCard
-                label="Expected Amount Received"
-                value={formatCurrency(summary.expectedAmountReceived, values.currency)}
-                valueClassName={cn(summary.expectedAmountReceived < 0 && 'text-destructive')}
+                  label="Expected Amount Received"
+                  value={formatCurrency(summary.expectedAmountReceived, values.currency)}
+                  valueClassName={cn(summary.expectedAmountReceived < 0 && 'text-destructive')}
               />
             </div>
 
@@ -510,7 +518,7 @@ function LoanCalculatorPage() {
                 </span>
                 , the expected released amount is{' '}
                 <span
-                  className={cn(
+                    className={cn(
                     'font-medium text-foreground',
                     summary.expectedAmountReceived < 0 && 'text-destructive',
                   )}
@@ -566,8 +574,8 @@ function LoanCalculatorPage() {
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -596,14 +604,14 @@ function NumberField({
         {label}
       </Label>
       <Input
-        id={id}
-        type="number"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="bg-background"
+          id={id}
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="bg-background"
       />
     </div>
   );
@@ -628,9 +636,9 @@ function ToggleButton({
 }) {
   return (
     <button
-      type="button"
-      onClick={onClick}
-      className={cn(
+        type="button"
+        onClick={onClick}
+        className={cn(
         'flex w-full min-w-0 items-center justify-center rounded-lg px-3 py-2 text-center text-sm font-medium transition-colors',
         isActive
           ? 'bg-background text-foreground shadow-sm'
@@ -679,8 +687,28 @@ function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'AbortError';
 }
 
-function roundTo(value: number): number {
-  return Number(value.toFixed(INTEREST_RATE_PRECISION));
+function roundUpToPrecision(value: number, precision: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  const precisionFactor = 10 ** precision;
+  return Math.ceil((value - Number.EPSILON) * precisionFactor) / precisionFactor;
+}
+
+function roundUpToTwoDecimals(value: number): number {
+  return roundUpToPrecision(value, TWO_DECIMAL_PRECISION);
+}
+
+function formatCurrency(value: number, currency: string): string {
+  const roundedValue = roundUpToTwoDecimals(value);
+
+  const formattedAmount = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(roundedValue);
+
+  return `${currency} ${formattedAmount}`;
 }
 
 function formatPercentage(value: number): string {
@@ -688,8 +716,10 @@ function formatPercentage(value: number): string {
 }
 
 function formatDecimal(value: number): string {
+  const roundedValue = roundUpToTwoDecimals(value);
+
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(roundedValue);
 }
