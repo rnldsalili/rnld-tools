@@ -293,6 +293,7 @@ export const getLoanAnalytics = createHandlers(
           dueDate: true,
           amount: true,
           paidAmount: true,
+          paidAt: true,
           status: true,
         },
       }),
@@ -304,6 +305,7 @@ export const getLoanAnalytics = createHandlers(
           voidedAt: null,
         },
         select: {
+          loanId: true,
           paymentDate: true,
           appliedAmount: true,
         },
@@ -354,6 +356,9 @@ export const getLoanAnalytics = createHandlers(
     let activeExcessBalance = 0;
     let unscheduledLoansCount = 0;
     let unscheduledLoanAmount = 0;
+    const loanIdsWithPaymentRecords = new Set(
+      phpPayments.map((payment) => payment.loanId),
+    );
 
     for (const loan of phpLoans) {
       totalPrincipalLoaned += loan.amount;
@@ -379,9 +384,23 @@ export const getLoanAnalytics = createHandlers(
       }
     }
 
+    const legacyCollectedAmountsByMonth = new Map<string, number>();
     const loansRequiringReview = new Set<string>();
 
     for (const installment of phpInstallments) {
+      if (!loanIdsWithPaymentRecords.has(installment.loanId) && installment.paidAmount > 0) {
+        totalAppliedCollections += installment.paidAmount;
+
+        if (installment.paidAt) {
+          const monthKey = getManilaMonthKey(installment.paidAt);
+          const currentCollectedAmount = legacyCollectedAmountsByMonth.get(monthKey) ?? 0;
+          legacyCollectedAmountsByMonth.set(
+            monthKey,
+            currentCollectedAmount + installment.paidAmount,
+          );
+        }
+      }
+
       const remainingAmount = getInstallmentRemainingAmount(
         installment.amount,
         installment.paidAmount,
@@ -430,6 +449,13 @@ export const getLoanAnalytics = createHandlers(
       if (upcomingDueEntry) {
         upcomingDueEntry.dueAmount += remainingAmount;
         upcomingDueEntry.installmentsCount += 1;
+      }
+    }
+
+    for (const [monthKey, collectedAmount] of legacyCollectedAmountsByMonth.entries()) {
+      const monthlyTrendEntry = monthlyTrendByKey.get(monthKey);
+      if (monthlyTrendEntry) {
+        monthlyTrendEntry.collectedAmount += collectedAmount;
       }
     }
 

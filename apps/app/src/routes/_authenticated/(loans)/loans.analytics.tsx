@@ -206,7 +206,7 @@ function LoanAnalyticsContent({
         <MetricCard
             title="Applied Collections"
             value={formatCurrency(summary.totalAppliedCollections, currency)}
-            description="Money collected and applied to loan balances."
+            description="Money collected toward balances, including older paid loans without payment records."
             icon={CircleDollarSignIcon}
         />
         <MetricCard
@@ -256,7 +256,7 @@ function LoanAnalyticsContent({
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
         <ChartCard
             title="Monthly Originations vs Collections"
-            description="Compares loans created and money collected over the last 12 months."
+            description="Compares loans created and money collected over the last 12 months, using paid loan dates when payment records are missing."
         >
           <ChartContainer config={monthlyTrendChartConfig} className="min-h-[280px] w-full">
             <BarChart accessibilityLayer data={monthlyTrend} barGap={10}>
