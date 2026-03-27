@@ -8,17 +8,25 @@ import {
 } from '@/app/constants/password-generator';
 
 export function generatePassword(opts: PasswordOptions): string {
-  let charset = '';
-  if (opts.uppercase) charset += CHAR_UPPERCASE;
-  if (opts.lowercase) charset += CHAR_LOWERCASE;
-  if (opts.numbers) charset += CHAR_NUMBERS;
-  if (opts.symbols) charset += CHAR_SYMBOLS;
-  if (opts.excludeAmbiguous) charset = charset.replace(AMBIGUOUS_RE, '');
-  if (!charset) return '';
+  const enabledCharsets = [
+    opts.uppercase ? filterCharset(CHAR_UPPERCASE, opts.excludeAmbiguous) : '',
+    opts.lowercase ? filterCharset(CHAR_LOWERCASE, opts.excludeAmbiguous) : '',
+    opts.numbers ? filterCharset(CHAR_NUMBERS, opts.excludeAmbiguous) : '',
+    opts.symbols ? filterCharset(CHAR_SYMBOLS, opts.excludeAmbiguous) : '',
+  ].filter((charset) => charset.length > 0);
 
-  const buf = new Uint32Array(opts.length);
-  crypto.getRandomValues(buf);
-  return Array.from(buf, (n) => charset[n % charset.length]).join('');
+  if (enabledCharsets.length === 0 || opts.length < enabledCharsets.length) return '';
+
+  const combinedCharset = enabledCharsets.join('');
+  const passwordCharacters = enabledCharsets.map((charset) => pickRandomCharacter(charset));
+
+  while (passwordCharacters.length < opts.length) {
+    passwordCharacters.push(pickRandomCharacter(combinedCharset));
+  }
+
+  shuffleCharacters(passwordCharacters);
+
+  return passwordCharacters.join('');
 }
 
 export function calcStrength(opts: PasswordOptions): PasswordStrength {
@@ -40,4 +48,35 @@ export function calcStrength(opts: PasswordOptions): PasswordStrength {
   if (score <= 4) return { label: 'Fair', score: 3 };
   if (score <= 5) return { label: 'Strong', score: 4 };
   return { label: 'Very Strong', score: 5 };
+}
+
+function filterCharset(charset: string, excludeAmbiguous: boolean): string {
+  return excludeAmbiguous ? charset.replace(AMBIGUOUS_RE, '') : charset;
+}
+
+function pickRandomCharacter(charset: string): string {
+  return charset[getRandomInt(charset.length)] ?? '';
+}
+
+function shuffleCharacters(characters: string[]): void {
+  for (let currentIndex = characters.length - 1; currentIndex > 0; currentIndex--) {
+    const randomIndex = getRandomInt(currentIndex + 1);
+    [characters[currentIndex], characters[randomIndex]] = [characters[randomIndex], characters[currentIndex]];
+  }
+}
+
+function getRandomInt(maxExclusive: number): number {
+  if (maxExclusive <= 0) return 0;
+
+  const randomBuffer = new Uint32Array(1);
+  const maxUint32 = 0x100000000;
+  const unbiasedLimit = maxUint32 - (maxUint32 % maxExclusive);
+
+  while (true) {
+    crypto.getRandomValues(randomBuffer);
+    const randomValue = randomBuffer[0] ?? 0;
+    if (randomValue < unbiasedLimit) {
+      return randomValue % maxExclusive;
+    }
+  }
 }
