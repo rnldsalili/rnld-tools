@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { CheckIcon, CopyIcon, RefreshCwIcon, ShuffleIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, RefreshCwIcon } from 'lucide-react';
 import {
   Button,
   Card,
@@ -15,6 +15,7 @@ import {
 } from '@workspace/ui';
 
 import type { SecretEncoding, SecretOptions } from '@/app/types/secret-generator';
+import { ToolPageHeader } from '@/app/components/tools/tool-page-header';
 import {
   DEFAULT_SECRET_OPTIONS,
   ENCODING_LABELS,
@@ -61,12 +62,7 @@ function SecretGeneratorPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
-      {/* Page heading */}
-      <div className="flex items-center justify-center size-12 rounded-full bg-accent mb-6">
-        <ShuffleIcon className="size-5 text-accent-foreground" />
-      </div>
-      <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Tools</p>
-      <h1 className="text-4xl font-bold text-foreground tracking-tight mb-8">Secret Generator</h1>
+      <ToolPageHeader href="/secret-generator" />
 
       {/* Main card */}
       <Card className="w-full max-w-md">

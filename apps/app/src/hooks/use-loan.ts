@@ -31,6 +31,8 @@ type InstallmentPaymentsGetRoute =
 type UpdateLoanRoute = (typeof apiClient.loans)[':id']['$put'];
 type UpdateInstallmentRoute =
   (typeof apiClient.loans)[':loanId']['installments'][':installmentId']['$put'];
+type DeleteInstallmentRoute =
+  (typeof apiClient.loans)[':loanId']['installments'][':installmentId']['$delete'];
 type AddInstallmentRoute = (typeof apiClient.loans)[':loanId']['installments']['$post'];
 type RecordInstallmentPaymentRoute =
   (typeof apiClient.loans)[':loanId']['installments'][':installmentId']['payments']['$post'];
@@ -111,6 +113,7 @@ export type LoanPaidInstallment = Omit<LatestPaidInstallmentItemBase, 'client' |
 type CreateLoanBody = InferRequestType<typeof apiClient.loans.$post>['json'];
 type UpdateLoanBody = InferRequestType<UpdateLoanRoute>['json'];
 type UpdateInstallmentBody = InferRequestType<UpdateInstallmentRoute>['json'];
+type DeleteInstallmentParams = InferRequestType<DeleteInstallmentRoute>['param'];
 type AddInstallmentBody = InferRequestType<AddInstallmentRoute>['json'];
 type RecordInstallmentPaymentBody = InferRequestType<RecordInstallmentPaymentRoute>['json'];
 type VoidInstallmentPaymentBody = InferRequestType<VoidInstallmentPaymentRoute>['json'];
@@ -648,6 +651,23 @@ export function useUpdateInstallment() {
       });
 
       return parseOkResponseOrThrow(response, 'Failed to update installment.');
+    },
+    onSuccess: (_data, { loanId, installmentId }) => {
+      invalidateLoanQueries(queryClient, { loanId, installmentId });
+    },
+  });
+}
+
+export function useDeleteInstallment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ loanId, installmentId }: DeleteInstallmentParams) => {
+      const response = await apiClient.loans[':loanId'].installments[':installmentId'].$delete({
+        param: { loanId, installmentId },
+      });
+
+      return parseOkResponseOrThrow(response, 'Failed to delete installment.');
     },
     onSuccess: (_data, { loanId, installmentId }) => {
       invalidateLoanQueries(queryClient, { loanId, installmentId });

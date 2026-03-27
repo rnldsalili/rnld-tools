@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
-import { CheckIcon, ClipboardListIcon, CopyIcon, HashIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
+import { CheckIcon, ClipboardListIcon, CopyIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react';
 import {
   Button,
   Card,
@@ -14,6 +14,7 @@ import {
 } from '@workspace/ui';
 
 import type { UuidOptions } from '@/app/types/uuid-generator';
+import { ToolPageHeader } from '@/app/components/tools/tool-page-header';
 import {
   DEFAULT_UUID_OPTIONS,
   UUID_COUNT_MAX,
@@ -64,12 +65,7 @@ function UuidGeneratorPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
-      {/* Page heading */}
-      <div className="flex items-center justify-center size-12 rounded-full bg-accent mb-6">
-        <HashIcon className="size-5 text-accent-foreground" />
-      </div>
-      <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Tools</p>
-      <h1 className="text-4xl font-bold text-foreground tracking-tight mb-8">UUID Generator</h1>
+      <ToolPageHeader href="/uuid-generator" />
 
       {/* Main card */}
       <Card className="w-full max-w-lg">

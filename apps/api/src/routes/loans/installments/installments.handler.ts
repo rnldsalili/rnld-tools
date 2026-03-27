@@ -253,7 +253,6 @@ export const deleteInstallment = createHandlers(
 
     await createLoanLog(prisma, {
       loanId,
-      installmentId,
       actorUserId: authenticatedUser.id,
       eventType: LoanLogEventType.INSTALLMENT_DELETED,
       eventData: {

@@ -72,6 +72,7 @@ import {
   useLoanAttachments,
 } from '@/app/hooks/use-loan-attachments';
 import {
+  useDeleteInstallment,
   useDeleteLoan,
   useLoan,
   useLoanLogs,
@@ -105,6 +106,7 @@ function LoanDetailPage() {
   const [installmentsPage, setInstallmentsPage] = useState(1);
   const [loanLogsPage, setLoanLogsPage] = useState(1);
   const [selectedInstallment, setSelectedInstallment] = useState<LoanInstallment | null>(null);
+  const [installmentPendingDelete, setInstallmentPendingDelete] = useState<LoanInstallment | null>(null);
   const [selectedAttachment, setSelectedAttachment] = useState<LoanAttachment | null>(null);
   const [paymentInstallment, setPaymentInstallment] = useState<LoanInstallment | null>(null);
   const [paymentHistoryInstallment, setPaymentHistoryInstallment] = useState<LoanInstallment | null>(null);
@@ -151,6 +153,7 @@ function LoanDetailPage() {
     page: loanLogsPage,
     limit: LOAN_LOGS_LIMIT,
   });
+  const deleteInstallmentMutation = useDeleteInstallment();
   const { mutateAsync: deleteLoan, isPending: isDeletePending } = useDeleteLoan();
   const { data: attachmentsData, isLoading: isAttachmentsLoading } = useLoanAttachments(loanId);
   const createLoanAttachmentMutation = useCreateLoanAttachment();
@@ -215,6 +218,28 @@ function LoanDetailPage() {
       await router.navigate({ to: '/loans' });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete loan.');
+    }
+  }
+
+  async function handleDeleteInstallment() {
+    if (!installmentPendingDelete) {
+      return;
+    }
+
+    try {
+      await deleteInstallmentMutation.mutateAsync({
+        loanId,
+        installmentId: installmentPendingDelete.id,
+      });
+
+      if (installments.length === 1 && installmentsPage > 1) {
+        setInstallmentsPage((currentPage) => Math.max(1, currentPage - 1));
+      }
+
+      setInstallmentPendingDelete(null);
+      toast.success('Installment deleted successfully.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete installment.');
     }
   }
 
@@ -443,6 +468,24 @@ function LoanDetailPage() {
                 Edit
               </button>
             </>
+          </Can>
+          <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+            {row.original.paidAmount <= 0 && row.original.paymentCount === 0 ? (
+              <>
+                <span className="mx-2 h-4 w-px bg-border" aria-hidden="true" />
+                <button
+                    type="button"
+                    className="font-medium text-destructive transition-colors hover:text-destructive/80"
+                    onClick={() => setInstallmentPendingDelete(row.original)}
+                    disabled={
+                      deleteInstallmentMutation.isPending
+                      && deleteInstallmentMutation.variables.installmentId === row.original.id
+                    }
+                >
+                  Delete
+                </button>
+              </>
+            ) : null}
           </Can>
         </div>
       ),
@@ -1008,6 +1051,26 @@ function LoanDetailPage() {
           errorMessage={previewState.errorMessage}
           onDownload={previewState.source ? handleDownloadActivePreview : undefined}
       />
+
+      <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
+        <ConfirmDeleteDialog
+            open={installmentPendingDelete !== null}
+            onOpenChange={(open) => {
+              if (!deleteInstallmentMutation.isPending && !open) {
+                setInstallmentPendingDelete(null);
+              }
+            }}
+            title="Delete Installment"
+            description={
+              installmentPendingDelete
+                ? `This will permanently remove the installment due on ${format(new Date(installmentPendingDelete.dueDate), 'MMM d, yyyy')} for ${formatCurrency(installmentPendingDelete.amount, loan?.currency ?? 'PHP')}.`
+                : 'This will permanently remove the selected installment from this loan.'
+            }
+            confirmLabel="Delete Installment"
+            isPending={deleteInstallmentMutation.isPending}
+            onConfirm={handleDeleteInstallment}
+        />
+      </Can>
 
       <Can I={PermissionAction.UPDATE} a={PermissionModule.LOANS}>
         <ConfirmDeleteDialog

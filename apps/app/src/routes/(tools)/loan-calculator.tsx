@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { DownloadIcon, HandCoinsIcon, InfoIcon, Loader2Icon, Share2Icon } from 'lucide-react';
+import { DownloadIcon, InfoIcon, Loader2Icon, Share2Icon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -24,7 +24,9 @@ import {
   Separator,
   cn,
 } from '@workspace/ui';
+import type { LoanCalculatorValues } from '@/app/types/loan-calculator';
 
+import { ToolPageHeader } from '@/app/components/tools/tool-page-header';
 import {
   DEFAULT_LOAN_CALCULATOR_VALUES,
   LOAN_CALCULATOR_AMOUNT_MAX,
@@ -51,7 +53,6 @@ import {
   downloadLoanCalculatorShareFile,
 } from '@/app/lib/loan-calculator-share';
 import { isOneOf } from '@/app/lib/value-guards';
-import type { LoanCalculatorValues } from '@/app/types/loan-calculator';
 
 const INTEREST_RATE_PRECISION = 4;
 
@@ -227,29 +228,22 @@ function LoanCalculatorPage() {
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
-      <div className="flex items-center justify-center size-12 rounded-full bg-accent mb-6">
-        <HandCoinsIcon className="size-5 text-accent-foreground" />
-      </div>
-      <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Tools</p>
-      <h1 className="mb-3 text-center text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-        Loan Calculator
-      </h1>
-      <p className="mb-8 max-w-2xl text-center text-sm leading-relaxed text-muted-foreground">
-        Estimate {paymentLabel.toLowerCase()}, total interest, processing fees, and the amount
-        the borrower actually receives after the deduction.
-      </p>
+        <ToolPageHeader
+          href="/loan-calculator"
+          description={`Estimate ${paymentLabel.toLowerCase()}, total interest, processing fees, and the amount the borrower actually receives after the deduction.`}
+        />
 
-      <Card className="w-full max-w-6xl">
-        <CardHeader className="px-4 pb-4 sm:px-6">
-          <CardTitle className="text-base">Loan Terms</CardTitle>
-          <CardDescription>
-            Compare flat-rate and amortized payments, switch between monthly and annual interest,
-            and share the result as a polished image.
-          </CardDescription>
-        </CardHeader>
+        <Card className="w-full max-w-6xl">
+          <CardHeader className="px-4 pb-4 sm:px-6">
+            <CardTitle className="text-base">Loan Terms</CardTitle>
+            <CardDescription>
+              Compare flat-rate and amortized payments, switch between monthly and annual interest,
+              and share the result as a polished image.
+            </CardDescription>
+          </CardHeader>
 
-        <CardContent className="grid gap-6 px-4 pb-4 sm:gap-8 sm:px-6 sm:pb-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
-          <div className="flex flex-col gap-6">
+          <CardContent className="grid gap-6 px-4 pb-4 sm:gap-8 sm:px-6 sm:pb-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+            <div className="flex flex-col gap-6">
             <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem]">
               <NumberField
                 id="loan-amount"

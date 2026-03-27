@@ -1,14 +1,9 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
 import {
   ArrowRightIcon,
-  FingerprintIcon,
-  KeyRoundIcon,
-  HandCoinsIcon,
-  LayoutDashboardIcon,
-  LockIcon,
-  ShieldCheckIcon,
+  MoonIcon,
+  SunIcon,
 } from 'lucide-react';
-import { useSession } from '@workspace/auth-client';
 import {
   Button,
   Card,
@@ -16,8 +11,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  cn,
 } from '@workspace/ui';
+
+import { ToolIconBadge } from '@/app/components/tools/tool-icon-badge';
+import { PUBLIC_TOOLS } from '@/app/constants/public-tools';
+import { useTheme } from '@/app/hooks/use-theme';
 import { BasicLayout } from '@/app/layouts/basic-layout';
 
 export const Route = createFileRoute('/')({
@@ -25,149 +23,204 @@ export const Route = createFileRoute('/')({
   component: HomePage,
 });
 
-const FREE_TOOLS = [
-  {
-    title: 'Password Generator',
-    description:
-      'Generate strong, customizable passwords with control over length, character sets, and complexity.',
-    icon: KeyRoundIcon,
-    href: '/password-generator',
-  },
-  {
-    title: 'UUID Generator',
-    description:
-      'Instantly generate one or many UUID v4 identifiers suitable for use as unique keys or tokens.',
-    icon: FingerprintIcon,
-    href: '/uuid-generator',
-  },
-  {
-    title: 'Secret Generator',
-    description:
-      'Create cryptographically secure random secrets in base64, base64url, or hex encoding.',
-    icon: ShieldCheckIcon,
-    href: '/secret-generator',
-  },
-  {
-    title: 'Loan Calculator',
-    description:
-      'Estimate loan payments, total interest, processing fees, and the expected amount released.',
-    icon: HandCoinsIcon,
-    href: '/loan-calculator',
-  },
+const FOOTER_LINKS = [
+  { label: 'Tools', href: '#tools' },
 ];
-
-const ACCOUNT_FEATURES = [
-  {
-    title: 'Dashboard',
-    description:
-      'Your personal hub — get a quick overview of all available tools in one place after signing in.',
-    icon: LayoutDashboardIcon,
-    href: '/dashboard',
-  },
-];
-
-function SectionLabel({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <p
-        className={cn(
-        'text-xs font-semibold uppercase tracking-widest mb-4',
-        className,
-      )}
-    >
-      {children}
-    </p>
-  );
-}
 
 function HomePage() {
-  const { data: session, isPending } = useSession();
-  const isAuthenticated = !!session?.user;
+  const { isDark, mounted, toggle } = useTheme();
 
   return (
     <BasicLayout>
-      <div className="min-h-screen flex flex-col">
-        {/* Hero */}
-        <section className="flex flex-col items-center justify-center text-center px-6 py-24 md:py-32">
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-4">
-            RTools
-          </h1>
-          <p className="text-muted-foreground max-w-md mb-10 leading-relaxed">
-            A lightweight utility dashboard. Use the free tools right away, or
-            sign in to access your personalized dashboard.
-          </p>
-          <div className="flex items-center gap-3">
-            <Button asChild>
-              <Link to="/dashboard">
-                Go to Dashboard
-                <ArrowRightIcon className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-            {!isPending && !isAuthenticated && (
-              <Button asChild variant="outline">
-                <Link to="/login">Sign In</Link>
-              </Button>
-            )}
-          </div>
-        </section>
+      <div className="relative min-h-screen overflow-hidden bg-background">
+        <div aria-hidden="true" className="absolute inset-0">
+          <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-primary/12 blur-3xl" />
+          <div className="absolute left-[-6rem] top-72 h-80 w-80 rounded-full bg-muted blur-3xl" />
+          <div className="absolute right-[-5rem] top-32 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute bottom-[-3rem] right-12 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(255,255,255,0.2)_26%,transparent_58%,rgba(255,255,255,0.36)_100%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,transparent_28%,transparent_74%,rgba(255,255,255,0.04)_100%)]" />
+        </div>
 
-        {/* Free tools */}
-        <section className="px-6 pb-16 max-w-5xl mx-auto w-full">
-          <SectionLabel className="text-muted-foreground">
-            No account required
-          </SectionLabel>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FREE_TOOLS.map(({ title, description, icon: Icon, href }) => (
-              <Link key={href} to={href} className="group">
-                <Card className="h-full transition-colors group-hover:border-foreground/30">
-                  <CardHeader className="pb-3">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                      <Icon className="h-5 w-5 text-foreground" />
+        <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-background/82 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-3.5">
+              <Link
+                  to="/"
+                  className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-border/70 bg-background/70 px-2 py-1.5 transition-colors hover:bg-background"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-background shadow-sm">
+                  <img
+                      src="/web-app-manifest-512x512.png"
+                      alt="RTools logo"
+                      className="size-full object-cover"
+                  />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[0.7rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+                    RTools
+                  </span>
+                  <span className="block truncate text-xs text-foreground sm:text-sm">
+                    Secure everyday utilities
+                  </span>
+                </span>
+              </Link>
+
+              <div className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3">
+                <Button asChild variant="outline" className="h-9 rounded-full px-4">
+                  <Link to="/login">Login</Link>
+                </Button>
+
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-9 rounded-full border border-border/70 bg-background/80 hover:bg-muted/80"
+                    onClick={toggle}
+                    aria-label={mounted ? (isDark ? 'Switch to light theme' : 'Switch to dark theme') : 'Toggle theme'}
+                >
+                  {mounted ? (
+                    isDark ? <SunIcon className="size-4.5" /> : <MoonIcon className="size-4.5" />
+                  ) : (
+                    <MoonIcon className="size-4.5" />
+                  )}
+                </Button>
+              </div>
+          </div>
+        </header>
+
+        <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-8 sm:px-6 sm:pb-10">
+          <main className="flex flex-1 flex-col gap-8 pt-2 sm:gap-10 sm:pt-4">
+            <section
+                id="tools"
+                className="relative scroll-mt-24 overflow-hidden rounded-[2rem] border border-border/80 bg-background/90 shadow-[0_34px_100px_-56px_rgba(15,23,42,0.34)] backdrop-blur-xl sm:scroll-mt-28 dark:shadow-[0_34px_100px_-56px_rgba(0,0,0,0.68)]"
+            >
+              <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(245,158,11,0.16),transparent_22%),linear-gradient(135deg,rgba(255,255,255,0.88),rgba(255,255,255,0.18))] dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(245,158,11,0.12),transparent_18%),linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0))]"
+              />
+
+              <div className="relative grid gap-6 px-5 py-6 sm:px-6 sm:py-7 lg:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.95fr)] lg:px-8 lg:py-8">
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      Secure generators and working calculations in one place.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-[3.65rem] lg:leading-[1.02]">
+                      One place for the utility work teams do every day.
+                    </h1>
+                    <p className="max-w-3xl text-base leading-8 text-muted-foreground">
+                      RTools brings together the small but essential workflows that keep delivery
+                      moving: generating secure values, creating identifiers, and running clear loan
+                      estimates without switching between throwaway tools.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 pt-1 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-border/70 bg-background/68 px-4 py-4">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                        Direct use
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-foreground">
+                        Open the tool, complete the task, and move on.
+                      </p>
                     </div>
-                    <CardTitle className="text-base">{title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="leading-relaxed">
-                      {description}
+                    <div className="rounded-2xl border border-border/70 bg-background/68 px-4 py-4">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                        Clean output
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-foreground">
+                        Results are structured for copy, review, and handoff.
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-border/70 bg-background/68 px-4 py-4">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                        Reliable scope
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-foreground">
+                        A compact set of utilities with practical defaults.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Card className="overflow-hidden border border-border/70 bg-background/82 py-0 shadow-[0_22px_48px_-32px_rgba(15,23,42,0.32)] backdrop-blur-sm">
+                  <div
+                      aria-hidden="true"
+                      className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/55 to-transparent"
+                  />
+                  <CardHeader className="relative gap-2 border-b border-border/60 px-5 pt-5 pb-4">
+                    <CardTitle className="text-base font-semibold tracking-tight">
+                      Built for recurring utility work
+                    </CardTitle>
+                    <CardDescription className="text-sm leading-6 text-muted-foreground">
+                      The public surface keeps the most useful workflows close at hand.
                     </CardDescription>
+                  </CardHeader>
+                  <CardContent className="relative space-y-3 px-5 pt-4 pb-5">
+                    {PUBLIC_TOOLS.map(({ title, href, icon, benefit }) => (
+                      <Link
+                          key={href}
+                          to={href}
+                          className="group flex items-start gap-3 rounded-2xl border border-border/70 bg-background/68 px-3 py-3 transition-all hover:-translate-y-0.5 hover:border-border hover:bg-background"
+                      >
+                        <ToolIconBadge icon={icon} className="mt-0.5" />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-semibold text-foreground">{title}</span>
+                            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                          </span>
+                          <span className="mt-1 block text-sm leading-6 text-muted-foreground">
+                            {benefit}
+                          </span>
+                        </span>
+                      </Link>
+                    ))}
                   </CardContent>
                 </Card>
-              </Link>
-            ))}
-          </div>
-        </section>
+              </div>
+            </section>
 
-        {/* Account features */}
-        <section className="px-6 pb-24 max-w-5xl mx-auto w-full">
-          <SectionLabel className="text-muted-foreground flex items-center gap-1.5">
-            <LockIcon className="h-3 w-3" />
-            Requires account
-          </SectionLabel>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {ACCOUNT_FEATURES.map(({ title, description, icon: Icon, href }) => (
-              <Link key={href} to={href} className="group">
-                <Card className="h-full transition-colors group-hover:border-foreground/30">
-                  <CardHeader className="pb-3">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                      <Icon className="h-5 w-5 text-foreground" />
-                    </div>
-                    <CardTitle className="text-base">{title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="leading-relaxed">
-                      {description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+          </main>
+
+        </div>
+
+        <footer className="w-full border-t border-border/70 bg-background/82 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-4 py-8 sm:px-6 sm:py-10 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-background shadow-sm">
+                  <img
+                      src="/web-app-manifest-512x512.png"
+                      alt="RTools logo"
+                      className="size-full object-cover"
+                  />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+                    RTools
+                  </p>
+                  <p className="text-base font-medium text-foreground">
+                    Secure everyday utilities in one place.
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Public tools for secure values, identifiers, and working calculations. Clear
+                workflows, dependable output, and less tool switching.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {FOOTER_LINKS.map((item) => (
+                <Button key={item.href} asChild variant="ghost" className="rounded-full">
+                  <a href={item.href}>{item.label}</a>
+                </Button>
+              ))}
+            </div>
           </div>
-        </section>
+        </footer>
       </div>
     </BasicLayout>
   );
