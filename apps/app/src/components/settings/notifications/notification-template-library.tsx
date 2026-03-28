@@ -54,12 +54,12 @@ export function NotificationTemplateLibrary({
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="relative">
-          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground sm:left-2.5" />
           <Input
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Search templates"
-              className="pl-9"
+              className="pr-3 pl-9 sm:pr-2 sm:pl-8"
           />
         </div>
 

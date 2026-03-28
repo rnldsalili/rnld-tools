@@ -38,6 +38,7 @@ import { Route as AuthenticatedSettingsdocumentsDocumentsRouteImport } from './r
 import { Route as AuthenticatedloansLoansNewRouteImport } from './routes/_authenticated/(loans)/loans.new'
 import { Route as AuthenticatedloansLoansAnalyticsRouteImport } from './routes/_authenticated/(loans)/loans.analytics'
 import { Route as AuthenticatedloansLoansLoanIdRouteImport } from './routes/_authenticated/(loans)/loans.$loanId'
+import { Route as AuthenticatedclientsClientsNewRouteImport } from './routes/_authenticated/(clients)/clients.new'
 import { Route as AuthenticatedclientsClientsClientIdRouteImport } from './routes/_authenticated/(clients)/clients.$clientId'
 import { Route as AuthenticatedSettingsdocumentsDocumentsIndexRouteImport } from './routes/_authenticated/settings/(documents)/documents.index'
 import { Route as AuthenticatedSettingsdocumentsDocumentsDocumentIdRouteImport } from './routes/_authenticated/settings/(documents)/documents.$documentId'
@@ -199,6 +200,12 @@ const AuthenticatedloansLoansLoanIdRoute =
     path: '/$loanId',
     getParentRoute: () => AuthenticatedloansLoansRoute,
   } as any)
+const AuthenticatedclientsClientsNewRoute =
+  AuthenticatedclientsClientsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedclientsClientsRoute,
+  } as any)
 const AuthenticatedclientsClientsClientIdRoute =
   AuthenticatedclientsClientsClientIdRouteImport.update({
     id: '/$clientId',
@@ -237,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
+  '/clients/new': typeof AuthenticatedclientsClientsNewRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/loans/analytics': typeof AuthenticatedloansLoansAnalyticsRoute
   '/loans/new': typeof AuthenticatedloansLoansNewRoute
@@ -265,6 +273,7 @@ export interface FileRoutesByTo {
   '/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/documents/$token': typeof PublicDocumentsTokenRoute
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
+  '/clients/new': typeof AuthenticatedclientsClientsNewRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/loans/analytics': typeof AuthenticatedloansLoansAnalyticsRoute
   '/loans/new': typeof AuthenticatedloansLoansNewRoute
@@ -299,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/users': typeof AuthenticatedSettingsUsersRoute
   '/_public/documents/$token': typeof PublicDocumentsTokenRoute
   '/_authenticated/(clients)/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
+  '/_authenticated/(clients)/clients/new': typeof AuthenticatedclientsClientsNewRoute
   '/_authenticated/(loans)/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/_authenticated/(loans)/loans/analytics': typeof AuthenticatedloansLoansAnalyticsRoute
   '/_authenticated/(loans)/loans/new': typeof AuthenticatedloansLoansNewRoute
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/documents/$token'
     | '/clients/$clientId'
+    | '/clients/new'
     | '/loans/$loanId'
     | '/loans/analytics'
     | '/loans/new'
@@ -360,6 +371,7 @@ export interface FileRouteTypes {
     | '/settings/users'
     | '/documents/$token'
     | '/clients/$clientId'
+    | '/clients/new'
     | '/loans/$loanId'
     | '/loans/analytics'
     | '/loans/new'
@@ -393,6 +405,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/users'
     | '/_public/documents/$token'
     | '/_authenticated/(clients)/clients/$clientId'
+    | '/_authenticated/(clients)/clients/new'
     | '/_authenticated/(loans)/loans/$loanId'
     | '/_authenticated/(loans)/loans/analytics'
     | '/_authenticated/(loans)/loans/new'
@@ -620,6 +633,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedloansLoansLoanIdRouteImport
       parentRoute: typeof AuthenticatedloansLoansRoute
     }
+    '/_authenticated/(clients)/clients/new': {
+      id: '/_authenticated/(clients)/clients/new'
+      path: '/new'
+      fullPath: '/clients/new'
+      preLoaderRoute: typeof AuthenticatedclientsClientsNewRouteImport
+      parentRoute: typeof AuthenticatedclientsClientsRoute
+    }
     '/_authenticated/(clients)/clients/$clientId': {
       id: '/_authenticated/(clients)/clients/$clientId'
       path: '/$clientId'
@@ -724,6 +744,7 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 
 interface AuthenticatedclientsClientsRouteChildren {
   AuthenticatedclientsClientsClientIdRoute: typeof AuthenticatedclientsClientsClientIdRoute
+  AuthenticatedclientsClientsNewRoute: typeof AuthenticatedclientsClientsNewRoute
   AuthenticatedclientsClientsIndexRoute: typeof AuthenticatedclientsClientsIndexRoute
 }
 
@@ -731,6 +752,7 @@ const AuthenticatedclientsClientsRouteChildren: AuthenticatedclientsClientsRoute
   {
     AuthenticatedclientsClientsClientIdRoute:
       AuthenticatedclientsClientsClientIdRoute,
+    AuthenticatedclientsClientsNewRoute: AuthenticatedclientsClientsNewRoute,
     AuthenticatedclientsClientsIndexRoute:
       AuthenticatedclientsClientsIndexRoute,
   }

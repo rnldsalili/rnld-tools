@@ -8,7 +8,6 @@ import { PlusIcon, UsersIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { ClientListItem } from '@/app/hooks/use-client';
-import { CreateClientDialog } from '@/app/components/clients/create-client-dialog';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { ClientStatusBadge } from '@/app/components/clients/client-status-badge';
 import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
@@ -23,7 +22,6 @@ export const Route = createFileRoute('/_authenticated/(clients)/clients/')({
 function ClientsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [page, setPage] = useState(1);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const debouncedSearch = useDebounce(searchInput);
 
   const { data, isLoading } = useClients({
@@ -105,9 +103,11 @@ function ClientsPage() {
         description="Manage the client records used across loan creation and documents."
         action={(
         <Can I={PermissionAction.CREATE} a={PermissionModule.CLIENTS}>
-          <Button className="gap-1.5" onClick={() => setIsCreateDialogOpen(true)}>
-            <PlusIcon className="size-3.5" />
-            New Client
+          <Button asChild className="gap-1.5">
+            <Link to="/clients/new">
+              <PlusIcon className="size-3.5" />
+              New Client
+            </Link>
           </Button>
         </Can>
       )}
@@ -136,9 +136,6 @@ function ClientsPage() {
           />
         )}
       />
-      <Can I={PermissionAction.CREATE} a={PermissionModule.CLIENTS}>
-        <CreateClientDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      </Can>
     </AuthenticatedListPageShell>
   );
 }

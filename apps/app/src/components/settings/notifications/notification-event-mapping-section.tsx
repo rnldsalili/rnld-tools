@@ -105,11 +105,6 @@ function NotificationEventMappingChannelCard({
       <div className="flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
           <Badge variant="secondary">{getNotificationChannelLabel(item.channel)}</Badge>
-          <span className="text-sm text-muted-foreground">
-            {item.channel === NotificationChannel.EMAIL
-              ? 'Rich email template with subject line'
-              : 'Plain text message for mobile delivery'}
-          </span>
         </div>
 
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
