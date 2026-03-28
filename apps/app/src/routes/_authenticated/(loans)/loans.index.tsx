@@ -5,7 +5,18 @@ import { useState } from 'react';
 import { LOANS_LIMIT } from '@workspace/constants';
 import { PermissionAction, PermissionModule } from '@workspace/permissions';
 import { Can, useCan } from '@workspace/permissions/react';
-import { Badge, Button, DataTable, HorizontalTabs, Input, Pagination, cn } from '@workspace/ui';
+import {
+  Badge,
+  Button,
+  DataTable,
+  Input,
+  Pagination,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  cn,
+} from '@workspace/ui';
 import { z } from 'zod';
 import type { ColumnDef } from '@tanstack/react-table';
 import type {
@@ -67,13 +78,10 @@ function LoansPage() {
   });
 
   const loans = data?.data.loans ?? [];
-  const totalLoans = data?.data.pagination.total ?? 0;
   const allLoansTotalPages = data?.data.pagination.totalPages ?? 1;
   const attentionInstallments = attentionData?.data.installments ?? [];
-  const totalAttentionInstallments = attentionData?.data.pagination.total ?? 0;
   const reviewTotalPages = attentionData?.data.pagination.totalPages ?? 1;
   const latestPaidInstallments = latestPaymentsData?.data.installments ?? [];
-  const totalLatestPayments = latestPaymentsData?.data.pagination.total ?? 0;
   const latestPaymentsTotalPages = latestPaymentsData?.data.pagination.totalPages ?? 1;
   const canViewLoans = useCan(PermissionModule.LOANS, PermissionAction.VIEW);
 
@@ -262,146 +270,102 @@ function LoansPage() {
   }
 
   return (
-    <AuthenticatedListPageShell
-        icon={HandCoinsIcon}
-        title="Loans"
-        description="Manage client loans and installments."
-        action={(
-        <div className="flex flex-wrap items-center gap-2">
-          <Button asChild variant="outline">
-            <Link to="/loans/analytics">
-              <BarChart3Icon data-icon="inline-start" />
-              Analytics
-            </Link>
-          </Button>
-          <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
-            <Button asChild>
-              <Link to="/loans/new">
-              <PlusIcon data-icon="inline-start" />
-              New Loan
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0">
+      <AuthenticatedListPageShell
+          icon={HandCoinsIcon}
+          title="Loans"
+          description="Manage client loans and installments."
+          action={(
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline">
+              <Link to="/loans/analytics">
+                <BarChart3Icon data-icon="inline-start" />
+                Analytics
               </Link>
             </Button>
-          </Can>
-        </div>
-      )}
-        controls={(
-        <Input
-            placeholder="Search by client..."
-            value={searchInput}
-            onChange={handleSearchChange}
-            className="max-w-sm bg-background"
-        />
-      )}
-    >
-      <div className="grid min-w-0 gap-3 p-2 sm:gap-4 sm:p-5">
-        <HorizontalTabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="min-w-0"
-            listClassName="-mx-1 px-1 sm:mx-0 sm:px-0"
-            contentClassName="min-w-0"
-            items={[
-              {
-                value: 'all',
-                label: 'All Loans',
-                content: (
-                  <div className="min-w-0">
-                    <DataTable
-                        columns={columns}
-                        data={loans}
-                        isLoading={isLoading}
-                        variant="card"
-                        toolbar={(
-                          <div className="flex w-full flex-wrap items-center gap-2">
-                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <span className="text-sm font-semibold">All Loans</span>
-                              <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                                {totalLoans}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                        footer={(
-                          <Pagination
-                              page={allLoansPage}
-                              totalPages={allLoansTotalPages}
-                              onPageChange={setAllLoansPage}
-                              isLoading={isLoading}
-                          />
-                        )}
-                    />
-                  </div>
-                ),
-              },
-              {
-                value: 'review',
-                label: 'Items Requiring Review',
-                content: (
-                  <div className="min-w-0">
-                    <DataTable
-                        columns={attentionColumns}
-                        data={attentionInstallments}
-                        isLoading={isAttentionLoading}
-                        variant="card"
-                        getRowClassName={(row) => getAttentionRowClassName(row.attentionCategory)}
-                        toolbar={(
-                          <div className="flex w-full flex-wrap items-center gap-2">
-                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <span className="text-sm font-semibold">Items Requiring Review</span>
-                              <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                                {totalAttentionInstallments}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                        footer={(
-                          <Pagination
-                              page={reviewPage}
-                              totalPages={reviewTotalPages}
-                              onPageChange={setReviewPage}
-                              isLoading={isAttentionLoading}
-                          />
-                        )}
-                    />
-                  </div>
-                ),
-              },
-              {
-                value: 'latest-payments',
-                label: 'Latest Payments',
-                content: (
-                  <div className="min-w-0">
-                    <DataTable
-                        columns={latestPaymentsColumns}
-                        data={latestPaidInstallments}
-                        isLoading={isLatestPaymentsLoading}
-                        variant="card"
-                        toolbar={(
-                          <div className="flex w-full flex-wrap items-center gap-2">
-                            <div className="flex min-w-0 flex-wrap items-center gap-2">
-                              <span className="text-sm font-semibold">Latest Payments</span>
-                              <Badge className="border-0 bg-muted text-xs text-muted-foreground">
-                                {totalLatestPayments}
-                              </Badge>
-                            </div>
-                          </div>
-                        )}
-                        footer={(
-                          <Pagination
-                              page={latestPaymentsPage}
-                              totalPages={latestPaymentsTotalPages}
-                              onPageChange={setLatestPaymentsPage}
-                              isLoading={isLatestPaymentsLoading}
-                          />
-                        )}
-                    />
-                  </div>
-                ),
-              },
-            ]}
-        />
-      </div>
-    </AuthenticatedListPageShell>
+            <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
+              <Button asChild>
+                <Link to="/loans/new">
+                <PlusIcon data-icon="inline-start" />
+                New Loan
+                </Link>
+              </Button>
+            </Can>
+          </div>
+        )}
+          controls={(
+          <div className="flex min-w-0 flex-col gap-3">
+            <TabsList className="-mx-1 flex w-full max-w-full justify-start gap-1 overflow-x-auto overscroll-x-contain px-1 sm:mx-0 sm:w-fit sm:justify-center sm:px-0">
+              <TabsTrigger value="all" className="shrink-0 px-3 py-1.5 text-sm">
+                All Loans
+              </TabsTrigger>
+              <TabsTrigger value="review" className="shrink-0 px-3 py-1.5 text-sm">
+                Items Requiring Review
+              </TabsTrigger>
+              <TabsTrigger value="latest-payments" className="shrink-0 px-3 py-1.5 text-sm">
+                Latest Payments
+              </TabsTrigger>
+            </TabsList>
+            <Input
+                placeholder="Search by client..."
+                value={searchInput}
+                onChange={handleSearchChange}
+                className="max-w-sm bg-background"
+            />
+          </div>
+        )}
+      >
+        <TabsContent value="all" className="mt-0 min-w-0">
+          <DataTable
+              columns={columns}
+              data={loans}
+              isLoading={isLoading}
+              variant="embedded"
+              footer={(
+                <Pagination
+                    page={allLoansPage}
+                    totalPages={allLoansTotalPages}
+                    onPageChange={setAllLoansPage}
+                    isLoading={isLoading}
+                />
+              )}
+          />
+        </TabsContent>
+        <TabsContent value="review" className="mt-0 min-w-0">
+          <DataTable
+              columns={attentionColumns}
+              data={attentionInstallments}
+              isLoading={isAttentionLoading}
+              variant="embedded"
+              getRowClassName={(row) => getAttentionRowClassName(row.attentionCategory)}
+              footer={(
+                <Pagination
+                    page={reviewPage}
+                    totalPages={reviewTotalPages}
+                    onPageChange={setReviewPage}
+                    isLoading={isAttentionLoading}
+                />
+              )}
+          />
+        </TabsContent>
+        <TabsContent value="latest-payments" className="mt-0 min-w-0">
+          <DataTable
+              columns={latestPaymentsColumns}
+              data={latestPaidInstallments}
+              isLoading={isLatestPaymentsLoading}
+              variant="embedded"
+              footer={(
+                <Pagination
+                    page={latestPaymentsPage}
+                    totalPages={latestPaymentsTotalPages}
+                    onPageChange={setLatestPaymentsPage}
+                    isLoading={isLatestPaymentsLoading}
+                />
+              )}
+          />
+        </TabsContent>
+      </AuthenticatedListPageShell>
+    </Tabs>
   );
 }
 
