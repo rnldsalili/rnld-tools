@@ -58,7 +58,7 @@ function pickRandomCharacter(charset: string): string {
   return charset[getRandomInt(charset.length)] ?? '';
 }
 
-function shuffleCharacters(characters: string[]): void {
+function shuffleCharacters(characters: Array<string>): void {
   for (let currentIndex = characters.length - 1; currentIndex > 0; currentIndex--) {
     const randomIndex = getRandomInt(currentIndex + 1);
     [characters[currentIndex], characters[randomIndex]] = [characters[randomIndex], characters[currentIndex]];

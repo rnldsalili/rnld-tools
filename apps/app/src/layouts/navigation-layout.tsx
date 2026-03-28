@@ -259,7 +259,7 @@ function SidebarContent({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 pb-4">
+      <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-4">
         <div className="flex flex-col gap-5">
           <SidebarSection
               title="Workspace"
@@ -481,7 +481,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="flex h-screen overflow-hidden overscroll-none bg-background">
         {!isMobile ? (
           <aside
               className={cn(
@@ -640,7 +640,7 @@ export function NavigationLayout({ children }: NavigationLayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto bg-muted/20">
+          <main className="flex-1 overflow-y-auto overscroll-contain bg-muted/20">
             {children}
           </main>
         </div>

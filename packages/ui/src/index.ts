@@ -6,6 +6,11 @@ export { FilePreviewModal, type FilePreviewModalProps } from '@workspace/ui/comp
 export { Combobox, type ComboboxOption } from '@workspace/ui/components/composite/combobox';
 export { LoadingState } from '@workspace/ui/components/composite/loading-state';
 export {
+  ProgressStepper,
+  type ProgressStepperItem,
+  type ProgressStepperItemState,
+} from '@workspace/ui/components/composite/progress-stepper';
+export {
   SectionCard,
   SectionCardHeader,
   SectionCardContent,

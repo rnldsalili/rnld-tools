@@ -14,7 +14,6 @@ import type {
   LoanListItem,
   LoanPaidInstallment,
 } from '@/app/hooks/use-loan';
-import { CreateLoanDialog } from '@/app/components/loans/create-loan-dialog';
 import { InstallmentStatusBadge } from '@/app/components/loans/installment-status-badge';
 import { UnauthorizedState } from '@/app/components/authorization/unauthorized-state';
 import { AuthenticatedListPageShell } from '@/app/components/layout/authenticated-list-page-shell';
@@ -45,7 +44,6 @@ function LoansPage() {
   const [allLoansPage, setAllLoansPage] = useState(1);
   const [reviewPage, setReviewPage] = useState(1);
   const [latestPaymentsPage, setLatestPaymentsPage] = useState(1);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const debouncedSearch = useDebounce(searchInput);
   const activeTab = tab;
 
@@ -277,9 +275,11 @@ function LoansPage() {
             </Link>
           </Button>
           <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Button asChild>
+              <Link to="/loans/new">
               <PlusIcon data-icon="inline-start" />
               New Loan
+              </Link>
             </Button>
           </Can>
         </div>
@@ -401,9 +401,6 @@ function LoansPage() {
             ]}
         />
       </div>
-      <Can I={PermissionAction.CREATE} a={PermissionModule.LOANS}>
-        <CreateLoanDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      </Can>
     </AuthenticatedListPageShell>
   );
 }

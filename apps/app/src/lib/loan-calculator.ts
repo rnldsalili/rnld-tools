@@ -1,9 +1,9 @@
 import type { InstallmentInterval } from '@workspace/constants';
-import { LOAN_CALCULATOR_PERIODS_PER_YEAR } from '@/app/constants/loan-calculator';
 import type {
   LoanCalculatorSummary,
   LoanCalculatorValues,
 } from '@/app/types/loan-calculator';
+import { LOAN_CALCULATOR_PERIODS_PER_YEAR } from '@/app/constants/loan-calculator';
 
 const PERCENT_DIVISOR = 100;
 

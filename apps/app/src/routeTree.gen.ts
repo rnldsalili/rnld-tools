@@ -35,6 +35,7 @@ import { Route as AuthenticatedclientsClientsIndexRouteImport } from './routes/_
 import { Route as AuthenticatedSettingsRolesRoleSlugRouteImport } from './routes/_authenticated/settings/roles.$roleSlug'
 import { Route as AuthenticatedSettingsnotificationsNotificationsRouteImport } from './routes/_authenticated/settings/(notifications)/notifications'
 import { Route as AuthenticatedSettingsdocumentsDocumentsRouteImport } from './routes/_authenticated/settings/(documents)/documents'
+import { Route as AuthenticatedloansLoansNewRouteImport } from './routes/_authenticated/(loans)/loans.new'
 import { Route as AuthenticatedloansLoansAnalyticsRouteImport } from './routes/_authenticated/(loans)/loans.analytics'
 import { Route as AuthenticatedloansLoansLoanIdRouteImport } from './routes/_authenticated/(loans)/loans.$loanId'
 import { Route as AuthenticatedclientsClientsClientIdRouteImport } from './routes/_authenticated/(clients)/clients.$clientId'
@@ -180,6 +181,12 @@ const AuthenticatedSettingsdocumentsDocumentsRoute =
     path: '/documents',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedloansLoansNewRoute =
+  AuthenticatedloansLoansNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedloansLoansRoute,
+  } as any)
 const AuthenticatedloansLoansAnalyticsRoute =
   AuthenticatedloansLoansAnalyticsRouteImport.update({
     id: '/analytics',
@@ -232,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/loans/analytics': typeof AuthenticatedloansLoansAnalyticsRoute
+  '/loans/new': typeof AuthenticatedloansLoansNewRoute
   '/settings/documents': typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
   '/settings/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
   '/settings/roles/$roleSlug': typeof AuthenticatedSettingsRolesRoleSlugRoute
@@ -259,6 +267,7 @@ export interface FileRoutesByTo {
   '/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/loans/analytics': typeof AuthenticatedloansLoansAnalyticsRoute
+  '/loans/new': typeof AuthenticatedloansLoansNewRoute
   '/settings/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
   '/settings/roles/$roleSlug': typeof AuthenticatedSettingsRolesRoleSlugRoute
   '/clients': typeof AuthenticatedclientsClientsIndexRoute
@@ -292,6 +301,7 @@ export interface FileRoutesById {
   '/_authenticated/(clients)/clients/$clientId': typeof AuthenticatedclientsClientsClientIdRoute
   '/_authenticated/(loans)/loans/$loanId': typeof AuthenticatedloansLoansLoanIdRoute
   '/_authenticated/(loans)/loans/analytics': typeof AuthenticatedloansLoansAnalyticsRoute
+  '/_authenticated/(loans)/loans/new': typeof AuthenticatedloansLoansNewRoute
   '/_authenticated/settings/(documents)/documents': typeof AuthenticatedSettingsdocumentsDocumentsRouteWithChildren
   '/_authenticated/settings/(notifications)/notifications': typeof AuthenticatedSettingsnotificationsNotificationsRoute
   '/_authenticated/settings/roles/$roleSlug': typeof AuthenticatedSettingsRolesRoleSlugRoute
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/clients/$clientId'
     | '/loans/$loanId'
     | '/loans/analytics'
+    | '/loans/new'
     | '/settings/documents'
     | '/settings/notifications'
     | '/settings/roles/$roleSlug'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/clients/$clientId'
     | '/loans/$loanId'
     | '/loans/analytics'
+    | '/loans/new'
     | '/settings/notifications'
     | '/settings/roles/$roleSlug'
     | '/clients'
@@ -383,6 +395,7 @@ export interface FileRouteTypes {
     | '/_authenticated/(clients)/clients/$clientId'
     | '/_authenticated/(loans)/loans/$loanId'
     | '/_authenticated/(loans)/loans/analytics'
+    | '/_authenticated/(loans)/loans/new'
     | '/_authenticated/settings/(documents)/documents'
     | '/_authenticated/settings/(notifications)/notifications'
     | '/_authenticated/settings/roles/$roleSlug'
@@ -586,6 +599,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsdocumentsDocumentsRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/(loans)/loans/new': {
+      id: '/_authenticated/(loans)/loans/new'
+      path: '/new'
+      fullPath: '/loans/new'
+      preLoaderRoute: typeof AuthenticatedloansLoansNewRouteImport
+      parentRoute: typeof AuthenticatedloansLoansRoute
+    }
     '/_authenticated/(loans)/loans/analytics': {
       id: '/_authenticated/(loans)/loans/analytics'
       path: '/analytics'
@@ -723,6 +743,7 @@ const AuthenticatedclientsClientsRouteWithChildren =
 interface AuthenticatedloansLoansRouteChildren {
   AuthenticatedloansLoansLoanIdRoute: typeof AuthenticatedloansLoansLoanIdRoute
   AuthenticatedloansLoansAnalyticsRoute: typeof AuthenticatedloansLoansAnalyticsRoute
+  AuthenticatedloansLoansNewRoute: typeof AuthenticatedloansLoansNewRoute
   AuthenticatedloansLoansIndexRoute: typeof AuthenticatedloansLoansIndexRoute
 }
 
@@ -731,6 +752,7 @@ const AuthenticatedloansLoansRouteChildren: AuthenticatedloansLoansRouteChildren
     AuthenticatedloansLoansLoanIdRoute: AuthenticatedloansLoansLoanIdRoute,
     AuthenticatedloansLoansAnalyticsRoute:
       AuthenticatedloansLoansAnalyticsRoute,
+    AuthenticatedloansLoansNewRoute: AuthenticatedloansLoansNewRoute,
     AuthenticatedloansLoansIndexRoute: AuthenticatedloansLoansIndexRoute,
   }
 
