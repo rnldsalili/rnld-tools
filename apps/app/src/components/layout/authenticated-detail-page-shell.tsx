@@ -10,6 +10,7 @@ interface AuthenticatedDetailPageShellProps {
   meta?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  backgroundClassName?: string;
   surface?: 'card' | 'plain';
   showHeader?: boolean;
 }
@@ -23,11 +24,12 @@ export function AuthenticatedDetailPageShell({
   meta,
   children,
   className,
+  backgroundClassName,
   surface = 'card',
   showHeader = true,
 }: AuthenticatedDetailPageShellProps) {
   const header = (
-    <div className="flex flex-col gap-4 px-4 py-4 sm:px-5 sm:py-5 lg:flex-row lg:items-start lg:justify-between">
+    <div className="flex flex-col gap-4 px-3 py-3 sm:px-5 sm:py-5 lg:flex-row lg:items-start lg:justify-between">
       <div className="flex min-w-0 items-start gap-4">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-primary/10 text-primary shadow-sm shadow-primary/5">
           <Icon className="size-4.5" />
@@ -53,11 +55,11 @@ export function AuthenticatedDetailPageShell({
 
   if (surface === 'plain') {
     return (
-      <div className="min-h-full bg-muted/[0.18]">
-        <div className={cn('mx-auto flex min-h-full w-full max-w-[1440px] flex-col gap-4 px-4 py-4 sm:px-6 sm:py-5', className)}>
+      <div className={cn('min-h-full bg-muted/[0.18]', backgroundClassName)}>
+        <div className={cn('mx-auto flex min-h-full w-full max-w-[1440px] flex-col gap-4 px-3 py-3 sm:px-6 sm:py-5', className)}>
           {showHeader ? header : null}
           {meta ? (
-            <div className="rounded-lg border border-border/70 bg-muted/15 px-4 py-3 sm:px-5">
+            <div className="rounded-lg border border-border/70 bg-muted/15 px-3 py-3 sm:px-5">
               {meta}
             </div>
           ) : null}
@@ -68,18 +70,18 @@ export function AuthenticatedDetailPageShell({
   }
 
   return (
-    <div className="min-h-full bg-muted/[0.18]">
-      <div className={cn('mx-auto flex min-h-full w-full max-w-[1440px] flex-col px-4 py-4 sm:px-6 sm:py-5', className)}>
+    <div className={cn('min-h-full bg-muted/[0.18]', backgroundClassName)}>
+      <div className={cn('mx-auto flex min-h-full w-full max-w-[1440px] flex-col px-3 py-3 sm:px-6 sm:py-5', className)}>
         <SectionCard>
           {showHeader ? header : null}
 
           {meta ? (
-            <div className="border-t border-border/70 bg-muted/15 px-4 py-3 sm:px-5">
+            <div className="border-t border-border/70 bg-muted/15 px-3 py-3 sm:px-5">
               {meta}
             </div>
           ) : null}
 
-          <div className={cn('px-4 py-4 sm:px-5 sm:py-5', meta && 'border-t border-border/70')}>
+          <div className={cn('px-3 py-3 sm:px-5 sm:py-5', meta && 'border-t border-border/70')}>
             {children}
           </div>
         </SectionCard>

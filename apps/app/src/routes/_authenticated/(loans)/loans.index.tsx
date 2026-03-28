@@ -293,7 +293,7 @@ function LoansPage() {
         />
       )}
     >
-      <div className="grid min-w-0 gap-4 p-4 sm:p-5">
+      <div className="grid min-w-0 gap-3 p-2 sm:gap-4 sm:p-5">
         <HorizontalTabs
             value={activeTab}
             onValueChange={handleTabChange}

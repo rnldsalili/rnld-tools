@@ -29,6 +29,7 @@ function NewLoanPage() {
         icon={HandCoinsIcon}
         title="New Loan"
         description="Create a loan and configure its repayment schedule in a dedicated page that is easier to use on mobile."
+        backgroundClassName="bg-background"
         surface="plain"
         showHeader={false}
     >
