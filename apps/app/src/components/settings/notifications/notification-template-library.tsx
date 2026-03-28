@@ -17,6 +17,7 @@ interface NotificationTemplateLibraryProps {
   isLoading?: boolean;
   selectedTemplateId: string;
   onSelectTemplate: (id: string) => void;
+  action?: React.ReactNode;
 }
 
 export function NotificationTemplateLibrary({
@@ -24,6 +25,7 @@ export function NotificationTemplateLibrary({
   isLoading = false,
   selectedTemplateId,
   onSelectTemplate,
+  action,
 }: NotificationTemplateLibraryProps) {
   const [searchInput, setSearchInput] = useState('');
   const normalizedSearch = searchInput.trim().toLowerCase();
@@ -41,11 +43,14 @@ export function NotificationTemplateLibrary({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Template Library</CardTitle>
-        <CardDescription>
-          Manage rich Email templates and plain-text SMS templates.
-        </CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-3">
+        <div className="min-w-0">
+          <CardTitle className="text-base">Template Library</CardTitle>
+          <CardDescription>
+            Manage rich Email templates and plain-text SMS templates.
+          </CardDescription>
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="relative">
