@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Input,
   Label,
   Separator,
   Slider,
@@ -78,29 +79,33 @@ function SecretGeneratorPage() {
 
         <CardContent className="flex flex-col gap-6">
           {/* Secret display + action buttons */}
-          <div className="flex items-center gap-2">
-            <input
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
                 readOnly
                 value={secret}
                 placeholder="Generating…"
                 className={cn(
-                'flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono',
-                'text-foreground placeholder:text-muted-foreground truncate',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
+                'flex-1 bg-muted font-mono',
+                'text-foreground placeholder:text-muted-foreground',
+                'break-all sm:truncate',
               )}
             />
-            <Button variant="outline" size="icon" onClick={regenerate} title="Regenerate">
-              <RefreshCwIcon className="size-4" />
-            </Button>
-            <Button
-                variant="outline"
-                size="icon"
-                onClick={copySecret}
-                disabled={!secret}
-                title="Copy to clipboard"
-            >
-              {copied ? <CheckIcon className="size-4 text-primary" /> : <CopyIcon className="size-4" />}
-            </Button>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-none">
+              <Button variant="outline" onClick={regenerate} title="Regenerate" className="w-full sm:size-8 sm:px-0">
+                <RefreshCwIcon data-icon="inline-start" />
+                <span className="sm:sr-only">Regenerate</span>
+              </Button>
+              <Button
+                  variant="outline"
+                  onClick={copySecret}
+                  disabled={!secret}
+                  title="Copy to clipboard"
+                  className="w-full sm:size-8 sm:px-0"
+              >
+                {copied ? <CheckIcon data-icon="inline-start" className="text-primary" /> : <CopyIcon data-icon="inline-start" />}
+                <span className="sm:sr-only">Copy</span>
+              </Button>
+            </div>
           </div>
 
           {/* Output length hint */}
@@ -116,7 +121,7 @@ function SecretGeneratorPage() {
               <Label htmlFor="bytes-slider" className="text-sm font-medium">
                 Bytes
               </Label>
-              <input
+              <Input
                   type="number"
                   min={SECRET_BYTES_MIN}
                   max={SECRET_BYTES_MAX}
@@ -125,10 +130,7 @@ function SecretGeneratorPage() {
                   const v = Math.min(SECRET_BYTES_MAX, Math.max(SECRET_BYTES_MIN, Number(e.target.value)));
                   if (!isNaN(v)) setOpt('bytes', v);
                 }}
-                  className={cn(
-                  'w-14 rounded-md border border-input bg-background px-2 py-1 text-sm text-center',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
-                )}
+                  className="w-20 text-center tabular-nums sm:w-14"
               />
             </div>
             <Slider
@@ -149,14 +151,14 @@ function SecretGeneratorPage() {
           {/* Encoding selector */}
           <div className="flex flex-col gap-3">
             <Label className="text-sm font-medium">Encoding</Label>
-            <div className="flex rounded-md border border-input p-0.5 gap-0.5 bg-muted">
+            <div className="grid grid-cols-1 gap-2 rounded-md border border-input bg-muted p-1 sm:grid-cols-3 sm:gap-0.5 sm:p-0.5">
               {ENCODINGS.map((enc) => (
                 <button
                     key={enc.value}
                     type="button"
                     onClick={() => setOpt('encoding', enc.value)}
                     className={cn(
-                    'flex-1 text-xs px-3 py-1.5 rounded-sm font-medium transition-colors duration-150',
+                    'min-h-10 rounded-md px-4 py-2 text-sm font-medium transition-colors duration-150 sm:min-h-8 sm:px-3 sm:py-1.5 sm:text-xs',
                     opts.encoding === enc.value
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground',

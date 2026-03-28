@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
   Checkbox,
+  Input,
   Label,
   Separator,
   Slider,
@@ -70,36 +71,44 @@ function PasswordGeneratorPage() {
 
         <CardContent className="flex flex-col gap-6">
           {/* Password display + action buttons */}
-          <div className="flex items-center gap-2">
-            <input
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
                 readOnly
                 value={password}
                 placeholder={hasAtLeastOne ? 'Generating…' : 'Select at least one character type'}
                 className={cn(
-                'flex-1 rounded-md border border-input bg-muted px-3 py-2 text-sm font-mono',
+                'flex-1 bg-muted font-mono',
                 'text-foreground placeholder:text-muted-foreground',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
+                'selection:bg-primary/15',
                 !hasAtLeastOne && 'opacity-50',
               )}
             />
-            <Button
-                variant="outline"
-                size="icon"
-                onClick={regenerate}
-                disabled={!hasAtLeastOne}
-                title="Regenerate"
-            >
-              <RefreshCwIcon className="size-4" />
-            </Button>
-            <Button
-                variant="outline"
-                size="icon"
-                onClick={copyPassword}
-                disabled={!password}
-                title="Copy to clipboard"
-            >
-              {copied ? <CheckIcon className="size-4 text-primary" /> : <CopyIcon className="size-4" />}
-            </Button>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-none">
+              <Button
+                  variant="outline"
+                  onClick={regenerate}
+                  disabled={!hasAtLeastOne}
+                  title="Regenerate"
+                  className="w-full sm:size-8 sm:px-0"
+              >
+                <RefreshCwIcon data-icon="inline-start" />
+                <span className="sm:sr-only">Regenerate</span>
+              </Button>
+              <Button
+                  variant="outline"
+                  onClick={copyPassword}
+                  disabled={!password}
+                  title="Copy to clipboard"
+                  className="w-full sm:size-8 sm:px-0"
+              >
+                {copied ? (
+                  <CheckIcon data-icon="inline-start" className="text-primary" />
+                ) : (
+                  <CopyIcon data-icon="inline-start" />
+                )}
+                <span className="sm:sr-only">Copy</span>
+              </Button>
+            </div>
           </div>
 
           {/* Strength bar */}
@@ -129,7 +138,7 @@ function PasswordGeneratorPage() {
               <Label htmlFor="length-slider" className="text-sm font-medium">
                 Length
               </Label>
-              <input
+              <Input
                   type="number"
                   min={PASSWORD_LENGTH_MIN}
                   max={PASSWORD_LENGTH_MAX}
@@ -138,10 +147,7 @@ function PasswordGeneratorPage() {
                   const v = Math.min(PASSWORD_LENGTH_MAX, Math.max(PASSWORD_LENGTH_MIN, Number(e.target.value)));
                   if (!isNaN(v)) setOpt('length', v);
                 }}
-                  className={cn(
-                  'w-14 rounded-md border border-input bg-background px-2 py-1 text-sm text-center',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
-                )}
+                  className="w-20 text-center tabular-nums sm:w-14"
               />
             </div>
             <Slider
@@ -162,7 +168,7 @@ function PasswordGeneratorPage() {
           {/* Character type options */}
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium text-foreground">Character Types</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <CheckboxOption
                   id="uppercase"
                   label="Uppercase (A–Z)"
@@ -220,9 +226,9 @@ interface CheckboxOptionProps {
 
 function CheckboxOption({ id, label, checked, onCheckedChange }: CheckboxOptionProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-start gap-3 rounded-md border border-transparent px-1 py-1">
       <Checkbox id={id} checked={checked} onCheckedChange={(v) => onCheckedChange(!!v)} />
-      <Label htmlFor={id} className="text-sm font-normal cursor-pointer leading-none">
+      <Label htmlFor={id} className="cursor-pointer font-normal leading-snug">
         {label}
       </Label>
     </div>

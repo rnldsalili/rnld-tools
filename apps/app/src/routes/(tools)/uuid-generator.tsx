@@ -8,9 +8,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Input,
   Label,
   Separator,
-  cn,
 } from '@workspace/ui';
 
 import type { UuidOptions } from '@/app/types/uuid-generator';
@@ -76,26 +76,23 @@ function UuidGeneratorPage() {
 
         <CardContent className="flex flex-col gap-6">
           {/* Controls */}
-          <div className="flex items-end gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex flex-col gap-1.5 flex-1">
               <Label htmlFor="uuid-count" className="text-sm font-medium">
                 Count
               </Label>
-              <input
+              <Input
                   id="uuid-count"
                   type="number"
                   min={UUID_COUNT_MIN}
                   max={UUID_COUNT_MAX}
                   value={opts.count}
                   onChange={(e) => handleCountChange(e.target.value)}
-                  className={cn(
-                  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/30',
-                )}
+                  className="w-full tabular-nums"
               />
             </div>
-            <Button onClick={regenerate} className="flex items-center gap-2">
-              <RefreshCwIcon className="size-4" />
+            <Button onClick={regenerate} className="w-full sm:w-auto">
+              <RefreshCwIcon data-icon="inline-start" />
               Generate
             </Button>
           </div>
@@ -106,22 +103,22 @@ function UuidGeneratorPage() {
           {uuids.length > 0 ? (
             <div className="flex flex-col gap-2">
               {uuids.map((uuid, i) => (
-                <div key={uuid + i} className="flex items-center gap-2">
-                  <code className="flex-1 rounded-md border border-input bg-muted px-3 py-2 text-xs font-mono text-foreground truncate">
+                <div key={uuid + i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <code className="flex-1 rounded-md border border-input bg-muted px-3 py-3 text-sm font-mono text-foreground break-all sm:px-3 sm:py-2 sm:text-xs sm:truncate">
                     {uuid}
                   </code>
                   <Button
                       variant="outline"
-                      size="icon"
                       onClick={() => copyOne(i)}
                       title="Copy"
-                      className="shrink-0"
+                      className="w-full sm:size-8 sm:w-8 sm:px-0"
                   >
                     {copiedIndex === i ? (
-                      <CheckIcon className="size-3.5 text-primary" />
+                      <CheckIcon data-icon="inline-start" className="text-primary" />
                     ) : (
-                      <CopyIcon className="size-3.5" />
+                      <CopyIcon data-icon="inline-start" />
                     )}
+                    <span className="sm:sr-only">Copy</span>
                   </Button>
                 </div>
               ))}
@@ -136,25 +133,25 @@ function UuidGeneratorPage() {
           {uuids.length > 0 && (
             <>
               <Separator />
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                     variant="outline"
                     onClick={copyAll}
-                    className="flex items-center gap-2 flex-1"
+                    className="flex-1"
                 >
                   {copiedAll ? (
-                    <CheckIcon className="size-3.5 text-primary" />
+                    <CheckIcon data-icon="inline-start" className="text-primary" />
                   ) : (
-                    <ClipboardListIcon className="size-3.5" />
+                    <ClipboardListIcon data-icon="inline-start" />
                   )}
                   {copiedAll ? 'Copied!' : 'Copy All'}
                 </Button>
                 <Button
                     variant="outline"
                     onClick={clear}
-                    className="flex items-center gap-2"
+                    className="flex-1 sm:flex-none"
                 >
-                  <Trash2Icon className="size-3.5" />
+                  <Trash2Icon data-icon="inline-start" />
                   Clear
                 </Button>
               </div>
