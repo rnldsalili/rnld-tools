@@ -6,7 +6,7 @@ import type {
 } from '@workspace/constants';
 
 export interface NotificationJobTrace {
-  event: NotificationEvent;
+  event: NotificationEvent | null;
   queuedAt: string;
   queuedByUserId: string | null;
   testSend: boolean;

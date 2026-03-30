@@ -1,4 +1,5 @@
 import { createAuthClient } from 'better-auth/react';
+import { emailOTPClient } from 'better-auth/client/plugins';
 
 // Get API base URL from environment or default to localhost
 const getBaseURL = () => {
@@ -8,4 +9,7 @@ const getBaseURL = () => {
 
 export const authClient = createAuthClient({
   baseURL: getBaseURL(),
+  plugins: [
+    emailOTPClient(),
+  ],
 });

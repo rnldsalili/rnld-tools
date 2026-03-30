@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as HealthRouteImport } from './routes/health'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as toolsRouteRouteImport } from './routes/(tools)/route'
@@ -51,6 +52,11 @@ const LoginRoute = LoginRouteImport.update({
 const HealthRoute = HealthRouteImport.update({
   id: '/health',
   path: '/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicRouteRoute = PublicRouteRouteImport.update({
@@ -227,6 +233,7 @@ const AuthenticatedSettingsdocumentsDocumentsDocumentIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/(tools)': typeof toolsRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_public': typeof PublicRouteRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
     | '/health'
     | '/login'
     | '/settings'
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/forgot-password'
     | '/health'
     | '/login'
     | '/settings'
@@ -388,6 +399,7 @@ export interface FileRouteTypes {
     | '/(tools)'
     | '/_authenticated'
     | '/_public'
+    | '/forgot-password'
     | '/health'
     | '/login'
     | '/_authenticated/settings'
@@ -424,6 +436,7 @@ export interface RootRouteChildren {
   toolsRouteRoute: typeof toolsRouteRouteWithChildren
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   PublicRouteRoute: typeof PublicRouteRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   HealthRoute: typeof HealthRoute
   LoginRoute: typeof LoginRoute
 }
@@ -442,6 +455,13 @@ declare module '@tanstack/react-router' {
       path: '/health'
       fullPath: '/health'
       preLoaderRoute: typeof HealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public': {
@@ -822,6 +842,7 @@ const rootRouteChildren: RootRouteChildren = {
   toolsRouteRoute: toolsRouteRouteWithChildren,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   PublicRouteRoute: PublicRouteRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   HealthRoute: HealthRoute,
   LoginRoute: LoginRoute,
 }

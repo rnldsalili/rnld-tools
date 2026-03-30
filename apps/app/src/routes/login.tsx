@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createFileRoute, redirect, useRouter } from '@tanstack/react-router';
+import { Link, createFileRoute, redirect, useRouter } from '@tanstack/react-router';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { authClient, signIn } from '@workspace/auth-client';
@@ -125,12 +125,20 @@ function LoginPage() {
                         className="gap-2.5"
                         data-invalid={!!error && !password ? true : undefined}
                     >
-                      <FieldLabel
-                          htmlFor="password"
-                          className="text-[0.78rem] font-medium tracking-[0.01em]"
-                      >
-                        Password <span className="text-destructive">*</span>
-                      </FieldLabel>
+                      <div className="flex items-center justify-between gap-3">
+                        <FieldLabel
+                            htmlFor="password"
+                            className="text-[0.78rem] font-medium tracking-[0.01em]"
+                        >
+                          Password <span className="text-destructive">*</span>
+                        </FieldLabel>
+                        <Link
+                            to="/forgot-password"
+                            className="text-[0.78rem] font-medium text-primary transition-colors hover:text-primary/80"
+                        >
+                          Forgot password?
+                        </Link>
+                      </div>
                       <PasswordInput
                           id="password"
                           placeholder="••••••••"
