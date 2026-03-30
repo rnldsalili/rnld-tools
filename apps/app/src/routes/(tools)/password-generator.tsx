@@ -59,10 +59,9 @@ function PasswordGeneratorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
+    <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
       <ToolPageHeader href="/password-generator" />
 
-      {/* Main card */}
       <Card className="w-full max-w-md">
         <CardHeader className="pb-4">
           <CardTitle className="text-base">Generated Password</CardTitle>
@@ -70,7 +69,6 @@ function PasswordGeneratorPage() {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-6">
-          {/* Password display + action buttons */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
                 readOnly
@@ -111,7 +109,6 @@ function PasswordGeneratorPage() {
             </div>
           </div>
 
-          {/* Strength bar */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Strength</span>
@@ -132,7 +129,6 @@ function PasswordGeneratorPage() {
 
           <Separator />
 
-          {/* Length control */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="length-slider" className="text-sm font-medium">
@@ -165,7 +161,6 @@ function PasswordGeneratorPage() {
 
           <Separator />
 
-          {/* Character type options */}
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium text-foreground">Character Types</p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -201,7 +196,6 @@ function PasswordGeneratorPage() {
 
           <Separator />
 
-          {/* Advanced options */}
           <div className="flex flex-col gap-3">
             <p className="text-sm font-medium text-foreground">Advanced</p>
             <CheckboxOption

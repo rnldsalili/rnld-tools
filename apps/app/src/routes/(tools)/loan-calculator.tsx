@@ -233,8 +233,7 @@ function LoanCalculatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center">
+    <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
         <ToolPageHeader
             href="/loan-calculator"
             description={`Estimate ${paymentLabel.toLowerCase()}, total interest, processing fees, and the amount the borrower actually receives after the deduction.`}
@@ -515,8 +514,7 @@ function LoanCalculatorPage() {
                 After deducting the processing fee of{' '}
                 <span className="font-medium text-foreground">
                   {formatCurrency(summary.processingFeeAmount, values.currency)}
-                </span>
-                , the expected released amount is{' '}
+                </span>, the expected released amount is{' '}
                 <span
                     className={cn(
                     'font-medium text-foreground',
@@ -524,8 +522,7 @@ function LoanCalculatorPage() {
                   )}
                 >
                   {formatCurrency(summary.expectedAmountReceived, values.currency)}
-                </span>
-                .
+                </span>.
               </p>
               {summary.expectedAmountReceived < 0 && (
                 <p className="mt-2 text-sm leading-relaxed text-destructive">
@@ -576,7 +573,6 @@ function LoanCalculatorPage() {
           </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 }

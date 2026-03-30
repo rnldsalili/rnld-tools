@@ -62,10 +62,9 @@ function SecretGeneratorPage() {
   const outLen = outputLength(opts.bytes, opts.encoding);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
+    <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
       <ToolPageHeader href="/secret-generator" />
 
-      {/* Main card */}
       <Card className="w-full max-w-md">
         <CardHeader className="pb-4">
           <CardTitle className="text-base">Generated Secret</CardTitle>
@@ -78,7 +77,6 @@ function SecretGeneratorPage() {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-6">
-          {/* Secret display + action buttons */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
                 readOnly
@@ -108,14 +106,12 @@ function SecretGeneratorPage() {
             </div>
           </div>
 
-          {/* Output length hint */}
           <p className="text-xs text-muted-foreground -mt-3">
             {opts.bytes} bytes → {outLen} characters
           </p>
 
           <Separator />
 
-          {/* Byte length control */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <Label htmlFor="bytes-slider" className="text-sm font-medium">
@@ -148,7 +144,6 @@ function SecretGeneratorPage() {
 
           <Separator />
 
-          {/* Encoding selector */}
           <div className="flex flex-col gap-3">
             <Label className="text-sm font-medium">Encoding</Label>
             <div className="grid grid-cols-1 gap-2 rounded-md border border-input bg-muted p-1 sm:grid-cols-3 sm:gap-0.5 sm:p-0.5">

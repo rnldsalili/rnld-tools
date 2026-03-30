@@ -1,9 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
-import {
-  ArrowRightIcon,
-  MoonIcon,
-  SunIcon,
-} from 'lucide-react';
+import { ArrowRightIcon } from 'lucide-react';
 import {
   Button,
   Card,
@@ -14,8 +10,8 @@ import {
 } from '@workspace/ui';
 
 import { ToolIconBadge } from '@/app/components/tools/tool-icon-badge';
+import { PublicSiteHeader } from '@/app/components/public/public-site-header';
 import { PUBLIC_TOOLS } from '@/app/constants/public-tools';
-import { useTheme } from '@/app/hooks/use-theme';
 import { BasicLayout } from '@/app/layouts/basic-layout';
 
 export const Route = createFileRoute('/')({
@@ -28,8 +24,6 @@ const FOOTER_LINKS = [
 ];
 
 function HomePage() {
-  const { isDark, mounted, toggle } = useTheme();
-
   return (
     <BasicLayout>
       <div className="relative min-h-screen overflow-hidden bg-background">
@@ -41,51 +35,7 @@ function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(255,255,255,0.2)_26%,transparent_58%,rgba(255,255,255,0.36)_100%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,transparent_28%,transparent_74%,rgba(255,255,255,0.04)_100%)]" />
         </div>
 
-        <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-background/82 backdrop-blur-xl">
-          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6 sm:py-3.5">
-              <Link
-                  to="/"
-                  className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-border/70 bg-background/70 px-2 py-1.5 transition-colors hover:bg-background"
-              >
-                <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-background shadow-sm">
-                  <img
-                      src="/web-app-manifest-512x512.png"
-                      alt="RTools logo"
-                      className="size-full object-cover"
-                  />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[0.7rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-                    RTools
-                  </span>
-                  <span className="block truncate text-xs text-foreground sm:text-sm">
-                    Secure everyday utilities
-                  </span>
-                </span>
-              </Link>
-
-              <div className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:gap-3">
-                <Button asChild variant="outline" className="h-9 rounded-full px-4">
-                  <Link to="/login">Login</Link>
-                </Button>
-
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-9 rounded-full border border-border/70 bg-background/80 hover:bg-muted/80"
-                    onClick={toggle}
-                    aria-label={mounted ? (isDark ? 'Switch to light theme' : 'Switch to dark theme') : 'Toggle theme'}
-                >
-                  {mounted ? (
-                    isDark ? <SunIcon className="size-4.5" /> : <MoonIcon className="size-4.5" />
-                  ) : (
-                    <MoonIcon className="size-4.5" />
-                  )}
-                </Button>
-              </div>
-          </div>
-        </header>
+        <PublicSiteHeader variant="tools" />
 
         <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-8 sm:px-6 sm:pb-10">
           <main className="flex flex-1 flex-col gap-8 pt-2 sm:gap-10 sm:pt-4">

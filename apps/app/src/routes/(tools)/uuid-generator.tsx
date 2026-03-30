@@ -64,10 +64,9 @@ function UuidGeneratorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
+    <div className="mx-auto flex w-full max-w-6xl flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
       <ToolPageHeader href="/uuid-generator" />
 
-      {/* Main card */}
       <Card className="w-full max-w-lg">
         <CardHeader className="pb-4">
           <CardTitle className="text-base">UUID v4</CardTitle>
@@ -75,7 +74,6 @@ function UuidGeneratorPage() {
         </CardHeader>
 
         <CardContent className="flex flex-col gap-6">
-          {/* Controls */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex flex-col gap-1.5 flex-1">
               <Label htmlFor="uuid-count" className="text-sm font-medium">
@@ -99,7 +97,6 @@ function UuidGeneratorPage() {
 
           <Separator />
 
-          {/* UUID list */}
           {uuids.length > 0 ? (
             <div className="flex flex-col gap-2">
               {uuids.map((uuid, i) => (
@@ -129,7 +126,6 @@ function UuidGeneratorPage() {
             </p>
           )}
 
-          {/* Bulk actions */}
           {uuids.length > 0 && (
             <>
               <Separator />
